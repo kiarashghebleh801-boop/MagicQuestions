@@ -15,12 +15,14 @@ import type { Question } from "./questions";
 import { questionCrops } from "./questionCrops";
 import { visualElements, type VisualElement } from "./visualElements";
 
+// Exact Y10H / ExamWizard page geometry supplied by the user.
 const A4_WIDTH_TWIPS = 11907;
 const A4_HEIGHT_TWIPS = 16839;
-const BODY_SIZE = 22;
+const BODY_SIZE = 22; // 11 pt
 const BODY_FONT = "Arial";
 const GREY = "A8AAAD";
-const RENDER_SCALE = 2;
+const RENDER_SCALE = 3;
+const LINE_TWIPS = 240;
 
 type PdfTextItem = { str: string; transform: number[]; width: number; height: number };
 type PositionedItem = PdfTextItem & { x: number; y: number; w: number; h: number };
@@ -49,13 +51,13 @@ function clean(text: string) {
 
 function skip(text: string) {
   const t = clean(text);
-  return !t || /^\*P\w+\*$/.test(t) || /^PMT/i.test(t) || /^Turn over$/i.test(t) || /^©/.test(t) || /^Pearson Education/i.test(t);
+  return !t || /^\*P\w+\*$/.test(t) || /^PMT/i.test(t) || /^Turn over$/i.test(t) || /^©/.test(t) || /^Pearson Education/i.test(t) || /^\d+$/.test(t);
 }
 
 function groupLines(items: PositionedItem[]) {
   const groups: PositionedItem[][] = [];
   for (const item of [...items].sort((a,b) => a.y - b.y || a.x - b.x)) {
-    let group = groups.find(g => Math.abs(g[0].y - item.y) <= 3.5);
+    let group = groups.find(g => Math.abs(g[0].y - item.y) <= 3.2);
     if (!group) { group = []; groups.push(group); }
     group.push(item);
   }
@@ -80,7 +82,7 @@ function overlapsVisual(item: PositionedItem, visual: VisualElement) {
   const yOverlap = Math.max(0, Math.min(iy1, visual.y1) - Math.max(iy0, visual.y0));
   const intersection = xOverlap * yOverlap;
   const area = Math.max(1, (ix1 - ix0) * (iy1 - iy0));
-  return intersection / area > 0.18 || (item.x >= visual.x0 && item.x <= visual.x1 && item.y >= visual.y0 && item.y <= visual.y1);
+  return intersection / area > 0.15 || (item.x >= visual.x0 && item.x <= visual.x1 && item.y >= visual.y0 && item.y <= visual.y1);
 }
 
 async function extractLines(pdf:any, pageNumber:number, crop:{startPage:number;endPage:number;startY:number;endY:number}, questionNumber:number, visuals:VisualElement[]) {
@@ -103,22 +105,19 @@ async function extractLines(pdf:any, pageNumber:number, crop:{startPage:number;e
 
   let lines = groupLines(positioned);
 
-  // MagicQuestions supplies Q1., Q2., etc.; never reproduce Pearson's original number.
+  // Remove Pearson's original question number. MagicQuestions supplies Q1., Q2., ...
   if (pageNumber === crop.startPage) {
     const candidate = lines.findIndex(line => {
       const t = clean(line.text);
-      const startsCorrectly = new RegExp(`^${questionNumber}(?:\\s|$)`).test(t);
       const leftMost = Math.min(...line.items.map(i => i.x));
-      return startsCorrectly && leftMost < 90 && line.y < top + 70;
+      return new RegExp(`^${questionNumber}(?:\\s|$)`).test(t) && leftMost < 100 && line.y < top + 80;
     });
     if (candidate >= 0) {
-      const t = clean(lines[candidate].text.replace(new RegExp(`^${questionNumber}\\s*`), ""));
-      if (t) lines[candidate] = { ...lines[candidate], text: t };
+      const remainder = clean(lines[candidate].text.replace(new RegExp(`^${questionNumber}\\s*`), ""));
+      if (remainder) lines[candidate] = { ...lines[candidate], text: remainder };
       else lines.splice(candidate, 1);
     }
   }
-
-  lines = lines.filter(line => !(pageNumber === crop.startPage && clean(line.text) === String(questionNumber) && Math.min(...line.items.map(i=>i.x)) < 90));
   return lines;
 }
 
@@ -160,12 +159,12 @@ async function renderVisuals(pdf:any, pageNumber:number, elements:VisualElement[
   return out;
 }
 
-function isMark(text:string) { return /^\(\d+\)$/.test(text); }
-function markValue(text:string) { const m = text.match(/^\((\d+)\)$/); return m ? Number(m[1]) : null; }
-function isTotal(text:string) { return /^\(Total for question/i.test(text) || /^\(Total for Question/i.test(text); }
+function isMark(text:string) { return /^\(\d+\)$/.test(clean(text)); }
+function isTotal(text:string) { return /^\(Total for (?:q|Q)uestion/i.test(clean(text)); }
 function isAnswer(text:string) { return /\.{6,}/.test(text); }
-function isContinuation(text:string) { return /^(Show your working|Show clear|Give your answer|You must show|Write down)/i.test(text); }
+function isContinuation(text:string) { return /^(Show your working|Show clear|Give your answer|You must show|Write down)/i.test(clean(text)); }
 function isSequenceRow(text:string) { return /^(?:-?\d+(?:\.\d+)?\s+){2,}-?\d+(?:\.\d+)?$/.test(clean(text)); }
+function isSubpart(text:string) { return /^\((?:[a-z]|i{1,3}|iv|v)\)\s*/i.test(clean(text)); }
 function isDisplayMath(text:string) {
   const t = clean(text);
   if (isAnswer(t) || isMark(t) || isTotal(t)) return false;
@@ -183,59 +182,76 @@ function normaliseMathText(text:string) {
     .replace(/n2\b/g,"n²").replace(/n3\b/g,"n³");
 }
 
-function runs(text:string) {
+function bodyRuns(text:string) {
   const t = normaliseMathText(text);
-  const parts = t.split(/([²³])/g).filter(Boolean);
-  return parts.map(part => new TextRun({ text: part, font: BODY_FONT, size: BODY_SIZE, superScript: part === "²" || part === "³" }));
+  const pieces = t.split(/([²³]|\b[xymnp]\b|\b[A-Z]{1,2}\b)/g).filter(Boolean);
+  return pieces.map(piece => new TextRun({
+    text: piece,
+    font: BODY_FONT,
+    size: BODY_SIZE,
+    superScript: piece === "²" || piece === "³",
+    italics: /^[xymnp]$/.test(piece) || /^[A-Z]{1,2}$/.test(piece),
+  }));
+}
+
+function answerRuns(text:string) {
+  const t = normaliseMathText(clean(text));
+  const match = t.match(/^([A-Za-z])\s*(=\s*\.{5,}.*)$/);
+  if (!match) return [new TextRun({text:t,font:BODY_FONT,size:BODY_SIZE})];
+  return [
+    new TextRun({text:match[1],italics:true,font:BODY_FONT,size:BODY_SIZE}),
+    new TextRun({text:` ${match[2]}`,font:BODY_FONT,size:BODY_SIZE}),
+  ];
 }
 
 function paragraphFor(line:TextLine) {
   const text = normaliseMathText(clean(line.text));
-  if (isMark(text)) return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:240}, children:[new TextRun({text,bold:true,color:GREY,font:BODY_FONT,size:BODY_SIZE})] });
-  if (isTotal(text)) return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:240}, children:[new TextRun({text,bold:true,font:BODY_FONT,size:BODY_SIZE})] });
-  if (isAnswer(text)) {
-    const match = text.match(/^([A-Za-z])\s*(=\s*\.{5,}.*)$/);
-    return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:240}, children: match ? [new TextRun({text:match[1],italics:true,font:BODY_FONT,size:BODY_SIZE}),new TextRun({text:` ${match[2]}`,font:BODY_FONT,size:BODY_SIZE})] : runs(text) });
-  }
-  if (isSequenceRow(text) || isDisplayMath(text)) {
-    return new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:120,after:120,line:240}, children:runs(text) });
-  }
-  return new Paragraph({ indent:isContinuation(text)?{left:320}:undefined, spacing:{before:120,after:120,line:240}, children:runs(text) });
+  if (isMark(text)) return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:LINE_TWIPS}, children:[new TextRun({text,bold:true,color:GREY,font:BODY_FONT,size:BODY_SIZE})] });
+  if (isTotal(text)) return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:LINE_TWIPS}, children:[new TextRun({text,bold:true,font:BODY_FONT,size:BODY_SIZE})] });
+  if (isAnswer(text)) return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:LINE_TWIPS}, children:answerRuns(text) });
+  if (isSequenceRow(text) || isDisplayMath(text)) return new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:120,after:120,line:LINE_TWIPS}, children:bodyRuns(text) });
+  return new Paragraph({
+    indent:isContinuation(text)?{left:320}:undefined,
+    spacing:{before:120,after:120,line:LINE_TWIPS},
+    keepNext:isSubpart(text),
+    children:bodyRuns(text),
+  });
 }
 
 function visualParagraph(visual:RenderedVisual) {
   return new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { before: 60, after: 60, line: 240 },
+    spacing: { before: 60, after: 60, line: LINE_TWIPS },
     children: [new ImageRun({ data: visual.data, type:"png", transformation:{ width:visual.displayWidth, height:visual.displayHeight } })],
   });
 }
 
-function workingBreakCount(marks:number | null) {
-  if (marks === null) return 4;
-  if (marks <= 1) return 3;
-  if (marks === 2) return 5;
-  if (marks === 3) return 7;
-  if (marks === 4) return 8;
-  if (marks === 5) return 9;
-  return 10;
+function spacer(breaks=1) {
+  return new Paragraph({ spacing:{before:0,after:0,line:LINE_TWIPS}, children:[new TextRun({text:"",break:breaks,font:BODY_FONT,size:BODY_SIZE})] });
 }
 
-function workingSpaceParagraph(marks:number | null) {
-  return new Paragraph({
-    spacing: { before: 0, after: 0, line: 240 },
-    children: [new TextRun({ text: "", break: workingBreakCount(marks), font: BODY_FONT, size: BODY_SIZE })],
-  });
+// ExamWizard uses stacked manual line breaks, not giant paragraph spacing.
+// Preserve the source paper's visible working-space gap, but quantise it to 12pt lines.
+function gapBreaks(current:DocEvent, next:DocEvent | undefined) {
+  if (!next) return 0;
+  const currentBottom = current.type === "visual" && current.visual ? current.visual.y1 : current.y;
+  const gap = next.y - currentBottom;
+  if (gap < 38) return 0;
+  return Math.max(1, Math.min(12, Math.round((gap - 24) / 17)));
 }
 
-function nextMarkAfter(events:DocEvent[], index:number) {
-  for (let i=index+1; i<events.length; i++) {
-    if (events[i].type !== "text" || !events[i].line) continue;
-    const text = clean(events[i].line!.text);
-    if (isMark(text)) return markValue(text);
-    if (isAnswer(text) || /^\([a-z]|^\(i{1,3}\)/i.test(text) || isTotal(text)) break;
+function shouldPreserveGap(current:DocEvent, next:DocEvent | undefined) {
+  if (!next) return false;
+  if (current.type === "text" && current.line) {
+    const t = clean(current.line.text);
+    // Answer lines already sit at the bottom of their working area in the source.
+    if (isAnswer(t) || isMark(t) || isTotal(t)) return false;
   }
-  return null;
+  if (next.type === "text" && next.line) {
+    const t = clean(next.line.text);
+    return isAnswer(t) || isMark(t) || isTotal(t) || isSubpart(t);
+  }
+  return false;
 }
 
 export async function exportPaperToWord(questions:Question[]) {
@@ -245,9 +261,20 @@ export async function exportPaperToWord(questions:Question[]) {
   for (let index=0; index<questions.length; index++) {
     const question = questions[index];
     const crop = questionCrops[question.id];
-    children.push(new Paragraph({ spacing:{after:0,line:240}, children:[new TextRun({text:"\n",font:BODY_FONT,size:BODY_SIZE})] }));
-    children.push(new Paragraph({ keepNext:true, spacing:{after:0,line:240}, children:[new TextRun({text:`Q${index+1}.`,bold:true,font:BODY_FONT,size:BODY_SIZE})] }));
-    if (!crop) continue;
+
+    // Exact recurring ExamWizard anatomy: blank spacer, literal bold Qn., then content.
+    children.push(spacer(1));
+    children.push(new Paragraph({
+      keepNext:true,
+      spacing:{before:0,after:0,line:LINE_TWIPS},
+      children:[new TextRun({text:`Q${index+1}.`,bold:true,font:BODY_FONT,size:BODY_SIZE})],
+    }));
+
+    if (!crop) {
+      children.push(new Paragraph({spacing:{before:120,after:120,line:LINE_TWIPS},children:[new TextRun({text:question.summary,font:BODY_FONT,size:BODY_SIZE})]}));
+      children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:`(Total for question = ${question.marks} marks)`,bold:true,font:BODY_FONT,size:BODY_SIZE})]}));
+      continue;
+    }
 
     try {
       const pdf = await loadPaper(crop.paperKey);
@@ -266,26 +293,47 @@ export async function exportPaperToWord(questions:Question[]) {
       }
 
       events.sort((a,b)=>a.y-b.y);
-      for (let eventIndex=0; eventIndex<events.length; eventIndex++) {
-        const event = events[eventIndex];
+      let sawTotal = false;
+      for (let i=0; i<events.length; i++) {
+        const event = events[i];
         if (event.type === "text" && event.line) {
-          const text = clean(event.line.text);
-          if (isAnswer(text)) children.push(workingSpaceParagraph(nextMarkAfter(events,eventIndex)));
+          const t = clean(event.line.text);
+          if (isTotal(t)) sawTotal = true;
           children.push(paragraphFor(event.line));
+        } else if (event.type === "visual" && event.visual) {
+          children.push(visualParagraph(event.visual));
         }
-        if (event.type === "visual" && event.visual) children.push(visualParagraph(event.visual));
+
+        const breaks = gapBreaks(event,events[i+1]);
+        if (breaks && shouldPreserveGap(event,events[i+1])) children.push(spacer(breaks));
       }
-      children.push(new Paragraph({ spacing:{after:0,line:240}, children:[new TextRun({text:"\n",font:BODY_FONT,size:BODY_SIZE})] }));
+
+      if (!sawTotal) {
+        children.push(spacer(1));
+        children.push(new Paragraph({
+          alignment:AlignmentType.RIGHT,
+          spacing:{before:0,after:0,line:LINE_TWIPS},
+          children:[new TextRun({text:`(Total for question = ${question.marks} marks)`,bold:true,font:BODY_FONT,size:BODY_SIZE})],
+        }));
+      }
+      children.push(spacer(1));
     } catch (error) {
       console.error(error);
-      children.push(new Paragraph({ spacing:{before:120,after:120,line:240}, children:[new TextRun({text:`Could not load source question ${question.id}.`,font:BODY_FONT,size:BODY_SIZE,color:"AA0000"})] }));
+      children.push(new Paragraph({spacing:{before:120,after:120,line:LINE_TWIPS},children:[new TextRun({text:question.summary,font:BODY_FONT,size:BODY_SIZE})]}));
+      children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:`(Total for question = ${question.marks} marks)`,bold:true,font:BODY_FONT,size:BODY_SIZE})]}));
     }
   }
 
   const doc = new Document({
-    styles:{default:{document:{run:{font:BODY_FONT,size:BODY_SIZE},paragraph:{spacing:{line:240}}}}},
+    styles:{default:{document:{run:{font:BODY_FONT,size:BODY_SIZE},paragraph:{spacing:{line:LINE_TWIPS}}}}},
     sections:[{
-      properties:{page:{size:{width:A4_WIDTH_TWIPS,height:A4_HEIGHT_TWIPS},margin:{top:900,bottom:900,left:800,right:800,header:720,footer:720},pageNumbers:{start:1}}},
+      properties:{
+        page:{
+          size:{width:A4_WIDTH_TWIPS,height:A4_HEIGHT_TWIPS},
+          margin:{top:900,bottom:900,left:800,right:800,header:720,footer:720},
+          pageNumbers:{start:1},
+        },
+      },
       headers:{default:new Header({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Y10H",font:BODY_FONT,size:BODY_SIZE})]})]})},
       footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({children:[PageNumber.CURRENT],font:BODY_FONT,size:BODY_SIZE})]})]})},
       children,
