@@ -1,8 +1,9 @@
 export type VisualElement = { page: number; x0: number; y0: number; x1: number; y1: number; displayWidth: number; displayHeight: number; kind: "diagram" | "table" | "graph" | "math" | "formula"; };
 
 // Tight, element-only crops derived from the user's June 2024 ExamWizard reference.
-// These are deliberately NOT full-question crops: only tables, diagrams, graphs,
-// or maths snippets that should remain graphical are listed here.
+// IMPORTANT: simple algebra that Arial can reproduce cleanly stays typed text.
+// Only genuine diagrams, tables, graphs, stacked fractions/surds, or other complex
+// typeset maths should appear here.
 export const visualElements: Record<string, VisualElement[]> = {
   "2024-1H-2": [{ page: 4, x0: 103.8, y0: 151.3, x1: 500.0, y1: 218.0, displayWidth: 600, displayHeight: 101, kind: "table" }],
   "2024-1H-5": [{ page: 6, x0: 215.6, y0: 80.7, x1: 556.8, y1: 266.4, displayWidth: 451, displayHeight: 245, kind: "diagram" }],
@@ -20,5 +21,4 @@ export const visualElements: Record<string, VisualElement[]> = {
   "2024-1H-20": [{ page: 21, x0: 207.8, y0: 81.4, x1: 552.9, y1: 271.0, displayWidth: 413, displayHeight: 227, kind: "diagram" }],
   "2024-1H-22": [{ page: 23, x0: 54.1, y0: 95.1, x1: 488.8, y1: 440.3, displayWidth: 566, displayHeight: 450, kind: "graph" }],
   "2024-1H-23": [{ page: 24, x0: 183.6, y0: 99.7, x1: 558.8, y1: 321.9, displayWidth: 413, displayHeight: 244, kind: "diagram" }],
-  "2024-1H-25": [{ page: 28, x0: 59.4, y0: 59.6, x1: 199.3, y1: 82.5, displayWidth: 146, displayHeight: 24, kind: "math" }],
 };
