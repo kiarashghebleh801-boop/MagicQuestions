@@ -104,6 +104,16 @@ async function extractLines(pdf:any,pageNumber:number,crop:any,questionNumber:nu
   const {items,viewport,top,bottom}=await positionedItems(pdf,pageNumber,crop);
   const filtered=items.filter(i=>!visuals.some(v=>v.page===pageNumber&&overlap(i,v)));
   let lines=groupLines(filtered);
+
+  // Strip Pearson page numbers/header-number fragments without deleting genuine maths rows.
+  lines=lines.filter(l=>{
+    const t=clean(l.text);
+    if(!/^\d{1,2}$/.test(t)) return true;
+    const left=Math.min(...l.items.map(i=>i.x));
+    const nearPageEdge=l.y<top+28 || l.y>bottom-28;
+    return !(nearPageEdge && left<130);
+  });
+
   if(pageNumber===crop.startPage){
     const candidate=lines.findIndex(l=>new RegExp(`^${questionNumber}(?:\\s|$)`).test(clean(l.text))&&Math.min(...l.items.map(i=>i.x))<100&&l.y<top+85);
     if(candidate>=0){const rest=clean(lines[candidate].text.replace(new RegExp(`^${questionNumber}\\s*`),"")); if(rest) lines[candidate]={...lines[candidate],text:rest}; else lines.splice(candidate,1);}
@@ -137,30 +147,60 @@ async function renderVisuals(pdf:any,pageNumber:number,elements:VisualElement[])
   return out;
 }
 
-function isMark(t:string){return /^\(\d+\)$/.test(clean(t));} function isTotal(t:string){return /^\(Total for (?:q|Q)uestion/i.test(clean(t));} function isAnswer(t:string){return /\.{6,}/.test(t);} function isSubpart(t:string){return /^\((?:[a-z]|i{1,3}|iv|v)\)\s*/i.test(clean(t));}
+function isMark(t:string){return /^\(\d+\)$/.test(clean(t));}
+function markNumber(t:string){const m=clean(t).match(/^\((\d+)\)$/);return m?Number(m[1]):0;}
+function isTotal(t:string){return /^\(Total for (?:q|Q)uestion/i.test(clean(t));}
+function isAnswer(t:string){return /\.{6,}/.test(t);}
+function isSubpart(t:string){return /^\((?:[a-z]|i{1,3}|iv|v)\)\s*/i.test(clean(t));}
 function isSequence(t:string){return /^(?:-?\d+(?:\.\d+)?\s+){2,}-?\d+(?:\.\d+)?$/.test(clean(t));}
 function isDisplayMath(t:string){const s=clean(t);return !isAnswer(s)&&!isMark(s)&&!isTotal(s)&&s.length<70&&/=/.test(s)&&(s.match(/\b(?:where|find|write|show|work|given|and|the|is|are|has|with|for|from|to)\b/gi)||[]).length===0;}
 function normalise(t:string){return t.replace(/x2\b/g,"x²").replace(/x3\b/g,"x³").replace(/y2\b/g,"y²").replace(/y3\b/g,"y³").replace(/a2\b/g,"a²").replace(/a3\b/g,"a³").replace(/n2\b/g,"n²").replace(/n3\b/g,"n³");}
-function runs(t:string){return normalise(t).split(/([²³]|\b[xymnp]\b|\b[A-Z]{1,2}\b)/g).filter(Boolean).map(p=>new TextRun({text:p,font:BODY_FONT,size:BODY_SIZE,superScript:p==="²"||p==="³",italics:/^[xymnp]$/.test(p)||/^[A-Z]{1,2}$/.test(p)}));}
+function runs(t:string){return normalise(t).split(/([²³]|\b[xymnp]\b|\b[A-Z]{1,2}\b)/g).filter(Boolean).map(p=>new TextRun({text:p==="²"?"2":p==="³"?"3":p,font:BODY_FONT,size:BODY_SIZE,superScript:p==="²"||p==="³",italics:/^[xymnp]$/.test(p)||/^[A-Z]{1,2}$/.test(p)}));}
 function para(line:TextLine){const t=normalise(clean(line.text));if(isMark(t))return new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:0,after:0,line:LINE_TWIPS},children:[new TextRun({text:t,bold:true,color:GREY,font:BODY_FONT,size:BODY_SIZE})]});if(isTotal(t))return new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:0,after:0,line:LINE_TWIPS},children:[new TextRun({text:t,bold:true,font:BODY_FONT,size:BODY_SIZE})]});if(isAnswer(t))return new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:0,after:0,line:LINE_TWIPS},children:runs(t)});if(isSequence(t)||isDisplayMath(t))return new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:120,after:120,line:LINE_TWIPS},children:runs(t)});return new Paragraph({spacing:{before:120,after:120,line:LINE_TWIPS},keepNext:isSubpart(t),children:runs(t)});}
 function visualPara(v:RenderedVisual){return new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:60,after:60,line:LINE_TWIPS},children:[new ImageRun({data:v.data,type:"png",transformation:{width:v.displayWidth,height:v.displayHeight}})]});}
 function spacer(n=1){return new Paragraph({spacing:{before:0,after:0,line:LINE_TWIPS},children:[new TextRun({text:"",break:n,font:BODY_FONT,size:BODY_SIZE})]});}
 function gapBreaks(a:DocEvent,b:DocEvent|undefined){if(!b)return 0;const bottom=a.type==="visual"&&a.visual?a.visual.y1:a.y;const gap=b.y-bottom;if(gap<45)return 0;return Math.max(1,Math.min(11,Math.round((gap-22)/16)));}
+function minimumWorkingBreaks(marks:number){if(marks<=0)return 0;if(marks===1)return 3;if(marks===2)return 5;if(marks===3)return 7;if(marks===4)return 8;if(marks===5)return 9;return 10;}
 
 export async function exportPaperToWord(questions:Question[]){
   if(!questions.length)return; const children:Paragraph[]=[];
   for(let qi=0;qi<questions.length;qi++){
-    const q=questions[qi],crop=questionCrops[q.id]; children.push(spacer(1),new Paragraph({keepNext:true,spacing:{after:0,line:LINE_TWIPS},children:[new TextRun({text:`Q${qi+1}.`,bold:true,font:BODY_FONT,size:BODY_SIZE})]})); if(!crop)continue;
+    const q=questions[qi],crop=questionCrops[q.id];
+    children.push(spacer(1),new Paragraph({keepNext:true,spacing:{after:0,line:LINE_TWIPS},children:[new TextRun({text:`Q${qi+1}.`,bold:true,font:BODY_FONT,size:BODY_SIZE})]}));
+    if(!crop)continue;
     try{
       const pdf=await loadPaper(crop.paperKey); const explicit=visualElements[q.id]??[]; const events:DocEvent[]=[];
       for(let p=crop.startPage;p<=crop.endPage;p++){
-        const base=await positionedItems(pdf,p,crop); const rawLines=groupLines(base.items); const pageExplicit=explicit.filter(v=>v.page===p); const auto=inferVisuals(rawLines,p,base.viewport.width,base.top,base.bottom,pageExplicit); const defs=[...pageExplicit,...auto];
-        const [{lines},rendered]=await Promise.all([extractLines(pdf,p,crop,q.questionNumber,defs),renderVisuals(pdf,p,defs)]); const off=(p-crop.startPage)*1000; lines.forEach(l=>events.push({y:off+l.y,type:"text",line:l})); rendered.forEach(v=>events.push({y:off+v.y0,type:"visual",visual:v}));
+        const base=await positionedItems(pdf,p,crop);
+        const rawLines=groupLines(base.items);
+        const pageExplicit=explicit.filter(v=>v.page===p);
+        // Once a question has been manually audited, trust only those exact crops.
+        // Automatic inference remains a fallback solely for unaudited questions.
+        const auto=explicit.length?[]:inferVisuals(rawLines,p,base.viewport.width,base.top,base.bottom,pageExplicit);
+        const defs=[...pageExplicit,...auto];
+        const [{lines},rendered]=await Promise.all([extractLines(pdf,p,crop,q.questionNumber,defs),renderVisuals(pdf,p,defs)]);
+        const off=(p-crop.startPage)*1000;
+        lines.forEach(l=>events.push({y:off+l.y,type:"text",line:l}));
+        rendered.forEach(v=>events.push({y:off+v.y0,type:"visual",visual:v}));
       }
       events.sort((a,b)=>a.y-b.y);
-      for(let i=0;i<events.length;i++){const e=events[i];children.push(e.type==="text"&&e.line?para(e.line):visualPara(e.visual!));const n=gapBreaks(e,events[i+1]);if(n&&events[i+1]?.type==="text"&&events[i+1].line&&(isAnswer(events[i+1].line!.text)||isMark(events[i+1].line!.text)||isTotal(events[i+1].line!.text)||isSubpart(events[i+1].line!.text)))children.push(spacer(n));}
+      for(let i=0;i<events.length;i++){
+        const e=events[i];
+        children.push(e.type==="text"&&e.line?para(e.line):visualPara(e.visual!));
+        const next=events[i+1];
+        let n=gapBreaks(e,next);
+        if(next?.type==="text"&&next.line&&isAnswer(next.line.text)){
+          const following=events[i+2];
+          const marks=following?.type==="text"&&following.line?markNumber(following.line.text):0;
+          n=Math.max(n,minimumWorkingBreaks(marks));
+        }
+        if(n&&next?.type==="text"&&next.line&&(isAnswer(next.line.text)||isMark(next.line.text)||isTotal(next.line.text)||isSubpart(next.line.text)))children.push(spacer(n));
+      }
       children.push(spacer(1));
-    }catch(err){console.error(err);children.push(new Paragraph({children:[new TextRun({text:`Could not load source question ${q.id}.`,color:"AA0000",font:BODY_FONT,size:BODY_SIZE})]}));}
+    }catch(err){
+      console.error(err);
+      children.push(new Paragraph({children:[new TextRun({text:`Could not load source question ${q.id}.`,color:"AA0000",font:BODY_FONT,size:BODY_SIZE})]}));
+    }
   }
   const doc=new Document({styles:{default:{document:{run:{font:BODY_FONT,size:BODY_SIZE},paragraph:{spacing:{line:LINE_TWIPS}}}}},sections:[{properties:{page:{size:{width:A4_WIDTH_TWIPS,height:A4_HEIGHT_TWIPS},margin:{top:900,bottom:900,left:800,right:800,header:720,footer:720},pageNumbers:{start:1}}},headers:{default:new Header({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Y10H",font:BODY_FONT,size:BODY_SIZE})]})]})},footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({children:[PageNumber.CURRENT],font:BODY_FONT,size:BODY_SIZE})]})]})},children}]});
   const blob=await Packer.toBlob(doc);const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="MagicQuestions-ExamWizard-Paper.docx";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
