@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.57.4",
     "docx": "9.5.1",
     "next": "14.2.15",
     "pdfjs-dist": "4.10.38",
