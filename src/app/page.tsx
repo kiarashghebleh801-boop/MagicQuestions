@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questions";
+import { exportPaperToWord } from "@/lib/exportWord";
 
 export default function Home() {
   const [selected, setSelected] = useState<string[]>(["Quadratics", "Algebra"]);
@@ -55,8 +56,19 @@ export default function Home() {
 }
 
 function PaperPreview({paper,totalMarks,removeQuestion,regenerate}:{paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void}) {
+  const [exporting, setExporting] = useState(false);
+
+  async function downloadWord() {
+    setExporting(true);
+    try {
+      await exportPaperToWord(paper);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return <div className="panel preview">
     <div className="previewHead"><div><p>YOUR PAPER</p><h2>{paper.length ? `${paper.length} questions · ${totalMarks} marks` : "Ready when you are"}</h2></div><span>Higher</span></div>
-    {!paper.length ? <div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div> : <><div className="questionList">{paper.map((q,index) => <article className="question" key={q.id}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div></div><div className="marks">{q.marks}<small>marks</small><button className="remove" onClick={() => removeQuestion(q.id)}>×</button></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate</button><button className="print" onClick={() => window.print()}>Print / Save PDF</button></div></>}
+    {!paper.length ? <div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div> : <><div className="questionList">{paper.map((q,index) => <article className="question" key={q.id}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div></div><div className="marks">{q.marks}<small>marks</small><button className="remove" onClick={() => removeQuestion(q.id)}>×</button></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting ? "Building Word…" : "Download Word"}</button><button className="print" onClick={() => window.print()}>Print / Save PDF</button></div></>}
   </div>;
 }
