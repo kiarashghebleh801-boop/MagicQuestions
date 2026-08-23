@@ -18,7 +18,9 @@ const A4_HEIGHT_TWIPS = 16839;
 const BODY_SIZE = 22; // 11 pt in half-points
 const BODY_FONT = "Arial";
 
-async function questionImage(question: Question): Promise<ImageRun | null> {
+type ExportQuestion = Question & { imageUrl?: string };
+
+async function questionImage(question: ExportQuestion): Promise<ImageRun | null> {
   if (!question.imageUrl) return null;
 
   try {
@@ -46,10 +48,9 @@ export async function exportPaperToWord(questions: Question[]) {
   const children: Paragraph[] = [];
 
   for (let index = 0; index < questions.length; index++) {
-    const question = questions[index];
+    const question = questions[index] as ExportQuestion;
     const image = await questionImage(question);
 
-    // Blank spacer paragraph before every question, matching the Y10H template.
     children.push(
       new Paragraph({
         spacing: { after: 0 },
@@ -81,7 +82,6 @@ export async function exportPaperToWord(questions: Question[]) {
         }),
       );
     } else {
-      // Development fallback until private question crops are connected.
       children.push(
         new Paragraph({
           spacing: { after: 120 },
