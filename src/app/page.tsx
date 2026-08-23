@@ -1,10 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questions";
 import { exportPaperToWord } from "@/lib/exportWord";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+  const [email, setEmail] = useState("");
   const [selected, setSelected] = useState<string[]>(["Quadratics", "Algebra"]);
   const [count, setCount] = useState(5);
   const [difficulty, setDifficulty] = useState<Difficulty | "Mixed">("Mixed");
@@ -12,22 +17,43 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"generate" | "bank">("generate");
 
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (!data.session) router.replace("/login");
+      else {
+        setEmail(data.session.user.email || "Account");
+        setReady(true);
+      }
+    });
+    const { data: auth } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) router.replace("/login");
+      else {
+        setEmail(session.user.email || "Account");
+        setReady(true);
+      }
+    });
+    return () => { active = false; auth.subscription.unsubscribe(); };
+  }, [router]);
+
   const totalMarks = useMemo(() => paper.reduce((sum, q) => sum + q.marks, 0), [paper]);
   const results = useMemo(() => searchQuestions(query, selected), [query, selected]);
 
-  function toggleTopic(topic: string) {
-    setSelected(current => current.includes(topic) ? current.filter(item => item !== topic) : [...current, topic]);
-  }
+  if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions</div></main>;
+
+  function toggleTopic(topic: string) { setSelected(current => current.includes(topic) ? current.filter(item => item !== topic) : [...current, topic]); }
   function generate() { setPaper(generateQuestions(selected, count, difficulty)); }
   function addQuestion(q: Question) { setPaper(current => current.some(item => item.id === q.id) ? current : [...current, q]); }
   function removeQuestion(id: string) { setPaper(current => current.filter(q => q.id !== id)); }
+  async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
   return (
     <main>
       <header className="nav">
         <div className="brand"><span className="spark">✦</span> MagicQuestions</div>
         <nav className="tabs"><button className={mode === "generate" ? "active" : ""} onClick={() => setMode("generate")}>Generate</button><button className={mode === "bank" ? "active" : ""} onClick={() => setMode("bank")}>Question bank</button></nav>
-        <div className="badge">{questions.length} questions · Edexcel IGCSE Maths A</div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
       </header>
 
       <section className="hero">
@@ -57,16 +83,7 @@ export default function Home() {
 
 function PaperPreview({paper,totalMarks,removeQuestion,regenerate}:{paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void}) {
   const [exporting, setExporting] = useState(false);
-
-  async function downloadWord() {
-    setExporting(true);
-    try {
-      await exportPaperToWord(paper);
-    } finally {
-      setExporting(false);
-    }
-  }
-
+  async function downloadWord() { setExporting(true); try { await exportPaperToWord(paper); } finally { setExporting(false); } }
   return <div className="panel preview">
     <div className="previewHead"><div><p>YOUR PAPER</p><h2>{paper.length ? `${paper.length} questions · ${totalMarks} marks` : "Ready when you are"}</h2></div><span>Higher</span></div>
     {!paper.length ? <div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div> : <><div className="questionList">{paper.map((q,index) => <article className="question" key={q.id}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div></div><div className="marks">{q.marks}<small>marks</small><button className="remove" onClick={() => removeQuestion(q.id)}>×</button></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting ? "Building Word…" : "Download Word"}</button><button className="print" onClick={() => window.print()}>Print / Save PDF</button></div></>}
