@@ -1,10 +1,23 @@
 export type VisualElement = { page: number; x0: number; y0: number; x1: number; y1: number; displayWidth: number; displayHeight: number; kind: "diagram" | "table" | "graph" | "math" | "formula"; };
 
-// Tight, element-only crops derived from the user's June 2024 ExamWizard reference.
-// IMPORTANT: simple algebra that Arial can reproduce cleanly stays typed text.
-// Only genuine diagrams, tables, graphs, stacked fractions/surds, or other complex
-// typeset maths should appear here.
+// ExamWizard rule:
+// - type normal text/simple inline algebra in Arial
+// - screenshot ONLY the exact element when Word cannot reproduce it cleanly
+//   (diagram, table, graph, probability tree, stacked fraction/surd, vector-arrow notation, etc.)
+// - never screenshot an entire question/page just to preserve one visual element
 export const visualElements: Record<string, VisualElement[]> = {
+  // Vector questions: the old exporter was trying to rebuild these from PDF text,
+  // which destroys the diagram and vector-arrow notation. Keep the wording typed,
+  // but raster-crop the original diagram and arrow notation from the source paper.
+  "2021-1H-23": [
+    { page: 26, x0: 98, y0: 88, x1: 555, y1: 285, displayWidth: 520, displayHeight: 224, kind: "diagram" },
+    { page: 26, x0: 54, y0: 278, x1: 235, y1: 350, displayWidth: 205, displayHeight: 82, kind: "math" }
+  ],
+  "2022-1HR-24": [
+    { page: 30, x0: 70, y0: 88, x1: 548, y1: 242, displayWidth: 555, displayHeight: 179, kind: "diagram" },
+    { page: 30, x0: 55, y0: 250, x1: 170, y1: 321, displayWidth: 150, displayHeight: 93, kind: "math" }
+  ],
+
   "2024-1H-2": [{ page: 4, x0: 103.8, y0: 151.3, x1: 500.0, y1: 218.0, displayWidth: 600, displayHeight: 101, kind: "table" }],
   "2024-1H-5": [{ page: 6, x0: 215.6, y0: 80.7, x1: 556.8, y1: 266.4, displayWidth: 451, displayHeight: 245, kind: "diagram" }],
   "2024-1H-6": [{ page: 7, x0: 117.6, y0: 279.5, x1: 243.1, y1: 311.5, displayWidth: 124, displayHeight: 32, kind: "math" }],
