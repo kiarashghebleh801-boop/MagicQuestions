@@ -26,6 +26,7 @@ type PdfTextItem = { str: string; transform: number[]; width: number; height: nu
 type PositionedItem = PdfTextItem & { x: number; y: number; w: number; h: number };
 type TextLine = { text: string; y: number; items: PositionedItem[] };
 type RenderedVisual = VisualElement & { data: Uint8Array };
+type DocEvent = { y: number; type: "text" | "visual"; line?: TextLine; visual?: RenderedVisual };
 
 const pdfCache = new Map<string, Promise<any>>();
 
@@ -102,7 +103,7 @@ async function extractLines(pdf:any, pageNumber:number, crop:{startPage:number;e
 
   let lines = groupLines(positioned);
 
-  // Remove only the original Pearson question number from the first page.
+  // MagicQuestions supplies Q1., Q2., etc.; never reproduce Pearson's original number.
   if (pageNumber === crop.startPage) {
     const candidate = lines.findIndex(line => {
       const t = clean(line.text);
@@ -117,7 +118,6 @@ async function extractLines(pdf:any, pageNumber:number, crop:{startPage:number;e
     }
   }
 
-  // Do not allow an isolated original question number to leak through.
   lines = lines.filter(line => !(pageNumber === crop.startPage && clean(line.text) === String(questionNumber) && Math.min(...line.items.map(i=>i.x)) < 90));
   return lines;
 }
@@ -161,12 +161,26 @@ async function renderVisuals(pdf:any, pageNumber:number, elements:VisualElement[
 }
 
 function isMark(text:string) { return /^\(\d+\)$/.test(text); }
+function markValue(text:string) { const m = text.match(/^\((\d+)\)$/); return m ? Number(m[1]) : null; }
 function isTotal(text:string) { return /^\(Total for question/i.test(text) || /^\(Total for Question/i.test(text); }
 function isAnswer(text:string) { return /\.{6,}/.test(text); }
 function isContinuation(text:string) { return /^(Show your working|Show clear|Give your answer|You must show|Write down)/i.test(text); }
+function isSequenceRow(text:string) { return /^(?:-?\d+(?:\.\d+)?\s+){2,}-?\d+(?:\.\d+)?$/.test(clean(text)); }
+function isDisplayMath(text:string) {
+  const t = clean(text);
+  if (isAnswer(t) || isMark(t) || isTotal(t)) return false;
+  if (t.length > 65 || !/[=]/.test(t)) return false;
+  const proseWords = t.match(/\b(?:where|find|write|show|work|given|and|the|is|are|has|with|for|from|to)\b/gi) ?? [];
+  return proseWords.length === 0;
+}
 
 function normaliseMathText(text:string) {
-  return text.replace(/x2\b/g,"x²").replace(/x3\b/g,"x³").replace(/y2\b/g,"y²").replace(/y3\b/g,"y³").replace(/a2\b/g,"a²").replace(/a3\b/g,"a³").replace(/b2\b/g,"b²").replace(/b3\b/g,"b³").replace(/n2\b/g,"n²").replace(/n3\b/g,"n³");
+  return text
+    .replace(/x2\b/g,"x²").replace(/x3\b/g,"x³")
+    .replace(/y2\b/g,"y²").replace(/y3\b/g,"y³")
+    .replace(/a2\b/g,"a²").replace(/a3\b/g,"a³")
+    .replace(/b2\b/g,"b²").replace(/b3\b/g,"b³")
+    .replace(/n2\b/g,"n²").replace(/n3\b/g,"n³");
 }
 
 function runs(text:string) {
@@ -183,6 +197,9 @@ function paragraphFor(line:TextLine) {
     const match = text.match(/^([A-Za-z])\s*(=\s*\.{5,}.*)$/);
     return new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{before:0,after:0,line:240}, children: match ? [new TextRun({text:match[1],italics:true,font:BODY_FONT,size:BODY_SIZE}),new TextRun({text:` ${match[2]}`,font:BODY_FONT,size:BODY_SIZE})] : runs(text) });
   }
+  if (isSequenceRow(text) || isDisplayMath(text)) {
+    return new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:120,after:120,line:240}, children:runs(text) });
+  }
   return new Paragraph({ indent:isContinuation(text)?{left:320}:undefined, spacing:{before:120,after:120,line:240}, children:runs(text) });
 }
 
@@ -192,6 +209,33 @@ function visualParagraph(visual:RenderedVisual) {
     spacing: { before: 60, after: 60, line: 240 },
     children: [new ImageRun({ data: visual.data, type:"png", transformation:{ width:visual.displayWidth, height:visual.displayHeight } })],
   });
+}
+
+function workingBreakCount(marks:number | null) {
+  if (marks === null) return 4;
+  if (marks <= 1) return 3;
+  if (marks === 2) return 5;
+  if (marks === 3) return 7;
+  if (marks === 4) return 8;
+  if (marks === 5) return 9;
+  return 10;
+}
+
+function workingSpaceParagraph(marks:number | null) {
+  return new Paragraph({
+    spacing: { before: 0, after: 0, line: 240 },
+    children: [new TextRun({ text: "", break: workingBreakCount(marks), font: BODY_FONT, size: BODY_SIZE })],
+  });
+}
+
+function nextMarkAfter(events:DocEvent[], index:number) {
+  for (let i=index+1; i<events.length; i++) {
+    if (events[i].type !== "text" || !events[i].line) continue;
+    const text = clean(events[i].line!.text);
+    if (isMark(text)) return markValue(text);
+    if (isAnswer(text) || /^\([a-z]|^\(i{1,3}\)/i.test(text) || isTotal(text)) break;
+  }
+  return null;
 }
 
 export async function exportPaperToWord(questions:Question[]) {
@@ -208,7 +252,7 @@ export async function exportPaperToWord(questions:Question[]) {
     try {
       const pdf = await loadPaper(crop.paperKey);
       const allVisuals = visualElements[question.id] ?? [];
-      const events: Array<{y:number; type:"text"|"visual"; line?:TextLine; visual?:RenderedVisual}> = [];
+      const events: DocEvent[] = [];
 
       for (let pageNumber=crop.startPage; pageNumber<=crop.endPage; pageNumber++) {
         const pageVisualDefs = allVisuals.filter(v => v.page === pageNumber);
@@ -222,8 +266,13 @@ export async function exportPaperToWord(questions:Question[]) {
       }
 
       events.sort((a,b)=>a.y-b.y);
-      for (const event of events) {
-        if (event.type === "text" && event.line) children.push(paragraphFor(event.line));
+      for (let eventIndex=0; eventIndex<events.length; eventIndex++) {
+        const event = events[eventIndex];
+        if (event.type === "text" && event.line) {
+          const text = clean(event.line.text);
+          if (isAnswer(text)) children.push(workingSpaceParagraph(nextMarkAfter(events,eventIndex)));
+          children.push(paragraphFor(event.line));
+        }
         if (event.type === "visual" && event.visual) children.push(visualParagraph(event.visual));
       }
       children.push(new Paragraph({ spacing:{after:0,line:240}, children:[new TextRun({text:"\n",font:BODY_FONT,size:BODY_SIZE})] }));
