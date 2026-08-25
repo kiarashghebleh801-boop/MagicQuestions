@@ -78,7 +78,7 @@ export default function Home() {
   return <main>
     <header className="nav">
       <div className="brand"><span className="spark">✦</span> MagicQuestions</div>
-      <nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button></nav>
+      <nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button><button onClick={()=>router.push("/chemistry")}>Chemistry</button></nav>
       <div style={{display:"flex",alignItems:"center",gap:8}}>{isOwner&&<button className="accountButton" onClick={()=>router.push("/owner")}>Owner panel</button>}<div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
     </header>
 
