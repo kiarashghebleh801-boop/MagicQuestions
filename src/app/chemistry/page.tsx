@@ -3,45 +3,106 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { chemistrySections } from "@/lib/chemistrySpec";
-import { chemistryQuestions } from "@/lib/chemistryQuestions";
+import { chemistryQuestions, type ChemistryQuestion } from "@/lib/chemistryQuestions";
+import { exportPaperToWord } from "@/lib/exportWord";
+import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
+
+function asExportQuestion(q: ChemistryQuestion): Question {
+  return {
+    id: q.id,
+    year: q.year,
+    session: q.session,
+    paper: q.paper,
+    questionNumber: q.questionNumber,
+    marks: q.marks,
+    topics: q.specTags,
+    difficulty: "Medium",
+    summary: q.summary,
+  };
+}
 
 export default function ChemistryPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(["1c"]);
+  const [count, setCount] = useState(5);
+  const [paper, setPaper] = useState<ChemistryQuestion[]>([]);
+  const [mode, setMode] = useState<"generate" | "bank">("generate");
+  const [query, setQuery] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
       setEmail(data.session.user.email || "Account");
-      const { data: profile } = await supabase.from("profiles").select("banned").eq("id",data.session.user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("banned").eq("id", data.session.user.id).maybeSingle();
       if (profile?.banned) { router.replace("/banned"); return; }
       setReady(true);
     });
   }, [router]);
 
-  const visibleQuestions = useMemo(() => {
+  const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
+  const filteredBank = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return chemistryQuestions.filter(q => {
-      const topicMatch = !selected || q.specTags.includes(selected);
-      const textMatch = !needle || `${q.summary} ${q.session} ${q.year} ${q.paper} Q${q.questionNumber} ${q.specTags.join(" ")}`.toLowerCase().includes(needle);
+      const topicMatch = !selectedTopics.length || q.specTags.some(tag => selectedTopics.includes(tag));
+      const textMatch = !needle || `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`.toLowerCase().includes(needle);
       return topicMatch && textMatch;
     });
-  }, [selected, query]);
-
-  const selectedLabel = useMemo(() => {
-    if (!selected) return null;
-    const sectionNumber = Number(selected[0]);
-    const code = selected.slice(1);
-    const section = chemistrySections.find(s => s.number === sectionNumber);
-    const subtopic = section?.subtopics.find(s => s.code === code);
-    return subtopic ? `${sectionNumber}(${code}) ${subtopic.title}` : selected;
-  }, [selected]);
+  }, [query, selectedTopics]);
 
   if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions Chemistry</div></main>;
+
+  function toggleTopic(tag: string) {
+    setSelectedTopics(current => current.includes(tag) ? current.filter(x=>x!==tag) : [...current, tag]);
+  }
+
+  function generate() {
+    const candidates = chemistryQuestions.filter(q => !selectedTopics.length || q.specTags.some(tag => selectedTopics.includes(tag)));
+    const shuffled = [...candidates].sort(() => Math.random() - .5);
+    setPaper(shuffled.slice(0, Math.min(count, shuffled.length)));
+  }
+
+  function addQuestion(q: ChemistryQuestion) {
+    setPaper(current => current.some(x=>x.id===q.id) ? current : [...current,q]);
+  }
+
+  function removeQuestion(id: string) {
+    setPaper(current => current.filter(q=>q.id!==id));
+  }
+
+  function moveQuestion(index:number,direction:number) {
+    setPaper(current => {
+      const next=index+direction;
+      if(next<0||next>=current.length) return current;
+      const copy=[...current];
+      [copy[index],copy[next]]=[copy[next],copy[index]];
+      return copy;
+    });
+  }
+
+  function swapQuestion(index:number) {
+    const old=paper[index];
+    if(!old) return;
+    const used=new Set(paper.map(q=>q.id));
+    const candidates=chemistryQuestions.filter(q=>!used.has(q.id)&&q.specTags.some(tag=>old.specTags.includes(tag)));
+    if(!candidates.length){window.alert("No other Chemistry question for the same specification topic is available yet.");return;}
+    setPaper(current=>current.map((q,i)=>i===index?candidates[0]:q));
+  }
+
+  async function downloadWord() {
+    if(!paper.length) return;
+    setExporting(true);
+    try {
+      await exportPaperToWord(paper.map(asExportQuestion));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return <main>
     <header className="nav">
@@ -50,41 +111,32 @@ export default function ChemistryPage() {
       <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={()=>router.push("/")}>Back</button></div>
     </header>
 
-    <section className="hero" style={{paddingBottom:28}}>
+    <section className="hero">
       <p className="eyebrow">EDEXCEL INTERNATIONAL GCSE CHEMISTRY 4CH1</p>
-      <h1 style={{fontSize:"clamp(36px,4.4vw,58px)"}}>Chemistry question bank.<br/><span>Organised by the specification.</span></h1>
-      <p className="subtitle">Choose an exact specification sub-topic such as 1(c), 2(d), 3(b) or 4(h). Questions can appear in more than one section when they test several parts of the specification.</p>
+      <h1>Your topics. Your Chemistry paper.<br/><span>Generated in seconds.</span></h1>
+      <p className="subtitle">Choose exact specification sections such as 1(c) Atomic structure, 2(d) Reactivity series or 3(a) Energetics, then build a formatted Word paper from the Chemistry question bank.</p>
     </section>
 
-    <section style={{width:"min(1180px,calc(100% - 32px))",margin:"0 auto 70px",display:"grid",gridTemplateColumns:"minmax(300px,.9fr) minmax(0,1.1fr)",gap:22}}>
-      <div style={{display:"flex",flexDirection:"column",gap:16}}>
-        <button className="accountButton" onClick={()=>setSelected(null)} style={{alignSelf:"stretch",padding:"12px 14px",fontWeight:800}}>All chemistry questions ({chemistryQuestions.length})</button>
-        {chemistrySections.map(section => <div className="panel" key={section.number} style={{padding:20}}>
-          <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:13}}>
-            <div className="qNumber" style={{width:34,height:34}}>{section.number}</div>
-            <div><b style={{fontSize:16}}>{section.title}</b><div className="qMeta">{section.subtopics.length} specification sub-topics</div></div>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:7}}>
-            {section.subtopics.map(subtopic => {
-              const key = `${section.number}${subtopic.code}`;
-              const count = chemistryQuestions.filter(q=>q.specTags.includes(key)).length;
-              const active = selected===key;
-              return <button key={key} onClick={()=>setSelected(active?null:key)} style={{display:"flex",alignItems:"center",gap:10,textAlign:"left",width:"100%",border:active?"1px solid #9f8cff":"1px solid var(--border, #e3e5eb)",background:active?"#f1eeff":"var(--panel, #fff)",borderRadius:10,padding:"10px 11px",cursor:"pointer",color:active?"#5638d8":"inherit"}}>
-                <b style={{minWidth:28}}>({subtopic.code})</b><span style={{flex:1,fontWeight:700}}>{subtopic.title}</span><small style={{color:"#8b909c",whiteSpace:"nowrap"}}>{subtopic.specRange} · {count}</small>
-              </button>;
-            })}
-          </div>
-        </div>)}
+    <div style={{display:"flex",justifyContent:"center",margin:"-8px 0 24px"}}><nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button></nav></div>
+
+    {mode==="generate" ? <section className="builder">
+      <div className="panel controls">
+        <div className="step"><span>1</span><div><b>Choose specification topics</b><small>{selectedTopics.length} selected</small></div></div>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>{chemistrySections.map(section=><div key={section.number}><div className="qMeta" style={{marginBottom:8}}>{section.number}. {section.title}</div><div className="topics">{section.subtopics.map(sub=>{const tag=`${section.number}${sub.code}`;return <button key={tag} className={selectedTopics.includes(tag)?"topic selected":"topic"} onClick={()=>toggleTopic(tag)}>({sub.code}) {sub.title}</button>})}</div></div>)}</div>
+        <div className="divider"/>
+        <div className="step"><span>2</span><div><b>Paper settings</b><small>Choose how many questions</small></div></div>
+        <div className="settingRow"><div className="counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={()=>setCount(Math.min(16,count+1))}>+</button></div></div>
+        <button className="generate" onClick={generate}>⚗ Generate Chemistry paper</button>
       </div>
 
-      <div className="panel" style={{padding:26,minHeight:540,alignSelf:"start",position:"sticky",top:18}}>
-        <div className="previewHead" style={{gap:14,alignItems:"flex-start"}}>
-          <div><p>CHEMISTRY QUESTION BANK</p><h2>{selectedLabel || "All chemistry questions"}</h2></div>
-          <span>{visibleQuestions.length} shown</span>
-        </div>
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search chemistry questions…" style={{width:"100%",padding:"12px 14px",border:"1px solid #dfe2e8",borderRadius:10,margin:"8px 0 18px",font:"inherit"}}/>
-        {visibleQuestions.length===0 ? <div className="empty" style={{height:360}}><div>⚗</div><h3>No matching questions</h3><p>Try another specification sub-topic or clear the search.</p></div> : <div className="bankResults" style={{borderTop:0}}>{visibleQuestions.map(q=><article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b></div></article>)}</div>}
+      <div className="panel preview">
+        <div className="previewHead"><div><p>YOUR CHEMISTRY PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>4CH1</span></div>
+        {!paper.length?<div className="empty"><div>⚗</div><h3>Your Chemistry paper will appear here</h3><p>Pick specification topics, choose the number of questions, then generate.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Swap, reorder, or remove any Chemistry question.</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting?"Building Word…":"Download Word"}</button></div></>}
       </div>
-    </section>
+    </section> : <section className="bank panel">
+      <div className="bankTop"><div><p className="eyebrow">CHEMISTRY QUESTION BANK</p><h2>Browse all {chemistryQuestions.length} formatted questions</h2></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search Chemistry questions…"/></div>
+      <div style={{marginTop:18,display:"flex",flexDirection:"column",gap:12}}>{chemistrySections.map(section=><div key={section.number}><div className="qMeta" style={{marginBottom:6}}>{section.number}. {section.title}</div><div className="topics compact" style={{margin:0}}>{section.subtopics.map(sub=>{const tag=`${section.number}${sub.code}`;const n=chemistryQuestions.filter(q=>q.specTags.includes(tag)).length;return <button key={tag} className={selectedTopics.includes(tag)?"topic selected":"topic"} onClick={()=>toggleTopic(tag)}>({sub.code}) {sub.title} · {n}</button>})}</div></div>)}</div>
+      <div className="bankResults" style={{marginTop:20}}>{filteredBank.map(q=><article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b><button onClick={()=>addQuestion(q)}>+ Add</button></div></article>)}</div>
+    </section>}
   </main>;
 }
