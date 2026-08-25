@@ -27,7 +27,10 @@ function parseXml(text: string): XMLDocument {
 }
 
 function serializeXml(doc: XMLDocument): string {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${new XMLSerializer().serializeToString(doc)}`;
+  // XMLSerializer can include an XML declaration for XMLDocument in some browsers.
+  // Serialising only documentElement guarantees exactly one declaration. Word is
+  // strict here and can report "unreadable content" for duplicate declarations.
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${new XMLSerializer().serializeToString(doc.documentElement)}`;
 }
 
 function nodeText(node: Node): string {
@@ -166,13 +169,12 @@ function extractRawQuestionXml(source: LoadedDoc, questionNumber: number): strin
 
 function renumberRawQuestionXml(xml: string, newNumber: number): string {
   let replaced = false;
-  return xml.replace(/(<w:t(?:\s[^>]*)?>\s*)Q\d+\.(\s*<\/w:t>)/i, (_all, before, after) => {
+  const result = xml.replace(/(<w:t(?:\s[^>]*)?>\s*)Q\d+\.(\s*<\/w:t>)/i, (_all, before, after) => {
     replaced = true;
     return `${before}Q${newNumber}.${after}`;
-  }).replace(/^/, () => {
-    if (!replaced) throw new Error("Could not renumber a question marker in the Word XML");
-    return "";
   });
+  if (!replaced) throw new Error("Could not renumber a question marker in the Word XML");
+  return result;
 }
 
 function buildSingleSourceDocumentXml(source: LoadedDoc, questions: Question[]): string {
@@ -221,6 +223,7 @@ function replaceRelationshipId(nodes: Node[], oldId: string, newId: string) {
       const el = node as Element;
       for (const attr of Array.from(el.attributes)) {
         if ((attr.namespaceURI === R_NS || attr.name.startsWith("r:")) && attr.value === oldId) {
+          // Preserve the existing qualified name/prefix (usually r:embed or r:id).
           el.setAttributeNS(R_NS, attr.name, newId);
         }
       }
@@ -254,8 +257,9 @@ async function copyRelationships(
     const type = sourceRel.getAttribute("Type") || "";
     const target = sourceRel.getAttribute("Target") || "";
     const mode = sourceRel.getAttribute("TargetMode");
-    const newId = nextRelationshipId(targetRels, { value: counters.rel });
-    counters.rel++;
+    const counterBox = { value: counters.rel };
+    const newId = nextRelationshipId(targetRels, counterBox);
+    counters.rel = counterBox.value;
 
     let newTarget = target;
     const isMedia = /\/image$/i.test(type) || target.startsWith("media/");
@@ -300,10 +304,6 @@ function downloadBlob(bytes: Uint8Array) {
 }
 
 async function exportFromSingleSource(questions: Question[], source: LoadedDoc) {
-  // Word is extremely strict about OOXML. Do NOT parse and re-serialize the source
-  // document here. Patch only the raw body XML so every namespace, relationship,
-  // header/footer, style, drawing and compatibility setting remains byte-for-byte
-  // identical to the known-good source package.
   const templateBytes = await source.zip.generateAsync({ type: "uint8array" });
   const outputZip = await JSZip.loadAsync(templateBytes);
   outputZip.file("word/document.xml", buildSingleSourceDocumentXml(source, questions));
@@ -317,8 +317,6 @@ async function exportFromSingleSource(questions: Question[], source: LoadedDoc) 
 }
 
 async function exportAcrossSources(questions: Question[], sources: LoadedDoc[]) {
-  // Cross-paper merging still needs relationship/media remapping. Keep it isolated
-  // from the safe same-source path above.
   const templateBytes = await sources[0].zip.generateAsync({ type: "uint8array" });
   const outputZip = await JSZip.loadAsync(templateBytes);
   const outputDocFile = outputZip.file("word/document.xml");
@@ -344,7 +342,11 @@ async function exportAcrossSources(questions: Question[], sources: LoadedDoc[]) 
   outputZip.file("word/document.xml", serializeXml(outputDoc));
   outputZip.file("word/_rels/document.xml.rels", serializeXml(outputRels));
 
-  const result = await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+  const result = await outputZip.generateAsync({
+    type: "uint8array",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
   downloadBlob(result);
 }
 
