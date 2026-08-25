@@ -155,7 +155,7 @@ async function copyRelationships(
   const sourceMap = relationshipMap(source.relsXml);
   const ids = referencedRelationshipIds(nodes);
 
-  for (const oldId of ids) {
+  for (const oldId of Array.from(ids)) {
     const sourceRel = sourceMap.get(oldId);
     if (!sourceRel) continue;
 
@@ -217,8 +217,6 @@ export async function exportPaperToWord(questions: Question[]) {
   }
 
   const sources = await Promise.all(questions.map(q => loadSource(getFormattedSource(q)!)));
-
-  // Use the first selected formatted paper as the package/style/header/footer template.
   const templateBytes = await sources[0].zip.generateAsync({ type: "uint8array" });
   const outputZip = await JSZip.loadAsync(templateBytes);
   const outputDocFile = outputZip.file("word/document.xml");
