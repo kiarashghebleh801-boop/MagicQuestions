@@ -28,19 +28,24 @@ export default function Home() {
       setEmail(session.user.email || "Account");
 
       const { data: profile } = await supabase.from("profiles").select("role,banned").eq("id", session.user.id).maybeSingle();
-      if (!profile) { router.replace("/pricing"); return; }
-      if (profile.banned) { router.replace("/banned"); return; }
-      if (profile.role === "owner") { setIsOwner(true); setReady(true); return; }
-
-      const { data: membership } = await supabase.from("memberships").select("status,current_period_end").eq("user_id", session.user.id).maybeSingle();
-      const activeMembership = membership?.status === "active" && (!membership.current_period_end || new Date(membership.current_period_end).getTime() > Date.now());
-      if (!activeMembership) { router.replace("/pricing"); return; }
+      if (profile?.banned) { router.replace("/banned"); return; }
+      setIsOwner(profile?.role === "owner");
+      await supabase.rpc("touch_last_seen");
       setReady(true);
     }
 
     supabase.auth.getSession().then(({ data }) => void checkAccess(data.session));
     const { data: auth } = supabase.auth.onAuthStateChange((_event, session) => void checkAccess(session));
-    return () => { active = false; auth.subscription.unsubscribe(); };
+    const presenceTimer = window.setInterval(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) await supabase.rpc("touch_last_seen");
+    }, 60000);
+
+    return () => {
+      active = false;
+      auth.subscription.unsubscribe();
+      window.clearInterval(presenceTimer);
+    };
   }, [router]);
 
   const formattedQuestions = useMemo(() => questions.filter(hasFormattedSource), []);
@@ -74,7 +79,7 @@ export default function Home() {
     <header className="nav">
       <div className="brand"><span className="spark">✦</span> MagicQuestions</div>
       <nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button></nav>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>{isOwner&&<button className="accountButton" onClick={()=>router.push("/owner")}>Owner</button>}<button className="accountButton" onClick={()=>router.push("/pricing")}>Plan</button><div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>{isOwner&&<button className="accountButton" onClick={()=>router.push("/owner")}>Owner panel</button>}<div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
     </header>
 
     <section className="hero"><p className="eyebrow">PAST PAPERS, BUILT AROUND YOU</p><h1>Your topics. Your paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exactly what you want to practise. MagicQuestions selects matching Higher-tier questions from the formatted Word question bank.</p></section>
