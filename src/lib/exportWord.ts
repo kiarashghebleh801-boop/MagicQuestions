@@ -6,12 +6,14 @@ import { supabase } from "./supabase";
 import { FORMATTED_BUCKET, getFormattedSource } from "./sourceDocs";
 
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml";
 const R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 const REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
 type LoadedDoc = {
   filename: string;
   zip: JSZip;
+  documentXmlText: string;
   documentXml: XMLDocument;
   relsXml: XMLDocument;
 };
@@ -86,15 +88,105 @@ async function loadSource(filename: string): Promise<LoadedDoc> {
       const documentFile = zip.file("word/document.xml");
       const relsFile = zip.file("word/_rels/document.xml.rels");
       if (!documentFile || !relsFile) throw new Error(`${filename} is not a valid Word document`);
+      const documentXmlText = await documentFile.async("text");
       return {
         filename,
         zip,
-        documentXml: parseXml(await documentFile.async("text")),
+        documentXmlText,
+        documentXml: parseXml(documentXmlText),
         relsXml: parseXml(await relsFile.async("text")),
       };
     })());
   }
   return sourceCache.get(filename)!;
+}
+
+function bodyBounds(xml: string) {
+  const openStart = xml.indexOf("<w:body");
+  if (openStart < 0) throw new Error("DOCX XML has no w:body");
+  const openEnd = xml.indexOf(">", openStart);
+  const closeStart = xml.lastIndexOf("</w:body>");
+  if (openEnd < 0 || closeStart < 0 || closeStart <= openEnd) throw new Error("DOCX XML has an invalid w:body");
+  return { openStart, openEnd: openEnd + 1, closeStart };
+}
+
+function markerParagraphs(doc: XMLDocument): Element[] {
+  return Array.from(getBody(doc).childNodes)
+    .filter(n => n.nodeType === Node.ELEMENT_NODE && isQuestionMarker(n) !== null) as Element[];
+}
+
+function rawParagraphStart(xml: string, paragraph: Element, from = 0): number {
+  const paraId = paragraph.getAttributeNS(W14_NS, "paraId") || paragraph.getAttribute("w14:paraId");
+  if (paraId) {
+    const doubleNeedle = `w14:paraId="${paraId}"`;
+    const singleNeedle = `w14:paraId='${paraId}'`;
+    let attrIndex = xml.indexOf(doubleNeedle, from);
+    if (attrIndex < 0) attrIndex = xml.indexOf(singleNeedle, from);
+    if (attrIndex >= 0) {
+      const pStart = xml.lastIndexOf("<w:p", attrIndex);
+      if (pStart >= from) return pStart;
+    }
+  }
+
+  const q = isQuestionMarker(paragraph);
+  if (q !== null) {
+    const body = bodyBounds(xml);
+    const end = body.closeStart;
+    const pattern = new RegExp(`<w:t(?:\\s[^>]*)?>\\s*Q${q}\\.\\s*</w:t>`, "gi");
+    pattern.lastIndex = from;
+    const match = pattern.exec(xml.slice(0, end));
+    if (match) {
+      const pStart = xml.lastIndexOf("<w:p", match.index);
+      if (pStart >= from) return pStart;
+    }
+  }
+
+  throw new Error("Could not locate a question marker in the original Word XML");
+}
+
+function rawSectPrStart(xml: string): number {
+  const { openEnd, closeStart } = bodyBounds(xml);
+  const start = xml.lastIndexOf("<w:sectPr", closeStart);
+  return start >= openEnd ? start : closeStart;
+}
+
+function extractRawQuestionXml(source: LoadedDoc, questionNumber: number): string {
+  const markers = markerParagraphs(source.documentXml);
+  const markerIndex = markers.findIndex(p => isQuestionMarker(p) === questionNumber);
+  if (markerIndex < 0) throw new Error(`Could not find Q${questionNumber}. in formatted source`);
+
+  const start = rawParagraphStart(source.documentXmlText, markers[markerIndex]);
+  const end = markerIndex + 1 < markers.length
+    ? rawParagraphStart(source.documentXmlText, markers[markerIndex + 1], start + 1)
+    : rawSectPrStart(source.documentXmlText);
+
+  if (end <= start) throw new Error(`Could not isolate Q${questionNumber}. in formatted source`);
+  return source.documentXmlText.slice(start, end);
+}
+
+function renumberRawQuestionXml(xml: string, newNumber: number): string {
+  let replaced = false;
+  return xml.replace(/(<w:t(?:\s[^>]*)?>\s*)Q\d+\.(\s*<\/w:t>)/i, (_all, before, after) => {
+    replaced = true;
+    return `${before}Q${newNumber}.${after}`;
+  }).replace(/^/, () => {
+    if (!replaced) throw new Error("Could not renumber a question marker in the Word XML");
+    return "";
+  });
+}
+
+function buildSingleSourceDocumentXml(source: LoadedDoc, questions: Question[]): string {
+  const { openEnd, closeStart } = bodyBounds(source.documentXmlText);
+  const sectPrStart = rawSectPrStart(source.documentXmlText);
+  const bodyPrefix = source.documentXmlText.slice(0, openEnd);
+  const bodySuffix = source.documentXmlText.slice(sectPrStart, closeStart);
+  const afterBody = source.documentXmlText.slice(closeStart);
+
+  const selected = questions.map((q, index) =>
+    renumberRawQuestionXml(extractRawQuestionXml(source, q.questionNumber), index + 1),
+  ).join("");
+
+  return `${bodyPrefix}${selected}${bodySuffix}${afterBody}`;
 }
 
 function relationshipMap(rels: XMLDocument) {
@@ -208,31 +300,13 @@ function downloadBlob(bytes: Uint8Array) {
 }
 
 async function exportFromSingleSource(questions: Question[], source: LoadedDoc) {
-  // Safest path: preserve the original, already-valid Word package exactly.
-  // We only replace word/document.xml with selected question blocks from that same document.
-  // All styles, images, headers, footers, relationships and content types stay untouched.
+  // Word is extremely strict about OOXML. Do NOT parse and re-serialize the source
+  // document here. Patch only the raw body XML so every namespace, relationship,
+  // header/footer, style, drawing and compatibility setting remains byte-for-byte
+  // identical to the known-good source package.
   const templateBytes = await source.zip.generateAsync({ type: "uint8array" });
   const outputZip = await JSZip.loadAsync(templateBytes);
-  const outputDocFile = outputZip.file("word/document.xml");
-  if (!outputDocFile) throw new Error("Formatted Word source is incomplete");
-
-  const outputDoc = parseXml(await outputDocFile.async("text"));
-  const body = getBody(outputDoc);
-  const sectPr = Array.from(body.childNodes).find(
-    n => n.nodeType === Node.ELEMENT_NODE && (n as Element).localName === "sectPr",
-  )?.cloneNode(true) || null;
-
-  while (body.firstChild) body.removeChild(body.firstChild);
-
-  questions.forEach((q, index) => {
-    const nodes = extractQuestionNodes(source.documentXml, q.questionNumber);
-    renumberQuestionMarker(nodes, index + 1);
-    nodes.forEach(node => body.appendChild(outputDoc.importNode(node, true)));
-  });
-
-  if (sectPr) body.appendChild(outputDoc.importNode(sectPr, true));
-  renumberDrawingIds(outputDoc);
-  outputZip.file("word/document.xml", serializeXml(outputDoc));
+  outputZip.file("word/document.xml", buildSingleSourceDocumentXml(source, questions));
 
   const result = await outputZip.generateAsync({
     type: "uint8array",
@@ -243,8 +317,8 @@ async function exportFromSingleSource(questions: Question[], source: LoadedDoc) 
 }
 
 async function exportAcrossSources(questions: Question[], sources: LoadedDoc[]) {
-  // Cross-paper merge fallback. This is kept separate from the same-source path so
-  // normal exports never rewrite relationships unnecessarily.
+  // Cross-paper merging still needs relationship/media remapping. Keep it isolated
+  // from the safe same-source path above.
   const templateBytes = await sources[0].zip.generateAsync({ type: "uint8array" });
   const outputZip = await JSZip.loadAsync(templateBytes);
   const outputDocFile = outputZip.file("word/document.xml");
