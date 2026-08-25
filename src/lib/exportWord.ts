@@ -426,7 +426,8 @@ export async function exportPaperToWord(questions: Question[], options: ExportOp
     throw new Error(`Front cover template not found. Upload ${FRONT_COVER_FILE} to the ${FORMATTED_BUCKET} Supabase bucket.`);
   }
 
-  const subject = options.subject || "Mathematics";
+  const rawSubject = options.subject || "Mathematics";
+  const subject = /^Edexcel IGCSE\b/i.test(rawSubject) ? rawSubject : `Edexcel IGCSE ${rawSubject}`;
   const filenames = questions.map(q => getFormattedSource(q)!);
   const uniqueFilenames = Array.from(new Set(filenames));
   if (uniqueFilenames.length === 1) {
