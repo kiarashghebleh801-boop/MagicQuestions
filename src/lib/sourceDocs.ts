@@ -13,6 +13,10 @@ const sourceByPaper: Record<string, string> = {
   "2025|June|2H": "June_2025_Paper_2_ExamWizard_Style.docx",
   "2024|November|1H": "November_2024_Paper_1_ExamWizard_Style.docx",
   "2024|November|2H": "November_2024_Paper_2_ExamWizard_Style (1).docx",
+
+  // Chemistry May/June 2025 formatted papers.
+  "2025|May/June|1C": "May_June_2025_Chemistry_Paper_1C_ExamWizard_Style.docx",
+  "2025|May/June|2C": "May_June_2025_Chemistry_Paper_2C_ExamWizard_Style.docx.docx",
 };
 
 export function getFormattedSource(q: Question): string | null {
