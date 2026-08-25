@@ -96,7 +96,7 @@ export default function ChemistryPage() {
     if(!paper.length) return;
     setExporting(true);
     try {
-      await exportPaperToWord(paper.map(asExportQuestion));
+      await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry" });
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper.");
     } finally {
