@@ -1,10 +1,21 @@
 import { questions as baseQuestions } from "./questions";
 import type { Difficulty, Question } from "./questions";
 import { extraQuestions } from "./extraQuestions";
+import { questions_2025_june_2h } from "./questions2025June2H";
+import { questions_2025_may_1h } from "./questions2025May1H";
+import { questions_2024_november_1h } from "./questions2024November1H";
+import { questions_2024_november_2h } from "./questions2024November2H";
 
 export type { Difficulty, Question } from "./questions";
 
-export const questions: Question[] = [...baseQuestions, ...extraQuestions];
+export const questions: Question[] = [
+  ...baseQuestions,
+  ...extraQuestions,
+  ...questions_2025_june_2h,
+  ...questions_2025_may_1h,
+  ...questions_2024_november_1h,
+  ...questions_2024_november_2h,
+];
 export const topics = Array.from(new Set(questions.flatMap(q => q.topics))).sort();
 
 export function generateQuestions(selectedTopics: string[], count: number, difficulty: Difficulty | "Mixed" = "Mixed"): Question[] {
