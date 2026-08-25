@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questions";
+import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questionBank";
 import { exportPaperToWord } from "@/lib/exportWord";
 import { hasFormattedSource } from "@/lib/sourceDocs";
 import { supabase } from "@/lib/supabase";
