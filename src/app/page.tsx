@@ -51,6 +51,38 @@ export default function Home() {
   }
   function addQuestion(q: Question) { setPaper(current => current.some(item => item.id === q.id) ? current : [...current, q]); }
   function removeQuestion(id: string) { setPaper(current => current.filter(q => q.id !== id)); }
+  function moveQuestion(index: number, direction: -1 | 1) {
+    setPaper(current => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= current.length) return current;
+      const copy = [...current];
+      [copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]];
+      return copy;
+    });
+  }
+  function swapQuestion(index: number) {
+    setPaper(current => {
+      const old = current[index];
+      if (!old) return current;
+      const used = new Set(current.map(q => q.id));
+      const candidates = formattedQuestions
+        .filter(q => !used.has(q.id) && q.topics.some(t => old.topics.includes(t)))
+        .sort((a, b) => {
+          const overlap = (q: Question) => q.topics.filter(t => old.topics.includes(t)).length;
+          const difficultyBonus = (q: Question) => q.difficulty === old.difficulty ? 3 : 0;
+          const markPenalty = (q: Question) => Math.abs(q.marks - old.marks);
+          const score = (q: Question) => overlap(q) * 10 + difficultyBonus(q) - markPenalty;
+          return score(b) - score(a);
+        });
+      if (!candidates.length) {
+        alert("No other formatted question covering the same topic is available yet.");
+        return current;
+      }
+      const copy = [...current];
+      copy[index] = candidates[0];
+      return copy;
+    });
+  }
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
   return (
@@ -76,7 +108,7 @@ export default function Home() {
           <div className="settingRow"><div className="counter"><button onClick={() => setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={() => setCount(Math.min(25,count+1))}>+</button></div><select value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty | "Mixed")}><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
           <button className="generate" onClick={generate}>✦ Generate my paper</button>
         </div>
-        <PaperPreview paper={paper} totalMarks={totalMarks} removeQuestion={removeQuestion} regenerate={generate} />
+        <PaperPreview paper={paper} totalMarks={totalMarks} removeQuestion={removeQuestion} regenerate={generate} swapQuestion={swapQuestion} moveQuestion={moveQuestion} />
       </section> : <section className="bank panel">
         <div className="bankTop"><div><p className="eyebrow">QUESTION BANK</p><h2>Browse all {formattedQuestions.length} formatted questions</h2></div><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search topics, year, paper…" /></div>
         <div className="topics compact">{topics.map(topic => <button key={topic} className={selected.includes(topic) ? "topic selected" : "topic"} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div>
@@ -86,8 +118,9 @@ export default function Home() {
   );
 }
 
-function PaperPreview({paper,totalMarks,removeQuestion,regenerate}:{paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void}) {
+function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,moveQuestion}:{paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void;swapQuestion:(index:number)=>void;moveQuestion:(index:number,direction:-1|1)=>void}) {
   const [exporting, setExporting] = useState(false);
+  const [showOverview, setShowOverview] = useState(false);
   async function downloadWord() {
     setExporting(true);
     try {
@@ -100,6 +133,11 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate}:{paper:Questi
   }
   return <div className="panel preview">
     <div className="previewHead"><div><p>YOUR PAPER</p><h2>{paper.length ? `${paper.length} questions · ${totalMarks} marks` : "Ready when you are"}</h2></div><span>Higher</span></div>
-    {!paper.length ? <div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div> : <><div className="questionList">{paper.map((q,index) => <article className="question" key={q.id}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div></div><div className="marks">{q.marks}<small>marks</small><button className="remove" onClick={() => removeQuestion(q.id)}>×</button></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting ? "Building Word…" : "Download Word"}</button><button className="print" onClick={() => window.print()}>Print / Save PDF</button></div></>}
+    {!paper.length ? <div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div> : <>
+      <div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Swap a question, reorder the paper, or remove anything you don’t want.</small></div></div>
+      <div className="questionList">{paper.map((q,index) => <article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div><div className="questionTools"><button onClick={() => moveQuestion(index,-1)} disabled={index===0} title="Move up">↑</button><button onClick={() => moveQuestion(index,1)} disabled={index===paper.length-1} title="Move down">↓</button><button className="swapButton" onClick={() => swapQuestion(index)}>↻ Swap question</button><button className="deleteButton" onClick={() => removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div>
+      <div className="paperActions"><button onClick={regenerate}>↻ Regenerate all</button><button onClick={() => setShowOverview(true)}>▣ Preview paper</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting ? "Building Word…" : "Download Word"}</button><button className="print" onClick={() => window.print()}>Print / Save PDF</button></div>
+      {showOverview && <div className="overviewBackdrop" onClick={() => setShowOverview(false)}><div className="overviewModal" onClick={e => e.stopPropagation()}><div className="overviewTop"><div><p>DOCUMENT PREVIEW</p><h2>{paper.length} questions · {totalMarks} marks</h2></div><button onClick={() => setShowOverview(false)}>×</button></div><div className="paperSheet"><div className="sheetHeader">Y10H</div>{paper.map((q,index)=><div className="sheetQuestion" key={q.id}><div className="sheetQuestionTop"><b>Q{index+1}.</b><span>{q.marks} marks</span></div><p>{q.summary}</p><small>{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}</small></div>)}</div></div></div>}
+    </>}
   </div>;
 }
