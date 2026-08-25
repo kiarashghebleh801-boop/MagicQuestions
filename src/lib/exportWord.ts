@@ -25,7 +25,7 @@ function parseXml(text: string): XMLDocument {
 }
 
 function serializeXml(doc: XMLDocument): string {
-  return new XMLSerializer().serializeToString(doc);
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${new XMLSerializer().serializeToString(doc)}`;
 }
 
 function nodeText(node: Node): string {
@@ -204,7 +204,74 @@ function downloadBlob(bytes: Uint8Array) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+async function exportFromSingleSource(questions: Question[], source: LoadedDoc) {
+  // Safest path: preserve the original, already-valid Word package exactly.
+  // We only replace word/document.xml with selected question blocks from that same document.
+  // All styles, images, headers, footers, relationships and content types stay untouched.
+  const templateBytes = await source.zip.generateAsync({ type: "uint8array" });
+  const outputZip = await JSZip.loadAsync(templateBytes);
+  const outputDocFile = outputZip.file("word/document.xml");
+  if (!outputDocFile) throw new Error("Formatted Word source is incomplete");
+
+  const outputDoc = parseXml(await outputDocFile.async("text"));
+  const body = getBody(outputDoc);
+  const sectPr = Array.from(body.childNodes).find(
+    n => n.nodeType === Node.ELEMENT_NODE && (n as Element).localName === "sectPr",
+  )?.cloneNode(true) || null;
+
+  while (body.firstChild) body.removeChild(body.firstChild);
+
+  questions.forEach((q, index) => {
+    const nodes = extractQuestionNodes(source.documentXml, q.questionNumber);
+    renumberQuestionMarker(nodes, index + 1);
+    nodes.forEach(node => body.appendChild(outputDoc.importNode(node, true)));
+  });
+
+  if (sectPr) body.appendChild(outputDoc.importNode(sectPr, true));
+  renumberDrawingIds(outputDoc);
+  outputZip.file("word/document.xml", serializeXml(outputDoc));
+
+  const result = await outputZip.generateAsync({
+    type: "uint8array",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
+  downloadBlob(result);
+}
+
+async function exportAcrossSources(questions: Question[], sources: LoadedDoc[]) {
+  // Cross-paper merge fallback. This is kept separate from the same-source path so
+  // normal exports never rewrite relationships unnecessarily.
+  const templateBytes = await sources[0].zip.generateAsync({ type: "uint8array" });
+  const outputZip = await JSZip.loadAsync(templateBytes);
+  const outputDocFile = outputZip.file("word/document.xml");
+  const outputRelsFile = outputZip.file("word/_rels/document.xml.rels");
+  if (!outputDocFile || !outputRelsFile) throw new Error("Template Word document is incomplete");
+
+  const outputDoc = parseXml(await outputDocFile.async("text"));
+  const outputRels = parseXml(await outputRelsFile.async("text"));
+  const body = getBody(outputDoc);
+  const sectPr = Array.from(body.childNodes).find(n => n.nodeType === Node.ELEMENT_NODE && (n as Element).localName === "sectPr")?.cloneNode(true) || null;
+  while (body.firstChild) body.removeChild(body.firstChild);
+
+  const counters = { rel: 1, media: 1 };
+  for (let i = 0; i < questions.length; i++) {
+    const nodes = extractQuestionNodes(sources[i].documentXml, questions[i].questionNumber);
+    renumberQuestionMarker(nodes, i + 1);
+    await copyRelationships(nodes, sources[i], outputZip, outputRels, counters);
+    nodes.forEach(node => body.appendChild(outputDoc.importNode(node, true)));
+  }
+
+  if (sectPr) body.appendChild(outputDoc.importNode(sectPr, true));
+  renumberDrawingIds(outputDoc);
+  outputZip.file("word/document.xml", serializeXml(outputDoc));
+  outputZip.file("word/_rels/document.xml.rels", serializeXml(outputRels));
+
+  const result = await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+  downloadBlob(result);
 }
 
 export async function exportPaperToWord(questions: Question[]) {
@@ -216,36 +283,15 @@ export async function exportPaperToWord(questions: Question[]) {
     throw new Error(`Formatted Word source not uploaded/mapped yet for: ${labels}`);
   }
 
-  const sources = await Promise.all(questions.map(q => loadSource(getFormattedSource(q)!)));
-  const templateBytes = await sources[0].zip.generateAsync({ type: "uint8array" });
-  const outputZip = await JSZip.loadAsync(templateBytes);
-  const outputDocFile = outputZip.file("word/document.xml");
-  const outputRelsFile = outputZip.file("word/_rels/document.xml.rels");
-  if (!outputDocFile || !outputRelsFile) throw new Error("Template Word document is incomplete");
+  const filenames = questions.map(q => getFormattedSource(q)!);
+  const uniqueFilenames = Array.from(new Set(filenames));
 
-  const outputDoc = parseXml(await outputDocFile.async("text"));
-  const outputRels = parseXml(await outputRelsFile.async("text"));
-  const body = getBody(outputDoc);
-  const sectPr = Array.from(body.childNodes).find(n => n.nodeType === Node.ELEMENT_NODE && (n as Element).localName === "sectPr")?.cloneNode(true) || null;
-
-  while (body.firstChild) body.removeChild(body.firstChild);
-
-  const counters = { rel: 1, media: 1 };
-  for (let i = 0; i < questions.length; i++) {
-    const q = questions[i];
-    const source = sources[i];
-    const nodes = extractQuestionNodes(source.documentXml, q.questionNumber);
-    renumberQuestionMarker(nodes, i + 1);
-    await copyRelationships(nodes, source, outputZip, outputRels, counters);
-    for (const node of nodes) body.appendChild(outputDoc.importNode(node, true));
+  if (uniqueFilenames.length === 1) {
+    const source = await loadSource(uniqueFilenames[0]);
+    await exportFromSingleSource(questions, source);
+    return;
   }
 
-  if (sectPr) body.appendChild(outputDoc.importNode(sectPr, true));
-  renumberDrawingIds(outputDoc);
-
-  outputZip.file("word/document.xml", serializeXml(outputDoc));
-  outputZip.file("word/_rels/document.xml.rels", serializeXml(outputRels));
-
-  const result = await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
-  downloadBlob(result);
+  const sources = await Promise.all(filenames.map(loadSource));
+  await exportAcrossSources(questions, sources);
 }
