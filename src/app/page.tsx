@@ -77,12 +77,12 @@ export default function Home() {
 
   return <main>
     <header className="nav">
-      <div className="brand"><span className="spark">✦</span> MagicQuestions</div>
+      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">Edexcel IGCSE Mathematics</span></div>
       <nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button><button onClick={()=>router.push("/chemistry")}>Chemistry</button></nav>
       <div style={{display:"flex",alignItems:"center",gap:8}}>{isOwner&&<button className="accountButton" onClick={()=>router.push("/owner")}>Owner panel</button>}<div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
     </header>
 
-    <section className="hero"><p className="eyebrow">PAST PAPERS, BUILT AROUND YOU</p><h1>Your topics. Your paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exactly what you want to practise. MagicQuestions selects matching Higher-tier questions from the formatted Word question bank.</p></section>
+    <section className="hero"><p className="eyebrow">EDEXCEL IGCSE MATHEMATICS · PAST PAPERS, BUILT AROUND YOU</p><h1>Your topics. Your paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exactly what you want to practise. MagicQuestions selects matching Higher-tier Edexcel IGCSE Mathematics questions from the formatted Word question bank.</p></section>
 
     {mode==="generate" ? <section className="builder">
       <div className="panel controls">
