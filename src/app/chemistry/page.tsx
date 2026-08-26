@@ -26,10 +26,12 @@ export default function ChemistryPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState("");
+  const [trackerKey, setTrackerKey] = useState("mq-chemistry-tracker");
   const [selectedTopics, setSelectedTopics] = useState<string[]>(["1c"]);
+  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [count, setCount] = useState(5);
   const [paper, setPaper] = useState<ChemistryQuestion[]>([]);
-  const [mode, setMode] = useState<"generate" | "bank">("generate");
+  const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
   const [query, setQuery] = useState("");
   const [exporting, setExporting] = useState(false);
 
@@ -37,12 +39,31 @@ export default function ChemistryPage() {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
       setEmail(data.session.user.email || "Account");
+      const key = `mq-chemistry-tracker-${data.session.user.id}`;
+      setTrackerKey(key);
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(key) || "[]");
+        if (Array.isArray(saved)) setCompletedTopics(saved.filter(x => typeof x === "string"));
+      } catch {}
       const { data: profile } = await supabase.from("profiles").select("banned").eq("id", data.session.user.id).maybeSingle();
       if (profile?.banned) { router.replace("/banned"); return; }
       setReady(true);
     });
   }, [router]);
 
+  useEffect(() => {
+    if (!ready) return;
+    window.localStorage.setItem(trackerKey, JSON.stringify(completedTopics));
+  }, [completedTopics, ready, trackerKey]);
+
+  const allSpecTopics = useMemo(() => chemistrySections.flatMap(section => section.subtopics.map(sub => ({
+    tag: `${section.number}${sub.code}`,
+    sectionNumber: section.number,
+    sectionTitle: section.title,
+    code: sub.code,
+    title: sub.title,
+  }))), []);
+  const trackerPercent = allSpecTopics.length ? Math.round((completedTopics.length / allSpecTopics.length) * 100) : 0;
   const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
   const filteredBank = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -57,6 +78,10 @@ export default function ChemistryPage() {
 
   function toggleTopic(tag: string) {
     setSelectedTopics(current => current.includes(tag) ? current.filter(x=>x!==tag) : [...current, tag]);
+  }
+
+  function toggleCompleted(tag: string) {
+    setCompletedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]);
   }
 
   function generate() {
@@ -117,7 +142,7 @@ export default function ChemistryPage() {
       <p className="subtitle">Choose exact specification sections such as 1(c) Atomic structure, 2(d) Reactivity series or 3(a) Energetics, then build a formatted Word paper from the Chemistry question bank.</p>
     </section>
 
-    <div style={{display:"flex",justifyContent:"center",margin:"-8px 0 24px"}}><nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button></nav></div>
+    <div style={{display:"flex",justifyContent:"center",margin:"-8px 0 24px"}}><nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button><button className={mode==="tracker"?"active":""} onClick={()=>setMode("tracker")}>Tracker</button></nav></div>
 
     {mode==="generate" ? <section className="builder">
       <div className="panel controls">
@@ -133,10 +158,28 @@ export default function ChemistryPage() {
         <div className="previewHead"><div><p>YOUR CHEMISTRY PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>4CH1</span></div>
         {!paper.length?<div className="empty"><div>⚗</div><h3>Your Chemistry paper will appear here</h3><p>Pick specification topics, choose the number of questions, then generate.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Swap, reorder, or remove any Chemistry question.</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting?"Building Word…":"Download Word"}</button></div></>}
       </div>
-    </section> : <section className="bank panel">
+    </section> : mode==="bank" ? <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">CHEMISTRY QUESTION BANK</p><h2>Browse all {chemistryQuestions.length} formatted questions</h2></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search Chemistry questions…"/></div>
       <div style={{marginTop:18,display:"flex",flexDirection:"column",gap:12}}>{chemistrySections.map(section=><div key={section.number}><div className="qMeta" style={{marginBottom:6}}>{section.number}. {section.title}</div><div className="topics compact" style={{margin:0}}>{section.subtopics.map(sub=>{const tag=`${section.number}${sub.code}`;const n=chemistryQuestions.filter(q=>q.specTags.includes(tag)).length;return <button key={tag} className={selectedTopics.includes(tag)?"topic selected":"topic"} onClick={()=>toggleTopic(tag)}>({sub.code}) {sub.title} · {n}</button>})}</div></div>)}</div>
       <div className="bankResults" style={{marginTop:20}}>{filteredBank.map(q=><article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b><button onClick={()=>addQuestion(q)}>+ Add</button></div></article>)}</div>
+    </section> : <section className="bank panel" style={{maxWidth:1100,margin:"0 auto 48px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"220px 1fr",gap:28,alignItems:"center",marginBottom:28}}>
+        <div style={{width:180,height:180,borderRadius:"50%",display:"grid",placeItems:"center",background:`conic-gradient(var(--accent, #6c4cff) ${trackerPercent}%, rgba(127,127,127,.18) 0)`,padding:14,margin:"0 auto"}}>
+          <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"var(--panel, #fff)",display:"grid",placeItems:"center",textAlign:"center"}}><div><strong style={{fontSize:38}}>{trackerPercent}%</strong><div className="qMeta">complete</div></div></div>
+        </div>
+        <div><p className="eyebrow">CHEMISTRY SPECIFICATION TRACKER</p><h2 style={{margin:"4px 0 8px"}}>{completedTopics.length} of {allSpecTopics.length} topics completed</h2><p className="subtitle" style={{textAlign:"left",margin:"0 0 16px",maxWidth:650}}>Tick each Edexcel IGCSE Chemistry specification topic when you finish revising it. Your progress is saved on this device.</p><div style={{height:16,borderRadius:999,background:"rgba(127,127,127,.18)",overflow:"hidden"}}><div style={{height:"100%",width:`${trackerPercent}%`,borderRadius:999,background:"var(--accent, #6c4cff)",transition:"width .25s ease"}}/></div><div className="qMeta" style={{marginTop:8}}>{trackerPercent}% towards 100%</div></div>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:18}}>{chemistrySections.map(section => {
+        const sectionTags = section.subtopics.map(sub => `${section.number}${sub.code}`);
+        const sectionDone = sectionTags.filter(tag => completedTopics.includes(tag)).length;
+        const sectionPercent = Math.round((sectionDone / sectionTags.length) * 100);
+        return <div key={section.number} style={{border:"1px solid var(--border, rgba(127,127,127,.2))",borderRadius:16,padding:18}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",marginBottom:12}}><div><div className="qMeta">SECTION {section.number}</div><h3 style={{margin:"2px 0"}}>{section.title}</h3></div><b>{sectionPercent}%</b></div>
+          <div style={{height:8,borderRadius:999,background:"rgba(127,127,127,.16)",overflow:"hidden",marginBottom:14}}><div style={{height:"100%",width:`${sectionPercent}%`,background:"var(--accent, #6c4cff)",borderRadius:999}}/></div>
+          <div style={{display:"grid",gap:9}}>{section.subtopics.map(sub => { const tag = `${section.number}${sub.code}`; const done = completedTopics.includes(tag); return <label key={tag} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,cursor:"pointer",background:done?"rgba(108,76,255,.10)":"rgba(127,127,127,.06)"}}><input type="checkbox" checked={done} onChange={()=>toggleCompleted(tag)} style={{width:18,height:18}}/><span style={{textDecoration:done?"line-through":"none",opacity:done?.7:1}}><b>{section.number}({sub.code})</b> {sub.title}</span></label> })}</div>
+        </div>
+      })}</div>
     </section>}
   </main>;
 }
