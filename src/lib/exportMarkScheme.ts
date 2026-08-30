@@ -3,22 +3,11 @@
 import { Document, HeadingLevel, ImageRun, Packer, Paragraph, PageBreak, TextRun } from "docx";
 import type { Question } from "./questions";
 import { supabase } from "./supabase";
-import { getMarkSchemeSource, MARKSCHEME_BUCKET } from "./markSchemeSources";
+import { getMarkSchemeSource, MARKSCHEME_BUCKET, type MarkSchemeSource } from "./markSchemeSources";
 
 type PdfDocumentProxy = any;
 type PdfPageProxy = any;
-type TextItem = { str?: string; transform?: number[]; width?: number; height?: number };
-
-type QuestionStart = {
-  pageIndex: number;
-  top: number;
-};
-
-type Crop = {
-  bytes: Uint8Array;
-  width: number;
-  height: number;
-};
+type Crop = { bytes: Uint8Array; width: number; height: number };
 
 const pdfCache = new Map<string, Promise<PdfDocumentProxy>>();
 
@@ -40,95 +29,21 @@ async function downloadFirstAvailable(filenames: string[]): Promise<{ filename: 
   throw new Error(`Could not download the mark scheme from ${MARKSCHEME_BUCKET}. ${lastError}`);
 }
 
-async function loadPdf(filenames: string[]): Promise<{ filename: string; pdf: PdfDocumentProxy }> {
+async function loadPdf(filenames: string[]): Promise<PdfDocumentProxy> {
   const cacheKey = filenames.join("|");
   if (!pdfCache.has(cacheKey)) {
     pdfCache.set(cacheKey, (async () => {
-      const { filename, data } = await downloadFirstAvailable(filenames);
+      const { data } = await downloadFirstAvailable(filenames);
       const pdfjs = await getPdfJs();
-      const loadingTask = pdfjs.getDocument({ data });
-      const pdf = await loadingTask.promise;
-      (pdf as any).__mqFilename = filename;
-      return pdf;
+      return await pdfjs.getDocument({ data }).promise;
     })());
   }
-  const pdf = await pdfCache.get(cacheKey)!;
-  return { filename: (pdf as any).__mqFilename || filenames[0], pdf };
-}
-
-function questionNumberFromText(value: string): number | null {
-  const text = value.replace(/\u00a0/g, " ").trim();
-
-  // Standard Pearson rows: "1", "1 (a)", "1*", "12 (a)" etc.
-  let match = text.match(/^(\d{1,2})(?:\s*\*|\s+|\s*\(|$)/);
-  if (match) return Number(match[1]);
-
-  // Some Pearson clerical/type-3 schemes use labels such as Q01a / Q04b.
-  match = text.match(/^Q0?(\d{1,2})(?:[a-z]|\b)/i);
-  return match ? Number(match[1]) : null;
-}
-
-function candidateQuestionMarker(item: TextItem, viewportWidth: number): number | null {
-  const q = questionNumberFromText(item.str || "");
-  if (!q) return null;
-
-  const transform = item.transform || [];
-  const x = transform[4] ?? Number.POSITIVE_INFINITY;
-
-  // Question numbers live in the first column. Allow a little more room than the
-  // old 105pt cutoff because several Pearson PDFs position the Q column farther in.
-  if (x > Math.min(165, viewportWidth * 0.28)) return null;
-  return q;
-}
-
-async function locateQuestionStarts(pdf: PdfDocumentProxy, maxQuestion: number): Promise<Map<number, QuestionStart>> {
-  const candidates = new Map<number, QuestionStart[]>();
-
-  for (let pageIndex = 0; pageIndex < pdf.numPages; pageIndex++) {
-    const page: PdfPageProxy = await pdf.getPage(pageIndex + 1);
-    const viewport = page.getViewport({ scale: 1 });
-    const content = await page.getTextContent();
-
-    for (const raw of content.items as TextItem[]) {
-      const q = candidateQuestionMarker(raw, viewport.width);
-      if (!q || q > maxQuestion) continue;
-      const y = raw.transform?.[5];
-      if (typeof y !== "number") continue;
-      const top = Math.max(0, viewport.height - y - 13);
-      const list = candidates.get(q) || [];
-      list.push({ pageIndex, top });
-      candidates.set(q, list);
-    }
-  }
-
-  // Ignore front-matter false positives by preferring a monotonic run through the
-  // actual mark-scheme tables, but do not require every preceding question to exist.
-  const chosen = new Map<number, QuestionStart>();
-  let previous: QuestionStart | null = null;
-  for (let q = 1; q <= maxQuestion; q++) {
-    const all = (candidates.get(q) || []).sort((a, b) => a.pageIndex - b.pageIndex || a.top - b.top);
-    if (!all.length) continue;
-
-    let pick: QuestionStart | undefined;
-    if (previous) {
-      pick = all.find(pos => pos.pageIndex > previous!.pageIndex || (pos.pageIndex === previous!.pageIndex && pos.top > previous!.top + 3));
-    }
-    if (!pick) {
-      // For a missing/odd earlier marker, fall back to the first occurrence on page 4+
-      // (index 4 == PDF page 5), where Pearson's actual answer tables normally begin.
-      pick = all.find(pos => pos.pageIndex >= 4) || all[0];
-    }
-
-    chosen.set(q, pick);
-    if (!previous || pick.pageIndex > previous.pageIndex || (pick.pageIndex === previous.pageIndex && pick.top > previous.top)) previous = pick;
-  }
-
-  return chosen;
+  return pdfCache.get(cacheKey)!;
 }
 
 async function canvasToJpeg(canvas: HTMLCanvasElement): Promise<Uint8Array> {
   const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(value => value ? resolve(value) : reject(new Error("Could not create mark scheme image.")), "image/jpeg", 0.92);
+    canvas.toBlob(value => value ? resolve(value) : reject(new Error("Could not create mark scheme image.")), "image/jpeg", 0.94);
   });
   return new Uint8Array(await blob.arrayBuffer());
 }
@@ -139,9 +54,9 @@ function trimWhiteMargins(source: HTMLCanvasElement): HTMLCanvasElement {
   const image = ctx.getImageData(0, 0, source.width, source.height);
   const { data, width, height } = image;
   let left = width, right = 0, top = height, bottom = 0;
-  const threshold = 247;
-  for (let y = 0; y < height; y += 3) {
-    for (let x = 0; x < width; x += 3) {
+  const threshold = 248;
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x += 2) {
       const i = (y * width + x) * 4;
       if (data[i] < threshold || data[i + 1] < threshold || data[i + 2] < threshold) {
         left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y);
@@ -149,7 +64,7 @@ function trimWhiteMargins(source: HTMLCanvasElement): HTMLCanvasElement {
     }
   }
   if (right <= left || bottom <= top) return source;
-  const pad = 18;
+  const pad = 14;
   left = Math.max(0, left - pad); top = Math.max(0, top - pad);
   right = Math.min(width - 1, right + pad); bottom = Math.min(height - 1, bottom + pad);
   const out = document.createElement("canvas");
@@ -159,61 +74,62 @@ function trimWhiteMargins(source: HTMLCanvasElement): HTMLCanvasElement {
   return out;
 }
 
-async function renderCrop(page: PdfPageProxy, fromTop: number, toTop: number): Promise<Crop> {
-  const scale = 2.15;
+async function renderCrop(page: PdfPageProxy, fromRatio: number, toRatio: number): Promise<Crop> {
+  const scale = 2.2;
   const viewport = page.getViewport({ scale });
   const full = document.createElement("canvas");
   full.width = Math.ceil(viewport.width);
   full.height = Math.ceil(viewport.height);
-  const fullCtx = full.getContext("2d");
-  if (!fullCtx) throw new Error("Canvas is unavailable in this browser.");
-  await page.render({ canvasContext: fullCtx, viewport }).promise;
+  const ctx = full.getContext("2d");
+  if (!ctx) throw new Error("Canvas is unavailable in this browser.");
+  await page.render({ canvasContext: ctx, viewport }).promise;
 
-  const topPx = Math.max(0, Math.floor((fromTop - 8) * scale));
-  const bottomPx = Math.min(full.height, Math.ceil((toTop + 8) * scale));
-  const cropHeight = Math.max(24, bottomPx - topPx);
+  const topPx = Math.max(0, Math.floor(fromRatio * full.height) - 10);
+  const bottomPx = Math.min(full.height, Math.ceil(toRatio * full.height) + 10);
+  if (bottomPx <= topPx + 20) throw new Error("Invalid mark scheme crop boundary.");
+
   const cropped = document.createElement("canvas");
   cropped.width = full.width;
-  cropped.height = cropHeight;
-  cropped.getContext("2d")?.drawImage(full, 0, topPx, full.width, cropHeight, 0, 0, full.width, cropHeight);
+  cropped.height = bottomPx - topPx;
+  cropped.getContext("2d")?.drawImage(full, 0, topPx, full.width, cropped.height, 0, 0, full.width, cropped.height);
   const trimmed = trimWhiteMargins(cropped);
-  const bytes = await canvasToJpeg(trimmed);
-  return { bytes, width: trimmed.width, height: trimmed.height };
+  return { bytes: await canvasToJpeg(trimmed), width: trimmed.width, height: trimmed.height };
 }
 
-async function extractQuestionCrops(pdf: PdfDocumentProxy, starts: Map<number, QuestionStart>, questionNumber: number): Promise<Crop[]> {
-  const start = starts.get(questionNumber);
-  if (!start) {
-    const found = Array.from(starts.keys()).sort((a, b) => a - b).join(", ");
-    throw new Error(`Could not locate Q${questionNumber} in this Pearson mark scheme. Detected questions: ${found || "none"}.`);
+function nextPosition(source: MarkSchemeSource, questionNumber: number) {
+  for (let q = questionNumber + 1; q <= 99; q++) {
+    if (source.positions[q]) return source.positions[q];
   }
+  return null;
+}
 
-  // Find the next detected question, not merely q+1. This handles schemes where a
-  // question marker is split/omitted and clerical schemes that contain selected parts.
-  const nextNumber = Array.from(starts.keys()).filter(n => n > questionNumber).sort((a, b) => a - b)[0];
-  const next = nextNumber ? starts.get(nextNumber)! : null;
+async function extractQuestionCrops(pdf: PdfDocumentProxy, source: MarkSchemeSource, questionNumber: number): Promise<Crop[]> {
+  const start = source.positions[questionNumber];
+  if (!start) throw new Error(`Mark scheme mapping is not available for original Q${questionNumber}.`);
+  const next = nextPosition(source, questionNumber);
+  const [startPage, startTop] = start;
+  const endPage = next ? next[0] : pdf.numPages - 1;
   const crops: Crop[] = [];
 
-  const lastPage = next ? next.pageIndex : pdf.numPages - 1;
-  for (let pageIndex = start.pageIndex; pageIndex <= lastPage; pageIndex++) {
+  for (let pageIndex = startPage; pageIndex <= endPage; pageIndex++) {
     const page: PdfPageProxy = await pdf.getPage(pageIndex + 1);
-    const viewport = page.getViewport({ scale: 1 });
-    let fromTop = pageIndex === start.pageIndex ? start.top : 0;
-    let toTop = viewport.height;
-    if (next && pageIndex === next.pageIndex) toTop = next.top;
-    if (toTop - fromTop < 10) continue;
-    crops.push(await renderCrop(page, fromTop, toTop));
-    if (next && pageIndex === next.pageIndex) break;
+    let from = pageIndex === startPage ? startTop : 0.045;
+    let to = 0.955;
+    if (next && pageIndex === next[0]) to = next[1];
+    if (to - from < 0.015) continue;
+    crops.push(await renderCrop(page, from, to));
+    if (next && pageIndex === next[0]) break;
   }
+  if (!crops.length) throw new Error(`No mark scheme image could be built for original Q${questionNumber}.`);
   return crops;
 }
 
 function imageParagraph(crop: Crop): Paragraph {
   const maxWidth = 610;
-  const maxHeight = 760;
-  const scale = Math.min(maxWidth / crop.width, maxHeight / crop.height, 1);
+  const maxHeight = 730;
+  const ratio = Math.min(maxWidth / crop.width, maxHeight / crop.height, 1);
   return new Paragraph({
-    children: [new ImageRun({ data: crop.bytes, transformation: { width: Math.round(crop.width * scale), height: Math.round(crop.height * scale) }, type: "jpg" })],
+    children: [new ImageRun({ data: crop.bytes, transformation: { width: Math.round(crop.width * ratio), height: Math.round(crop.height * ratio) }, type: "jpg" })],
     spacing: { after: 120 },
   });
 }
@@ -221,25 +137,18 @@ function imageParagraph(crop: Crop): Paragraph {
 export async function exportMarkSchemeToWord(questions: Question[]) {
   if (!questions.length) throw new Error("Add at least one question before downloading a mark scheme.");
 
-  const grouped = new Map<string, { source: NonNullable<ReturnType<typeof getMarkSchemeSource>>; pdf: PdfDocumentProxy; starts: Map<number, QuestionStart> }>();
-
+  const grouped = new Map<string, { source: MarkSchemeSource; pdf: PdfDocumentProxy }>();
   for (const q of questions) {
     const source = getMarkSchemeSource(q);
-    if (!source) throw new Error(`A formatted mark scheme is not available yet for ${q.session} ${q.year} Paper ${q.paper}.`);
-    const key = `${q.year}|${q.session}|${q.paper}`;
-    if (!grouped.has(key)) {
-      const { pdf } = await loadPdf(source.filenames);
-      const starts = await locateQuestionStarts(pdf, source.maxQuestion);
-      grouped.set(key, { source, pdf, starts });
+    if (!source || !source.positions[q.questionNumber]) {
+      throw new Error(`A verified mark scheme is not available yet for ${q.session} ${q.year} Paper ${q.paper}, original Q${q.questionNumber}.`);
     }
+    const key = `${q.year}|${q.session}|${q.paper}`;
+    if (!grouped.has(key)) grouped.set(key, { source, pdf: await loadPdf(source.filenames) });
   }
 
   const children: Paragraph[] = [
-    new Paragraph({
-      text: "MagicQuestions Mark Scheme",
-      heading: HeadingLevel.TITLE,
-      spacing: { after: 120 },
-    }),
+    new Paragraph({ text: "MagicQuestions Mark Scheme", heading: HeadingLevel.TITLE, spacing: { after: 120 } }),
     new Paragraph({
       children: [new TextRun({ text: "Pearson Edexcel examination materials are © Pearson Education Limited. MagicQuestions is not affiliated with or endorsed by Pearson.", italics: true, size: 18 })],
       spacing: { after: 260 },
@@ -250,9 +159,12 @@ export async function exportMarkSchemeToWord(questions: Question[]) {
     const q = questions[index];
     const key = `${q.year}|${q.session}|${q.paper}`;
     const loaded = grouped.get(key)!;
-    children.push(new Paragraph({ children: [new TextRun({ text: `Q${index + 1}.`, bold: true, size: 28 })], spacing: { before: index ? 180 : 0, after: 100 } }));
-    const crops = await extractQuestionCrops(loaded.pdf, loaded.starts, q.questionNumber);
-    crops.forEach(crop => children.push(imageParagraph(crop)));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: `Q${index + 1}.`, bold: true, size: 28 })],
+      spacing: { before: index ? 180 : 0, after: 100 },
+    }));
+    const crops = await extractQuestionCrops(loaded.pdf, loaded.source, q.questionNumber);
+    for (const crop of crops) children.push(imageParagraph(crop));
     if (index < questions.length - 1) children.push(new Paragraph({ children: [new PageBreak()] }));
   }
 
