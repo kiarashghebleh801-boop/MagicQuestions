@@ -8,18 +8,11 @@ export type MarkSchemeSource = {
   positions: Record<number, MarkSchemePosition>;
 };
 
-// These positions were verified against the actual Pearson PDFs. Keeping the
-// boundaries here makes export deterministic instead of trying to guess table
-// rows from PDF text in the browser.
+// Only papers whose exact Higher-tier mark-scheme PDF is currently present in
+// the Supabase mark-scheme bucket are enabled here. This prevents the app from
+// trying to download a missing file or, worse, pairing a question with the
+// wrong tier's mark scheme.
 const markSchemeByPaper: Record<string, MarkSchemeSource> = {
-  "2022|January|1HR": {
-    filenames: ["January 2022 (R) MS (1)(1).pdf", "January 2022 (R) MS(1).pdf"],
-    positions: {1:[4,0.15926],2:[4,0.60441],3:[5,0.06206],4:[5,0.48323],5:[6,0.06206],6:[6,0.27052],7:[7,0.06206],8:[7,0.43143],9:[7,0.63142],10:[8,0.09878],11:[8,0.65561],12:[9,0.06206],13:[10,0.06206],14:[11,0.06206],15:[12,0.06206],16:[13,0.06206],17:[13,0.57861],18:[14,0.06206],19:[14,0.50339],20:[15,0.06206],21:[15,0.29189],22:[16,0.06206],23:[17,0.09878],24:[18,0.08041]},
-  },
-  "2022|January|2HR": {
-    filenames: ["January 2022 (R) MS (1)(2).pdf"],
-    positions: {1:[4,0.21866],2:[5,0.12091],3:[6,0.12171],4:[7,0.12171],5:[7,0.45869],6:[8,0.12091],7:[9,0.12171],8:[10,0.12171],9:[10,0.32587],10:[11,0.1203],11:[12,0.12192],12:[13,0.1203],13:[14,0.12171],14:[15,0.12171],15:[16,0.12171],16:[17,0.12171],17:[18,0.12171],18:[19,0.12171],19:[20,0.12171],20:[21,0.12171],21:[22,0.12171],22:[23,0.1203],23:[25,0.12091]},
-  },
   "2024|November|2H": {
     filenames: ["IGCSE_MATHEMATICS_A_2024_Nov_Higher_P2_MS.pdf"],
     positions: {1:[4,0.227],2:[5,0.15272],3:[6,0.15272],4:[7,0.15272],5:[8,0.15272],6:[9,0.1759],7:[10,0.15272],8:[11,0.1759],9:[12,0.15205],10:[13,0.17623],11:[14,0.15272],12:[15,0.15272],13:[17,0.15272],14:[18,0.15253],15:[19,0.15253],16:[20,0.2223],17:[21,0.19912],18:[22,0.15272],19:[23,0.1759],20:[23,0.36845],21:[24,0.2223],22:[25,0.15272],23:[26,0.1759],24:[27,0.15272],25:[28,0.15272]},
