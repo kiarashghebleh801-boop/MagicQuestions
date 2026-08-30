@@ -56,14 +56,29 @@ async function loadPdf(filenames: string[]): Promise<{ filename: string; pdf: Pd
   return { filename: (pdf as any).__mqFilename || filenames[0], pdf };
 }
 
+function questionNumberFromText(value: string): number | null {
+  const text = value.replace(/\u00a0/g, " ").trim();
+
+  // Standard Pearson rows: "1", "1 (a)", "1*", "12 (a)" etc.
+  let match = text.match(/^(\d{1,2})(?:\s*\*|\s+|\s*\(|$)/);
+  if (match) return Number(match[1]);
+
+  // Some Pearson clerical/type-3 schemes use labels such as Q01a / Q04b.
+  match = text.match(/^Q0?(\d{1,2})(?:[a-z]|\b)/i);
+  return match ? Number(match[1]) : null;
+}
+
 function candidateQuestionMarker(item: TextItem, viewportWidth: number): number | null {
-  const text = (item.str || "").trim();
-  if (!/^\d{1,2}$/.test(text)) return null;
+  const q = questionNumberFromText(item.str || "");
+  if (!q) return null;
+
   const transform = item.transform || [];
   const x = transform[4] ?? Number.POSITIVE_INFINITY;
-  if (x > Math.min(105, viewportWidth * 0.19)) return null;
-  const n = Number(text);
-  return Number.isFinite(n) ? n : null;
+
+  // Question numbers live in the first column. Allow a little more room than the
+  // old 105pt cutoff because several Pearson PDFs position the Q column farther in.
+  if (x > Math.min(165, viewportWidth * 0.28)) return null;
+  return q;
 }
 
 async function locateQuestionStarts(pdf: PdfDocumentProxy, maxQuestion: number): Promise<Map<number, QuestionStart>> {
@@ -86,18 +101,26 @@ async function locateQuestionStarts(pdf: PdfDocumentProxy, maxQuestion: number):
     }
   }
 
+  // Ignore front-matter false positives by preferring a monotonic run through the
+  // actual mark-scheme tables, but do not require every preceding question to exist.
   const chosen = new Map<number, QuestionStart>();
   let previous: QuestionStart | null = null;
   for (let q = 1; q <= maxQuestion; q++) {
-    const options = (candidates.get(q) || []).filter(pos => {
-      if (!previous) return true;
-      return pos.pageIndex > previous.pageIndex || (pos.pageIndex === previous.pageIndex && pos.top > previous.top + 4);
-    });
-    if (!options.length) continue;
-    options.sort((a, b) => a.pageIndex - b.pageIndex || a.top - b.top);
-    const pick = options[0];
+    const all = (candidates.get(q) || []).sort((a, b) => a.pageIndex - b.pageIndex || a.top - b.top);
+    if (!all.length) continue;
+
+    let pick: QuestionStart | undefined;
+    if (previous) {
+      pick = all.find(pos => pos.pageIndex > previous!.pageIndex || (pos.pageIndex === previous!.pageIndex && pos.top > previous!.top + 3));
+    }
+    if (!pick) {
+      // For a missing/odd earlier marker, fall back to the first occurrence on page 4+
+      // (index 4 == PDF page 5), where Pearson's actual answer tables normally begin.
+      pick = all.find(pos => pos.pageIndex >= 4) || all[0];
+    }
+
     chosen.set(q, pick);
-    previous = pick;
+    if (!previous || pick.pageIndex > previous.pageIndex || (pick.pageIndex === previous.pageIndex && pick.top > previous.top)) previous = pick;
   }
 
   return chosen;
@@ -146,7 +169,6 @@ async function renderCrop(page: PdfPageProxy, fromTop: number, toTop: number): P
   if (!fullCtx) throw new Error("Canvas is unavailable in this browser.");
   await page.render({ canvasContext: fullCtx, viewport }).promise;
 
-  const sourceViewport = page.getViewport({ scale: 1 });
   const topPx = Math.max(0, Math.floor((fromTop - 8) * scale));
   const bottomPx = Math.min(full.height, Math.ceil((toTop + 8) * scale));
   const cropHeight = Math.max(24, bottomPx - topPx);
@@ -161,8 +183,15 @@ async function renderCrop(page: PdfPageProxy, fromTop: number, toTop: number): P
 
 async function extractQuestionCrops(pdf: PdfDocumentProxy, starts: Map<number, QuestionStart>, questionNumber: number): Promise<Crop[]> {
   const start = starts.get(questionNumber);
-  if (!start) throw new Error(`Could not locate question ${questionNumber} in the mark scheme PDF.`);
-  const next = starts.get(questionNumber + 1) || null;
+  if (!start) {
+    const found = Array.from(starts.keys()).sort((a, b) => a - b).join(", ");
+    throw new Error(`Could not locate Q${questionNumber} in this Pearson mark scheme. Detected questions: ${found || "none"}.`);
+  }
+
+  // Find the next detected question, not merely q+1. This handles schemes where a
+  // question marker is split/omitted and clerical schemes that contain selected parts.
+  const nextNumber = Array.from(starts.keys()).filter(n => n > questionNumber).sort((a, b) => a - b)[0];
+  const next = nextNumber ? starts.get(nextNumber)! : null;
   const crops: Crop[] = [];
 
   const lastPage = next ? next.pageIndex : pdf.numPages - 1;
