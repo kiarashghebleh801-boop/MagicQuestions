@@ -99,13 +99,22 @@ function markerParagraphs(doc: XMLDocument): Element[] {
     .filter(n => n.nodeType === Node.ELEMENT_NODE && isQuestionMarker(n) !== null) as Element[];
 }
 
+function paragraphStartBefore(xml: string, index: number, from = 0): number {
+  const re = /<w:p(?=[\s>])/g;
+  re.lastIndex = from;
+  let last = -1;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(xml)) && match.index <= index) last = match.index;
+  return last;
+}
+
 function rawParagraphStart(xml: string, paragraph: Element, from = 0): number {
   const paraId = paragraph.getAttributeNS(W14_NS, "paraId") || paragraph.getAttribute("w14:paraId");
   if (paraId) {
     for (const needle of [`w14:paraId=\"${paraId}\"`, `w14:paraId='${paraId}'`]) {
       const attrIndex = xml.indexOf(needle, from);
       if (attrIndex >= 0) {
-        const pStart = xml.lastIndexOf("<w:p", attrIndex);
+        const pStart = paragraphStartBefore(xml, attrIndex, from);
         if (pStart >= from) return pStart;
       }
     }
@@ -118,7 +127,7 @@ function rawParagraphStart(xml: string, paragraph: Element, from = 0): number {
     pattern.lastIndex = from;
     const match = pattern.exec(xml.slice(0, closeStart));
     if (match) {
-      const pStart = xml.lastIndexOf("<w:p", match.index);
+      const pStart = paragraphStartBefore(xml, match.index, from);
       if (pStart >= from) return pStart;
     }
   }
@@ -144,24 +153,15 @@ function extractRawQuestionXml(source: LoadedDoc, questionNumber: number): strin
 }
 
 function removeOriginalTotalParagraph(xml: string): string {
-  // Match only the paragraph that actually contains the total. The previous
-  // regex could begin at the first paragraph in the selected part and swallow
-  // the whole part before reaching "Total for question".
   return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?Total for question(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
 }
 
 function partStarts(xml: string): { part: string; start: number }[] {
   const found: { part: string; start: number }[] = [];
-
-  // In our formatted Chemistry DOCX files a part label is normally at the
-  // START of a text run together with the question text, e.g.
-  //   <w:t>(a)  State what is meant ...</w:t>
-  // not a standalone <w:t>(a)</w:t>. Detect the label at the start and keep
-  // the whole paragraph as the boundary.
   const re = /<w:t(?:\s[^>]*)?>\s*\(([a-z])\)(?=\s|<)/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(xml))) {
-    const start = xml.lastIndexOf("<w:p", match.index);
+    const start = paragraphStartBefore(xml, match.index);
     if (start < 0) continue;
     if (!found.some(item => item.start === start)) found.push({ part: match[1].toLowerCase(), start });
   }
@@ -170,8 +170,6 @@ function partStarts(xml: string): { part: string; start: number }[] {
 
 function renumberPartMarker(xml: string, oldPart: string, newPart: string): string {
   const escaped = oldPart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  // Replace only a part marker at the start of a Word text run. This works for
-  // both "(a)" by itself and "(a)  question text" in the same run.
   const re = new RegExp(`(<w:t(?:\\s[^>]*)?>\\s*)\\(${escaped}\\)(?=\\s|<)`, "i");
   return xml.replace(re, `$1(${newPart})`);
 }
