@@ -161,7 +161,6 @@ function partStarts(xml: string, selectedParts: string[]): { part: string; start
   const paragraphs = rawParagraphs(xml);
   const detected: { part: string; start: number }[] = [];
   let expectedCode = "a".charCodeAt(0);
-
   for (const p of paragraphs) {
     const m = p.text.match(/^\(([a-z])\)(?:\s|$)/i);
     if (!m) continue;
@@ -170,28 +169,20 @@ function partStarts(xml: string, selectedParts: string[]): { part: string; start
     detected.push({ part, start: p.start });
     expectedCode++;
   }
-
   const requested = selectedParts.map(p => p.toLowerCase());
   const available = new Set(detected.map(x => x.part));
-
   for (const missingPart of requested.filter(p => !available.has(p))) {
     const code = missingPart.charCodeAt(0);
     const prev = detected.find(x => x.part.charCodeAt(0) === code - 1);
     const next = detected.find(x => x.part.charCodeAt(0) === code + 1);
     if (!prev || !next) continue;
-
     const between = paragraphs.filter(p => p.start > prev.start && p.start < next.start);
     const drawingParas = between.filter(p => /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml));
     if (!drawingParas.length) continue;
-
-    // In the formatted papers, some MCQ subparts are inserted as one screenshot,
-    // including the '(b)' label itself. Treat the first image paragraph after the
-    // previous part's answer content as the missing part boundary.
     const inferred = drawingParas[drawingParas.length - 1];
     detected.push({ part: missingPart, start: inferred.start });
     available.add(missingPart);
   }
-
   return detected.sort((a, b) => a.start - b.start);
 }
 
@@ -209,7 +200,6 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
   const available = new Set(boundaries.map(b => b.part));
   const missing = selectedParts.filter(p => !available.has(p.toLowerCase()));
   if (missing.length) throw new Error(`Could not isolate Chemistry part(s) ${missing.map(p => `(${p})`).join(", ")}. This source appears to store those parts as an unsupported image layout.`);
-
   const preamble = xml.slice(0, boundaries[0].start);
   const chunks: string[] = [];
   let newIndex = 0;
@@ -223,7 +213,7 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
     newIndex++;
     chunks.push(chunk);
   }
-  const total = `<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"A8AAAD\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
+  const total = `<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"000000\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
   return `${preamble}${chunks.join("")}${total}`;
 }
 
