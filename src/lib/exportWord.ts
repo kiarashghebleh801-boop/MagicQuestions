@@ -60,26 +60,15 @@ async function loadSource(filename: string): Promise<LoadedDoc> {
     sourceCache.set(filename, (async () => {
       const { data, error } = await supabase.storage.from(FORMATTED_BUCKET).download(filename);
       if (error || !data) throw new Error(`Could not download ${filename}: ${error?.message || "unknown error"}`);
-
       const zip = await JSZip.loadAsync(await data.arrayBuffer());
       const documentFile = zip.file("word/document.xml");
       const relsFile = zip.file("word/_rels/document.xml.rels");
       const contentTypesFile = zip.file("[Content_Types].xml");
       if (!documentFile || !relsFile || !contentTypesFile) throw new Error(`${filename} is not a valid Word document`);
-
       const documentXmlText = await documentFile.async("text");
       const relsXmlText = await relsFile.async("text");
       const contentTypesText = await contentTypesFile.async("text");
-      return {
-        filename,
-        zip,
-        documentXmlText,
-        documentXml: parseXml(documentXmlText),
-        relsXmlText,
-        relsXml: parseXml(relsXmlText),
-        contentTypesText,
-        contentTypesXml: parseXml(contentTypesText),
-      };
+      return { filename, zip, documentXmlText, documentXml: parseXml(documentXmlText), relsXmlText, relsXml: parseXml(relsXmlText), contentTypesText, contentTypesXml: parseXml(contentTypesText) };
     })());
   }
   return sourceCache.get(filename)!;
@@ -95,8 +84,7 @@ function bodyBounds(xml: string) {
 }
 
 function markerParagraphs(doc: XMLDocument): Element[] {
-  return Array.from(getBody(doc).childNodes)
-    .filter(n => n.nodeType === Node.ELEMENT_NODE && isQuestionMarker(n) !== null) as Element[];
+  return Array.from(getBody(doc).childNodes).filter(n => n.nodeType === Node.ELEMENT_NODE && isQuestionMarker(n) !== null) as Element[];
 }
 
 function paragraphStartBefore(xml: string, index: number, from = 0): number {
@@ -119,7 +107,6 @@ function rawParagraphStart(xml: string, paragraph: Element, from = 0): number {
       }
     }
   }
-
   const q = isQuestionMarker(paragraph);
   if (q !== null) {
     const { closeStart } = bodyBounds(xml);
@@ -145,9 +132,7 @@ function extractRawQuestionXml(source: LoadedDoc, questionNumber: number): strin
   const markerIndex = markers.findIndex(p => isQuestionMarker(p) === questionNumber);
   if (markerIndex < 0) throw new Error(`Could not find Q${questionNumber}. in ${source.filename}`);
   const start = rawParagraphStart(source.documentXmlText, markers[markerIndex]);
-  const end = markerIndex + 1 < markers.length
-    ? rawParagraphStart(source.documentXmlText, markers[markerIndex + 1], start + 1)
-    : rawSectPrStart(source.documentXmlText);
+  const end = markerIndex + 1 < markers.length ? rawParagraphStart(source.documentXmlText, markers[markerIndex + 1], start + 1) : rawSectPrStart(source.documentXmlText);
   if (end <= start) throw new Error(`Could not isolate Q${questionNumber}. in ${source.filename}`);
   return source.documentXmlText.slice(start, end);
 }
@@ -156,16 +141,58 @@ function removeOriginalTotalParagraph(xml: string): string {
   return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?Total for question(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
 }
 
-function partStarts(xml: string): { part: string; start: number }[] {
-  const found: { part: string; start: number }[] = [];
-  const re = /<w:t(?:\s[^>]*)?>\s*\(([a-z])\)(?=\s|<)/gi;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(xml))) {
-    const start = paragraphStartBefore(xml, match.index);
-    if (start < 0) continue;
-    if (!found.some(item => item.start === start)) found.push({ part: match[1].toLowerCase(), start });
+function paragraphText(xml: string): string {
+  const texts: string[] = [];
+  const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) texts.push(m[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+  return texts.join("").replace(/\s+/g, " ").trim();
+}
+
+function rawParagraphs(xml: string): { start: number; end: number; xml: string; text: string }[] {
+  const out: { start: number; end: number; xml: string; text: string }[] = [];
+  const re = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) out.push({ start: m.index, end: m.index + m[0].length, xml: m[0], text: paragraphText(m[0]) });
+  return out;
+}
+
+function partStarts(xml: string, selectedParts: string[]): { part: string; start: number }[] {
+  const paragraphs = rawParagraphs(xml);
+  const detected: { part: string; start: number }[] = [];
+  let expectedCode = "a".charCodeAt(0);
+
+  for (const p of paragraphs) {
+    const m = p.text.match(/^\(([a-z])\)(?:\s|$)/i);
+    if (!m) continue;
+    const part = m[1].toLowerCase();
+    if (part.charCodeAt(0) !== expectedCode) continue;
+    detected.push({ part, start: p.start });
+    expectedCode++;
   }
-  return found.sort((a,b)=>a.start-b.start);
+
+  const requested = selectedParts.map(p => p.toLowerCase());
+  const available = new Set(detected.map(x => x.part));
+
+  for (const missingPart of requested.filter(p => !available.has(p))) {
+    const code = missingPart.charCodeAt(0);
+    const prev = detected.find(x => x.part.charCodeAt(0) === code - 1);
+    const next = detected.find(x => x.part.charCodeAt(0) === code + 1);
+    if (!prev || !next) continue;
+
+    const between = paragraphs.filter(p => p.start > prev.start && p.start < next.start);
+    const drawingParas = between.filter(p => /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml));
+    if (!drawingParas.length) continue;
+
+    // In the formatted papers, some MCQ subparts are inserted as one screenshot,
+    // including the '(b)' label itself. Treat the first image paragraph after the
+    // previous part's answer content as the missing part boundary.
+    const inferred = drawingParas[drawingParas.length - 1];
+    detected.push({ part: missingPart, start: inferred.start });
+    available.add(missingPart);
+  }
+
+  return detected.sort((a, b) => a.start - b.start);
 }
 
 function renumberPartMarker(xml: string, oldPart: string, newPart: string): string {
@@ -176,20 +203,20 @@ function renumberPartMarker(xml: string, oldPart: string, newPart: string): stri
 
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
-  const boundaries = partStarts(xml);
+  const boundaries = partStarts(xml, selectedParts);
   if (!boundaries.length) throw new Error("Could not locate Chemistry sub-question labels in the formatted Word source.");
-  const wanted = new Set(selectedParts.map(p=>p.toLowerCase()));
-  const available = new Set(boundaries.map(b=>b.part));
-  const missing = selectedParts.filter(p=>!available.has(p.toLowerCase()));
-  if (missing.length) throw new Error(`Could not locate Chemistry part(s) ${missing.map(p=>`(${p})`).join(", ")} in the formatted Word source.`);
+  const wanted = new Set(selectedParts.map(p => p.toLowerCase()));
+  const available = new Set(boundaries.map(b => b.part));
+  const missing = selectedParts.filter(p => !available.has(p.toLowerCase()));
+  if (missing.length) throw new Error(`Could not isolate Chemistry part(s) ${missing.map(p => `(${p})`).join(", ")}. This source appears to store those parts as an unsupported image layout.`);
 
   const preamble = xml.slice(0, boundaries[0].start);
   const chunks: string[] = [];
   let newIndex = 0;
-  for (let i=0;i<boundaries.length;i++) {
+  for (let i = 0; i < boundaries.length; i++) {
     const current = boundaries[i];
     if (!wanted.has(current.part)) continue;
-    const end = i+1<boundaries.length ? boundaries[i+1].start : xml.length;
+    const end = i + 1 < boundaries.length ? boundaries[i + 1].start : xml.length;
     let chunk = xml.slice(current.start, end);
     chunk = removeOriginalTotalParagraph(chunk);
     chunk = renumberPartMarker(chunk, current.part, String.fromCharCode(97 + newIndex));
@@ -233,9 +260,7 @@ function referencedRelationshipIds(xml: string): string[] {
 
 function replaceRelationshipId(xml: string, oldId: string, newId: string): string {
   const escaped = oldId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return xml
-    .replace(new RegExp(`(\\br:(?:embed|id|link)=\")${escaped}(\")`, "g"), `$1${newId}$2`)
-    .replace(new RegExp(`(\\br:(?:embed|id|link)=')${escaped}(')`, "g"), `$1${newId}$2`);
+  return xml.replace(new RegExp(`(\\br:(?:embed|id|link)=\")${escaped}(\")`, "g"), `$1${newId}$2`).replace(new RegExp(`(\\br:(?:embed|id|link)=')${escaped}(')`, "g"), `$1${newId}$2`);
 }
 
 function insertBeforeClosing(xml: string, closingTag: string, addition: string): string {
@@ -296,17 +321,10 @@ function mergeRootNamespaces(templateXml: string, sources: LoadedDoc[]): string 
 }
 
 function renumberDrawingIds(xml: string, counter: { value: number }): string {
-  return xml.replace(/(<(?:[A-Za-z0-9_]+:)?docPr\b[^>]*\bid=(?:\"|'))\d+((?:\"|'))/g, (_m, before, after) => `${before}${counter.value++}${after}`)
-    .replace(/(<pic:cNvPr\b[^>]*\bid=(?:\"|'))\d+((?:\"|'))/g, (_m, before, after) => `${before}${counter.value++}${after}`);
+  return xml.replace(/(<(?:[A-Za-z0-9_]+:)?docPr\b[^>]*\bid=(?:\"|'))\d+((?:\"|'))/g, (_m, before, after) => `${before}${counter.value++}${after}`).replace(/(<pic:cNvPr\b[^>]*\bid=(?:\"|'))\d+((?:\"|'))/g, (_m, before, after) => `${before}${counter.value++}${after}`);
 }
 
-async function remapRelationships(
-  chunk: string,
-  source: LoadedDoc,
-  outputZip: JSZip,
-  relState: RelState,
-  contentTypesState: ContentTypesState,
-): Promise<string> {
+async function remapRelationships(chunk: string, source: LoadedDoc, outputZip: JSZip, relState: RelState, contentTypesState: ContentTypesState): Promise<string> {
   const sourceRels = relationshipMap(source.relsXml);
   let result = chunk;
   for (const oldId of referencedRelationshipIds(chunk)) {
@@ -334,11 +352,7 @@ async function remapRelationships(
     } else if (!isExternal && !isImage) {
       throw new Error(`Unsupported embedded Word object in ${source.filename}. Please send this question so I can add support for it.`);
     }
-    relState.xml = insertBeforeClosing(
-      relState.xml,
-      "</Relationships>",
-      `<Relationship Id=\"${escapeXml(newId)}\" Type=\"${escapeXml(type)}\" Target=\"${escapeXml(newTarget)}\"${targetMode ? ` TargetMode=\"${escapeXml(targetMode)}\"` : ""}/>`
-    );
+    relState.xml = insertBeforeClosing(relState.xml, "</Relationships>", `<Relationship Id=\"${escapeXml(newId)}\" Type=\"${escapeXml(type)}\" Target=\"${escapeXml(newTarget)}\"${targetMode ? ` TargetMode=\"${escapeXml(targetMode)}\"` : ""}/>`);
     result = replaceRelationshipId(result, oldId, newId);
   }
   return result;
@@ -346,24 +360,15 @@ async function remapRelationships(
 
 function setCellText(doc: XMLDocument, cell: Element, value: string) {
   let p = Array.from(cell.getElementsByTagNameNS(W_NS, "p"))[0];
-  if (!p) {
-    p = doc.createElementNS(W_NS, "w:p");
-    cell.appendChild(p);
-  }
-  for (const child of Array.from(p.childNodes)) {
-    if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
-  }
+  if (!p) { p = doc.createElementNS(W_NS, "w:p"); cell.appendChild(p); }
+  for (const child of Array.from(p.childNodes)) if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
   const run = doc.createElementNS(W_NS, "w:r");
   const runPr = doc.createElementNS(W_NS, "w:rPr");
   const fonts = doc.createElementNS(W_NS, "w:rFonts");
   fonts.setAttributeNS(W_NS, "w:ascii", "Arial");
   fonts.setAttributeNS(W_NS, "w:hAnsi", "Arial");
-  runPr.appendChild(fonts);
-  run.appendChild(runPr);
-  const text = doc.createElementNS(W_NS, "w:t");
-  text.textContent = value;
-  run.appendChild(text);
-  p.appendChild(run);
+  runPr.appendChild(fonts); run.appendChild(runPr);
+  const text = doc.createElementNS(W_NS, "w:t"); text.textContent = value; run.appendChild(text); p.appendChild(run);
 }
 
 function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number): string {
@@ -374,9 +379,7 @@ function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number):
   const firstRow = Array.from(firstTable.getElementsByTagNameNS(W_NS, "tr"))[0];
   const cells = firstRow ? Array.from(firstRow.getElementsByTagNameNS(W_NS, "tc")) : [];
   if (cells.length < 6) throw new Error("FrontCover.docx top row format is not recognised");
-  setCellText(doc, cells[1], subject);
-  setCellText(doc, cells[3], String(totalMarks));
-  setCellText(doc, cells[5], "");
+  setCellText(doc, cells[1], subject); setCellText(doc, cells[3], String(totalMarks)); setCellText(doc, cells[5], "");
   for (const paragraph of Array.from(firstTable.getElementsByTagNameNS(W_NS, "p"))) {
     const numPr = Array.from(paragraph.getElementsByTagNameNS(W_NS, "numPr"))[0];
     if (!numPr) continue;
@@ -401,9 +404,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const templateXml = mergeRootNamespaces(source.documentXmlText, [source, cover]);
   const { openEnd, closeStart } = bodyBounds(templateXml);
   const sectPrStart = rawSectPrStart(templateXml);
-  const prefix = templateXml.slice(0, openEnd);
-  const sectPr = templateXml.slice(sectPrStart, closeStart);
-  const suffix = templateXml.slice(closeStart);
+  const prefix = templateXml.slice(0, openEnd), sectPr = templateXml.slice(sectPrStart, closeStart), suffix = templateXml.slice(closeStart);
   const relState: RelState = { xml: source.relsXmlText, used: usedRelationshipIds(source.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: source.contentTypesText };
   const drawingCounter = { value: 1 };
@@ -412,8 +413,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1), drawingCounter)).join("");
   outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${sectPr}${suffix}`);
-  outputZip.file("word/_rels/document.xml.rels", relState.xml);
-  outputZip.file("[Content_Types].xml", contentTypesState.xml);
+  outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
 
@@ -423,36 +423,27 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const templateXml = mergeRootNamespaces(template.documentXmlText, [...sources, cover]);
   const { openEnd, closeStart } = bodyBounds(templateXml);
   const sectPrStart = rawSectPrStart(templateXml);
-  const prefix = templateXml.slice(0, openEnd);
-  const sectPr = templateXml.slice(sectPrStart, closeStart);
-  const suffix = templateXml.slice(closeStart);
+  const prefix = templateXml.slice(0, openEnd), sectPr = templateXml.slice(sectPrStart, closeStart), suffix = templateXml.slice(closeStart);
   const relState: RelState = { xml: template.relsXmlText, used: usedRelationshipIds(template.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: template.contentTypesText };
   const drawingCounter = { value: 1 };
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
-  coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
-  coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
+  coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = buildQuestionChunk(sources[i], questions[i], i + 1);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
-    chunk = renumberDrawingIds(chunk, drawingCounter);
-    chunks.push(chunk);
+    chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
   outputZip.file("word/document.xml", `${prefix}${coverChunk}${chunks.join("")}${sectPr}${suffix}`);
-  outputZip.file("word/_rels/document.xml.rels", relState.xml);
-  outputZip.file("[Content_Types].xml", contentTypesState.xml);
+  outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
 
 function downloadBlob(bytes: Uint8Array) {
   const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "MagicQuestions-ExamWizard-Paper.docx";
-  document.body.appendChild(a);
-  a.click(); a.remove();
+  const a = document.createElement("a"); a.href = url; a.download = "MagicQuestions-ExamWizard-Paper.docx"; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
@@ -460,21 +451,14 @@ export async function exportPaperToWord(questions: Question[], options: ExportOp
   if (!questions.length) return;
   const exportQuestions = questions as ExportQuestion[];
   const missing = exportQuestions.filter(q => !getFormattedSource(q));
-  if (missing.length) {
-    const labels = missing.map(q => `${q.session} ${q.year} ${q.paper} Q${q.questionNumber}`).join(", ");
-    throw new Error(`Formatted Word source not uploaded/mapped yet for: ${labels}`);
-  }
+  if (missing.length) throw new Error(`Formatted Word source not uploaded/mapped yet for: ${missing.map(q => `${q.session} ${q.year} ${q.paper} Q${q.questionNumber}`).join(", ")}`);
   let cover: LoadedDoc;
-  try { cover = await loadSource(FRONT_COVER_FILE); }
-  catch { throw new Error(`Front cover template not found. Upload ${FRONT_COVER_FILE} to the ${FORMATTED_BUCKET} Supabase bucket.`); }
+  try { cover = await loadSource(FRONT_COVER_FILE); } catch { throw new Error(`Front cover template not found. Upload ${FRONT_COVER_FILE} to the ${FORMATTED_BUCKET} Supabase bucket.`); }
   const rawSubject = options.subject || "Mathematics";
   const subject = /^Edexcel IGCSE\b/i.test(rawSubject) ? rawSubject : `Edexcel IGCSE ${rawSubject}`;
   const filenames = exportQuestions.map(q => getFormattedSource(q)!);
   const uniqueFilenames = Array.from(new Set(filenames));
-  if (uniqueFilenames.length === 1) {
-    await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0]), cover, subject);
-    return;
-  }
+  if (uniqueFilenames.length === 1) { await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0]), cover, subject); return; }
   const sources = await Promise.all(filenames.map(loadSource));
   await exportAcrossSources(exportQuestions, sources, cover, subject);
 }
