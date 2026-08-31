@@ -144,12 +144,21 @@ function extractRawQuestionXml(source: LoadedDoc, questionNumber: number): strin
 }
 
 function removeOriginalTotalParagraph(xml: string): string {
-  return xml.replace(/<w:p\b[^>]*>[\s\S]*?Total for question[\s\S]*?<\/w:p>/gi, "");
+  // Match only the paragraph that actually contains the total. The previous
+  // regex could begin at the first paragraph in the selected part and swallow
+  // the whole part before reaching "Total for question".
+  return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?Total for question(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
 }
 
 function partStarts(xml: string): { part: string; start: number }[] {
   const found: { part: string; start: number }[] = [];
-  const re = /<w:t(?:\s[^>]*)?>\s*\(([a-z])\)\s*<\/w:t>/gi;
+
+  // In our formatted Chemistry DOCX files a part label is normally at the
+  // START of a text run together with the question text, e.g.
+  //   <w:t>(a)  State what is meant ...</w:t>
+  // not a standalone <w:t>(a)</w:t>. Detect the label at the start and keep
+  // the whole paragraph as the boundary.
+  const re = /<w:t(?:\s[^>]*)?>\s*\(([a-z])\)(?=\s|<)/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(xml))) {
     const start = xml.lastIndexOf("<w:p", match.index);
@@ -161,8 +170,10 @@ function partStarts(xml: string): { part: string; start: number }[] {
 
 function renumberPartMarker(xml: string, oldPart: string, newPart: string): string {
   const escaped = oldPart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`(<w:t(?:\\s[^>]*)?>\\s*)\\(${escaped}\\)(\\s*<\\/w:t>)`, "i");
-  return xml.replace(re, `$1(${newPart})$2`);
+  // Replace only a part marker at the start of a Word text run. This works for
+  // both "(a)" by itself and "(a)  question text" in the same run.
+  const re = new RegExp(`(<w:t(?:\\s[^>]*)?>\\s*)\\(${escaped}\\)(?=\\s|<)`, "i");
+  return xml.replace(re, `$1(${newPart})`);
 }
 
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
@@ -187,7 +198,7 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
     newIndex++;
     chunks.push(chunk);
   }
-  const total = `<w:p><w:r><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
+  const total = `<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"A8AAAD\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
   return `${preamble}${chunks.join("")}${total}`;
 }
 
@@ -291,7 +302,13 @@ function renumberDrawingIds(xml: string, counter: { value: number }): string {
     .replace(/(<pic:cNvPr\b[^>]*\bid=(?:\"|'))\d+((?:\"|'))/g, (_m, before, after) => `${before}${counter.value++}${after}`);
 }
 
-async function remapRelationships(chunk: string, source: LoadedDoc, outputZip: JSZip, relState: RelState, contentTypesState: ContentTypesState): Promise<string> {
+async function remapRelationships(
+  chunk: string,
+  source: LoadedDoc,
+  outputZip: JSZip,
+  relState: RelState,
+  contentTypesState: ContentTypesState,
+): Promise<string> {
   const sourceRels = relationshipMap(source.relsXml);
   let result = chunk;
   for (const oldId of referencedRelationshipIds(chunk)) {
@@ -319,7 +336,11 @@ async function remapRelationships(chunk: string, source: LoadedDoc, outputZip: J
     } else if (!isExternal && !isImage) {
       throw new Error(`Unsupported embedded Word object in ${source.filename}. Please send this question so I can add support for it.`);
     }
-    relState.xml = insertBeforeClosing(relState.xml, "</Relationships>", `<Relationship Id=\"${escapeXml(newId)}\" Type=\"${escapeXml(type)}\" Target=\"${escapeXml(newTarget)}\"${targetMode ? ` TargetMode=\"${escapeXml(targetMode)}\"` : ""}/>`);
+    relState.xml = insertBeforeClosing(
+      relState.xml,
+      "</Relationships>",
+      `<Relationship Id=\"${escapeXml(newId)}\" Type=\"${escapeXml(type)}\" Target=\"${escapeXml(newTarget)}\"${targetMode ? ` TargetMode=\"${escapeXml(targetMode)}\"` : ""}/>`
+    );
     result = replaceRelationshipId(result, oldId, newId);
   }
   return result;
@@ -327,15 +348,24 @@ async function remapRelationships(chunk: string, source: LoadedDoc, outputZip: J
 
 function setCellText(doc: XMLDocument, cell: Element, value: string) {
   let p = Array.from(cell.getElementsByTagNameNS(W_NS, "p"))[0];
-  if (!p) { p = doc.createElementNS(W_NS, "w:p"); cell.appendChild(p); }
-  for (const child of Array.from(p.childNodes)) if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
+  if (!p) {
+    p = doc.createElementNS(W_NS, "w:p");
+    cell.appendChild(p);
+  }
+  for (const child of Array.from(p.childNodes)) {
+    if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
+  }
   const run = doc.createElementNS(W_NS, "w:r");
   const runPr = doc.createElementNS(W_NS, "w:rPr");
   const fonts = doc.createElementNS(W_NS, "w:rFonts");
   fonts.setAttributeNS(W_NS, "w:ascii", "Arial");
   fonts.setAttributeNS(W_NS, "w:hAnsi", "Arial");
-  runPr.appendChild(fonts); run.appendChild(runPr);
-  const text = doc.createElementNS(W_NS, "w:t"); text.textContent = value; run.appendChild(text); p.appendChild(run);
+  runPr.appendChild(fonts);
+  run.appendChild(runPr);
+  const text = doc.createElementNS(W_NS, "w:t");
+  text.textContent = value;
+  run.appendChild(text);
+  p.appendChild(run);
 }
 
 function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number): string {
