@@ -192,6 +192,40 @@ function renumberPartMarker(xml: string, oldPart: string, newPart: string): stri
   return xml.replace(re, `$1(${newPart})`);
 }
 
+function removeGreyPartMarkParagraphs(xml: string): string {
+  return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?<w:color\s+w:val=(?:\"A8AAAD\"|'A8AAAD')[^>]*\/>[\s\S]*?<w:t[^>]*>\s*\(\d+\)\s*<\/w:t>(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
+}
+
+function stripPartialPageBreaks(xml: string): string {
+  return xml
+    .replace(/<w:lastRenderedPageBreak\s*\/>/gi, "")
+    .replace(/<w:br\b[^>]*w:type=(?:\"page\"|'page')[^>]*\/>/gi, "")
+    .replace(/<w:pageBreakBefore\b[^>]*\/>/gi, "");
+}
+
+function keepLastParagraphWithTotal(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const last = [...paragraphs].reverse().find(p => p.text.trim() || /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml));
+  if (!last) return xml;
+  let updated = last.xml;
+  if (/<w:pPr\b/i.test(updated)) {
+    if (!/<w:keepNext\b/i.test(updated)) updated = updated.replace(/<w:pPr\b([^>]*)>/i, `<w:pPr$1><w:keepNext/>`);
+  } else {
+    updated = updated.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr><w:keepNext/></w:pPr>`);
+  }
+  return `${xml.slice(0, last.start)}${updated}${xml.slice(last.end)}`;
+}
+
+function forceFirstVisiblePartToA(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const first = paragraphs.find(p => /^\([a-z]\)(?:\s|$)/i.test(p.text));
+  if (!first) return xml;
+  const current = first.text.match(/^\(([a-z])\)/i)?.[1];
+  if (!current || current.toLowerCase() === "a") return xml;
+  const updated = renumberPartMarker(first.xml, current, "a");
+  return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
+}
+
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
@@ -200,6 +234,7 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
   const available = new Set(boundaries.map(b => b.part));
   const missing = selectedParts.filter(p => !available.has(p.toLowerCase()));
   if (missing.length) throw new Error(`Could not isolate Chemistry part(s) ${missing.map(p => `(${p})`).join(", ")}. This source appears to store those parts as an unsupported image layout.`);
+
   const preamble = xml.slice(0, boundaries[0].start);
   const chunks: string[] = [];
   let newIndex = 0;
@@ -209,12 +244,20 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
     const end = i + 1 < boundaries.length ? boundaries[i + 1].start : xml.length;
     let chunk = xml.slice(current.start, end);
     chunk = removeOriginalTotalParagraph(chunk);
+    chunk = stripPartialPageBreaks(chunk);
     chunk = renumberPartMarker(chunk, current.part, String.fromCharCode(97 + newIndex));
     newIndex++;
     chunks.push(chunk);
   }
-  const total = `<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"000000\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
-  return `${preamble}${chunks.join("")}${total}`;
+
+  let selectedXml = `${preamble}${chunks.join("")}`;
+  selectedXml = stripPartialPageBreaks(selectedXml);
+  selectedXml = forceFirstVisiblePartToA(selectedXml);
+  if (selectedParts.length === 1) selectedXml = removeGreyPartMarkParagraphs(selectedXml);
+  selectedXml = keepLastParagraphWithTotal(selectedXml);
+
+  const total = `<w:p><w:pPr><w:keepLines/><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"000000\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
+  return `${selectedXml}${total}`;
 }
 
 function renumberRawQuestionXml(xml: string, newNumber: number): string {
