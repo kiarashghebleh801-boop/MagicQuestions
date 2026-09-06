@@ -59,6 +59,16 @@ export default function MathematicsPage() {
   function moveQuestion(index: number, direction: number) {
     setPaper(current => { const nextIndex=index+direction; if(nextIndex<0||nextIndex>=current.length)return current; const copy=current.slice(); [copy[index],copy[nextIndex]]=[copy[nextIndex],copy[index]]; return copy; });
   }
+  function reorderQuestion(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return;
+    setPaper(current => {
+      if (fromIndex < 0 || toIndex < 0 || fromIndex >= current.length || toIndex >= current.length) return current;
+      const copy = current.slice();
+      const [moved] = copy.splice(fromIndex, 1);
+      copy.splice(toIndex, 0, moved);
+      return copy;
+    });
+  }
   function swapQuestion(index: number) {
     const old = paper[index]; if (!old) return;
     const usedIds = new Set(paper.map(q => q.id));
@@ -90,7 +100,7 @@ export default function MathematicsPage() {
         <div className="settingRow"><div className="counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={()=>setCount(Math.min(25,count+1))}>+</button></div><select value={difficulty} onChange={e=>setDifficulty(e.target.value as Difficulty|"Mixed")}><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
         <button className="generate" onClick={generate}>✦ Generate my paper</button>
       </div>
-      <PaperPreview paper={paper} totalMarks={totalMarks} removeQuestion={removeQuestion} regenerate={generate} swapQuestion={swapQuestion} moveQuestion={moveQuestion}/>
+      <PaperPreview paper={paper} totalMarks={totalMarks} removeQuestion={removeQuestion} regenerate={generate} swapQuestion={swapQuestion} moveQuestion={moveQuestion} reorderQuestion={reorderQuestion}/>
     </section> : <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">QUESTION BANK</p><h2>Browse all {formattedQuestions.length} formatted questions</h2></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search topics, year, paper…"/></div>
       <div className="topics compact">{topics.map(topic=><button key={topic} className={selected.includes(topic)?"topic selected":"topic"} onClick={()=>toggleTopic(topic)}>{topic}</button>)}</div>
@@ -99,10 +109,11 @@ export default function MathematicsPage() {
   </main>;
 }
 
-type PaperPreviewProps={paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void;swapQuestion:(index:number)=>void;moveQuestion:(index:number,direction:number)=>void};
-function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,moveQuestion}:PaperPreviewProps){
+type PaperPreviewProps={paper:Question[];totalMarks:number;removeQuestion:(id:string)=>void;regenerate:()=>void;swapQuestion:(index:number)=>void;moveQuestion:(index:number,direction:number)=>void;reorderQuestion:(fromIndex:number,toIndex:number)=>void};
+function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,moveQuestion,reorderQuestion}:PaperPreviewProps){
   const[exporting,setExporting]=useState(false);
   const[exportingMarkScheme,setExportingMarkScheme]=useState(false);
+  const[draggedIndex,setDraggedIndex]=useState<number|null>(null);
   const missingMarkSchemes=paper.filter(q=>!hasMarkSchemeSource(q));
   async function downloadWord(){setExporting(true);try{await exportPaperToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the Word paper.");}finally{setExporting(false);}}
   async function downloadMarkScheme(){
@@ -114,6 +125,6 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,m
     setExportingMarkScheme(true);try{await exportMarkSchemeToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the mark scheme.");}finally{setExportingMarkScheme(false);}
   }
   return <div className="panel preview"><div className="previewHead"><div><p>YOUR PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>Higher</span></div>
-    {!paper.length?<div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Newly generated papers only use questions that have matching mark schemes ready.</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t=><span key={t}>{t}</span>)}</div><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting||exportingMarkScheme}>{exporting?"Building paper…":"Download Question Paper"}</button><button className="word" onClick={downloadMarkScheme} disabled={paper.length===0||exporting||exportingMarkScheme}>{exportingMarkScheme?"Building mark scheme…":"Download Mark Scheme"}</button><button className="print" onClick={()=>window.print()}>Print / Save PDF</button></div></>}
+    {!paper.length?<div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Drag and drop questions to change their order, or use the buttons below.</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`} draggable onDragStart={e=>{setDraggedIndex(index);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect="move";}} onDrop={e=>{e.preventDefault();if(draggedIndex!==null)reorderQuestion(draggedIndex,index);setDraggedIndex(null);}} onDragEnd={()=>setDraggedIndex(null)} style={{cursor:"grab",opacity:draggedIndex===index?.55:1,transition:"opacity .15s ease, transform .15s ease"}}><div className="qNumber" title="Drag to reorder">{index+1}<div style={{fontSize:10,lineHeight:1,opacity:.55,marginTop:4}}>⋮⋮</div></div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t=><span key={t}>{t}</span>)}</div><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting||exportingMarkScheme}>{exporting?"Building paper…":"Download Question Paper"}</button><button className="word" onClick={downloadMarkScheme} disabled={paper.length===0||exporting||exportingMarkScheme}>{exportingMarkScheme?"Building mark scheme…":"Download Mark Scheme"}</button><button className="print" onClick={()=>window.print()}>Print / Save PDF</button></div></>}
   </div>;
 }
