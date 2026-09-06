@@ -37,6 +37,15 @@ export default function LoginPage() {
           },
         });
         if (error) throw error;
+
+        const existingAccount = data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+        if (existingAccount) {
+          setMode("login");
+          setPassword("");
+          setMessage("You already have an account with this email. Log in instead.");
+          return;
+        }
+
         if (data.session) {
           router.replace("/");
         } else {
@@ -45,7 +54,14 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Something went wrong.");
+      const text = error instanceof Error ? error.message : "Something went wrong.";
+      if (mode === "signup" && /already|registered|exists/i.test(text)) {
+        setMode("login");
+        setPassword("");
+        setMessage("You already have an account with this email. Log in instead.");
+      } else {
+        setMessage(text);
+      }
     } finally {
       setLoading(false);
     }
