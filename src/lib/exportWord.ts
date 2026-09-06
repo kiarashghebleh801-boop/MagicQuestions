@@ -226,6 +226,21 @@ function forceFirstVisiblePartToA(xml: string): string {
   return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
 }
 
+function normalizeChemistryParagraphSpacing(xml: string): string {
+  const spacing = `<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (/<w:pPr\b/i.test(paragraph)) {
+      return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+        const cleaned = inner
+          .replace(/<w:spacing\b[^>]*\/>/gi, "")
+          .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+        return `<w:pPr${attrs}>${cleaned}${spacing}</w:pPr>`;
+      });
+    }
+    return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
+  });
+}
+
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
@@ -426,10 +441,12 @@ function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number):
   return xml;
 }
 
-function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number): string {
+function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string): string {
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
-  return renumberRawQuestionXml(chunk, newNumber);
+  chunk = renumberRawQuestionXml(chunk, newNumber);
+  if (/Chemistry/i.test(subject)) chunk = normalizeChemistryParagraphSpacing(chunk);
+  return chunk;
 }
 
 async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc, cover: LoadedDoc, subject: string) {
@@ -444,7 +461,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1), drawingCounter)).join("");
+  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1, subject), drawingCounter)).join("");
   outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
@@ -464,7 +481,7 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
-    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1);
+    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
