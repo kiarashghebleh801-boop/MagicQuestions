@@ -87,4 +87,4 @@ export const chemistryPartRules2024 = {
     { part:"a", marks:6, specTags:["4e","4f","4g","1e"] },
     { part:"b", marks:6, specTags:["4f","4h","1e"] },
   ],
-} as const;
+};
