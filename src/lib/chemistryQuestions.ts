@@ -1,3 +1,5 @@
+import { chemistryQuestions2024 } from "./chemistryQuestions2024";
+
 export type ChemistryQuestion = {
   id: string;
   specTags: string[];
@@ -11,6 +13,7 @@ export type ChemistryQuestion = {
 };
 
 export const chemistryQuestions: ChemistryQuestion[] = [
+  ...chemistryQuestions2024,
   { id:"chem-2025-1C-1", specTags:["1c","1d"], summary:"Atomic structure: subatomic particles, mass number, group, period, electronic configuration and element identification.", marks:8, year:2025, session:"May/June", paper:"1C", questionNumber:1, sourceFile:"May_June_2025_Chemistry_Paper_1C_ExamWizard_Style.docx" },
   { id:"chem-2025-1C-2", specTags:["2a","2f","2h"], summary:"Lithium reacting with water, alkaline solution and pH, hydroxide ions, and the lithium flame test.", marks:8, year:2025, session:"May/June", paper:"1C", questionNumber:2, sourceFile:"May_June_2025_Chemistry_Paper_1C_ExamWizard_Style.docx" },
   { id:"chem-2025-1C-3", specTags:["1b"], summary:"Paper chromatography: pencil start line, solubility, interpreting spots and calculating an Rf value.", marks:11, year:2025, session:"May/June", paper:"1C", questionNumber:3, sourceFile:"May_June_2025_Chemistry_Paper_1C_ExamWizard_Style.docx" },
