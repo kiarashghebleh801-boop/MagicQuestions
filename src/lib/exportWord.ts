@@ -192,6 +192,19 @@ function renumberPartMarker(xml: string, oldPart: string, newPart: string): stri
   return xml.replace(re, `$1(${newPart})`);
 }
 
+function removeFirstVisiblePartLabel(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const first = paragraphs.find(p => /^\([a-z]\)(?:\s|$)/i.test(p.text));
+  if (!first) return xml;
+  let removed = false;
+  const updated = first.xml.replace(/(<w:t(?:\s[^>]*)?>\s*)\([a-z]\)(\s*)/i, (_all, before, after) => {
+    removed = true;
+    return `${before}${after}`;
+  });
+  if (!removed) return xml;
+  return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
+}
+
 function removeGreyPartMarkParagraphs(xml: string): string {
   return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?<w:color\s+w:val=(?:\"A8AAAD\"|'A8AAAD')[^>]*\/>[\s\S]*?<w:t[^>]*>\s*\(\d+\)\s*<\/w:t>(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
 }
@@ -334,7 +347,10 @@ function selectQuestionParts(xml: string, selectedParts: string[] | undefined, m
   let selectedXml = `${preamble}${chunks.join("")}`;
   selectedXml = stripPartialPageBreaks(selectedXml);
   selectedXml = forceFirstVisiblePartToA(selectedXml);
-  if (selectedParts.length === 1) selectedXml = removeGreyPartMarkParagraphs(selectedXml);
+  if (selectedParts.length === 1) {
+    selectedXml = removeGreyPartMarkParagraphs(selectedXml);
+    selectedXml = removeFirstVisiblePartLabel(selectedXml);
+  }
   selectedXml = keepLastParagraphWithTotal(selectedXml);
 
   const total = `<w:p><w:pPr><w:keepLines/><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"000000\"/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
