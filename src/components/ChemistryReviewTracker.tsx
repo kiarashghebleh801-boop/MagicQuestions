@@ -37,6 +37,16 @@ export default function ChemistryReviewTracker() {
     return map;
   }, []);
 
+  function resolveTopic(topicTag: string) {
+    if (!userId || !snapshot) return;
+    const next: ReviewSnapshot = { ...snapshot, topics: snapshot.topics.filter(topic => topic.topic !== topicTag) };
+    setSnapshot(next);
+    try {
+      window.localStorage.setItem(`mq-chemistry-review-${userId}`, JSON.stringify(next));
+      window.dispatchEvent(new Event("mq-chemistry-review-updated"));
+    } catch {}
+  }
+
   if (!userId || !snapshot) return <div style={{marginBottom:20,padding:16,borderRadius:16,border:"1px dashed var(--border,rgba(127,127,127,.28))",background:"rgba(127,127,127,.04)"}}><div className="qMeta">PAPER REVIEW LINK</div><h3 style={{margin:"5px 0 7px"}}>No review data yet</h3><p style={{margin:0}}>Finish a Chemistry paper review and your red/yellow topics will appear here automatically.</p></div>;
 
   const weakTopics = snapshot.topics.filter(t => names.has(t.topic));
@@ -49,6 +59,6 @@ export default function ChemistryReviewTracker() {
       <div><div className="qMeta">LINKED TO YOUR LATEST PAPER REVIEW</div><h3 style={{margin:"5px 0 4px"}}>{weakTopics.length ? `${weakTopics.length} topic${weakTopics.length===1?"":"s"} need attention` : "No weak Chemistry topics from your latest review"}</h3><div className="qMeta">{date} · {snapshot.score}/{snapshot.possible} marks · {snapshot.percent}%</div></div>
       <div style={{display:"flex",gap:7,flexWrap:"wrap",justifyContent:"flex-end"}}>{redTopics>0&&<span style={{padding:"6px 9px",borderRadius:999,background:"rgba(220,38,38,.12)",border:"1px solid rgba(220,38,38,.28)",fontSize:11,fontWeight:850}}>{redTopics} red</span>}{yellowOnly>0&&<span style={{padding:"6px 9px",borderRadius:999,background:"rgba(234,179,8,.14)",border:"1px solid rgba(234,179,8,.3)",fontSize:11,fontWeight:850}}>{yellowOnly} yellow</span>}</div>
     </div>
-    {!weakTopics.length ? <p style={{margin:0}}>Everything tested in that paper was green. Keep the tracker moving by completing your next topics.</p> : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:9}}>{weakTopics.map(topic => <div key={topic.topic} style={{padding:"11px 12px",borderRadius:12,background:topic.red?"rgba(220,38,38,.10)":"rgba(234,179,8,.12)",border:`1px solid ${topic.red?"rgba(220,38,38,.25)":"rgba(234,179,8,.28)"}`}}><b>{names.get(topic.topic)}</b><div className="qMeta" style={{marginTop:4}}>{topic.red?`${topic.red} red${topic.yellow?` · ${topic.yellow} yellow`:""}`:`${topic.yellow} yellow`} · weakest {Math.round(topic.worst*100)}%</div></div>)}</div>}
+    {!weakTopics.length ? <p style={{margin:0}}>Everything tested in that paper was green, or you have resolved all the topics you wanted to revisit.</p> : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:9}}>{weakTopics.map(topic => <div key={topic.topic} style={{padding:"11px 12px",borderRadius:12,background:topic.red?"rgba(220,38,38,.10)":"rgba(234,179,8,.12)",border:`1px solid ${topic.red?"rgba(220,38,38,.25)":"rgba(234,179,8,.28)"}`}}><div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"flex-start"}}><div><b>{names.get(topic.topic)}</b><div className="qMeta" style={{marginTop:4}}>{topic.red?`${topic.red} red${topic.yellow?` · ${topic.yellow} yellow`:""}`:`${topic.yellow} yellow`} · weakest {Math.round(topic.worst*100)}%</div></div><button onClick={()=>resolveTopic(topic.topic)} style={{border:"1px solid rgba(127,127,127,.28)",background:"rgba(127,127,127,.10)",color:"inherit",borderRadius:9,padding:"7px 10px",fontSize:11,fontWeight:850,cursor:"pointer",whiteSpace:"nowrap"}}>✓ Resolve</button></div></div>)}</div>}
   </div>;
 }
