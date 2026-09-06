@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReviewPart, ReviewQuestion } from "@/lib/reviewParts";
 import { getReviewParts } from "@/lib/reviewParts";
+import { supabase } from "@/lib/supabase";
 
 type QuestionWithParts = { question: ReviewQuestion; parts: ReviewPart[] };
 type FocusItem = { qi: number; part: ReviewPart; score: number; ratio: number; question: ReviewQuestion };
@@ -95,10 +96,26 @@ export default function PaperReview({ paper, title, onClose }: Props) {
     setScores(current => ({ ...current, [key]: Math.max(0, Math.min(max, parsed)) }));
   }
 
-  function finishReview() {
+  async function finishReview() {
     if (!allFilled) return;
     setSubmitted(true);
     setTab("focus");
+    if (/Chemistry/i.test(title)) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const userId = data.session?.user.id;
+        if (userId) {
+          window.localStorage.setItem(`mq-chemistry-review-${userId}`, JSON.stringify({
+            percent: totals.percent,
+            score: totals.got,
+            possible: totals.possible,
+            topics: topicFocus,
+            savedAt: Date.now(),
+          }));
+          window.dispatchEvent(new CustomEvent("mq-chemistry-review-updated", { detail: { userId } }));
+        }
+      } catch {}
+    }
   }
 
   const redCount = focusItems.filter(x => x.ratio < .5).length;
