@@ -226,6 +226,13 @@ function forceFirstVisiblePartToA(xml: string): string {
   return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
 }
 
+function withParagraphProperties(paragraph: string, properties: string): string {
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>/i, `<w:pPr$1>${properties}`);
+  }
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${properties}</w:pPr>`);
+}
+
 function normalizeChemistryParagraphSpacing(xml: string): string {
   const spacing = `<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"300\" w:lineRule=\"auto\"/>`;
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
@@ -239,6 +246,65 @@ function normalizeChemistryParagraphSpacing(xml: string): string {
     }
     return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
   });
+}
+
+function improveChemistryPageLayout(xml: string): string {
+  let out = stripPartialPageBreaks(xml);
+
+  // Keep table rows intact where Word can do so safely. This stops diagrams/tables
+  // from being chopped halfway across a page without making a whole question unbreakable.
+  out = out.replace(/<w:tr(?=[\s>])[\s\S]*?<\/w:tr>/gi, row => {
+    if (/<w:trPr\b/i.test(row)) {
+      if (/<w:cantSplit\b/i.test(row)) return row;
+      return row.replace(/<w:trPr\b([^>]*)>/i, `<w:trPr$1><w:cantSplit/>`);
+    }
+    return row.replace(/<w:tr(?=[\s>])([^>]*)>/i, `<w:tr$1><w:trPr><w:cantSplit/></w:trPr>`);
+  });
+
+  const paragraphs = rawParagraphs(out);
+  if (!paragraphs.length) return out;
+
+  const replacements = new Map<number, string>();
+  for (let i = 0; i < paragraphs.length; i++) {
+    const p = paragraphs[i];
+    const text = p.text.trim();
+    const isQuestionLabel = /^Q\d+\.$/i.test(text);
+    const isMainPart = /^\([a-z]\)(?:\s|$)/i.test(text);
+    const isSubPart = /^\((?:i|ii|iii|iv|v|vi)\)(?:\s|$)/i.test(text);
+    const hasDrawing = /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml);
+    const isTotal = /Total for question/i.test(text);
+
+    let props = "";
+    if (isQuestionLabel) props += `<w:keepNext/><w:keepLines/><w:widowControl/><w:spacing w:before=\"180\" w:after=\"60\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+    else if (isMainPart || isSubPart) props += `<w:keepNext/><w:keepLines/><w:widowControl/>`;
+    else if (hasDrawing) props += `<w:keepLines/><w:widowControl/>`;
+    else if (isTotal) props += `<w:keepLines/><w:widowControl/>`;
+    else if (text) props += `<w:widowControl/>`;
+
+    if (!props) continue;
+    let updated = p.xml;
+    // Remove duplicate pagination controls before adding the clean set above.
+    updated = updated
+      .replace(/<w:keepNext\b[^>]*\/>/gi, "")
+      .replace(/<w:keepLines\b[^>]*\/>/gi, "")
+      .replace(/<w:widowControl\b[^>]*\/>/gi, "");
+    if (isQuestionLabel) {
+      updated = updated
+        .replace(/<w:spacing\b[^>]*\/>/gi, "")
+        .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+    }
+    replacements.set(p.start, withParagraphProperties(updated, props));
+  }
+
+  // Work backwards so the original paragraph offsets stay valid.
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    const p = paragraphs[i];
+    const replacement = replacements.get(p.start);
+    if (!replacement) continue;
+    out = `${out.slice(0, p.start)}${replacement}${out.slice(p.end)}`;
+  }
+
+  return out;
 }
 
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
@@ -445,7 +511,10 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
-  if (/Chemistry/i.test(subject)) chunk = normalizeChemistryParagraphSpacing(chunk);
+  if (/Chemistry/i.test(subject)) {
+    chunk = normalizeChemistryParagraphSpacing(chunk);
+    chunk = improveChemistryPageLayout(chunk);
+  }
   return chunk;
 }
 
