@@ -1,11 +1,13 @@
 import type { ChemistryQuestion } from "./chemistryQuestions";
 import { chemistryPartRules2024 } from "./chemistryParts2024";
+import { chemistryPartRulesArchive } from "./chemistryPartsArchive";
 
 export type ChemistryQuestionSelection = ChemistryQuestion & { selectedParts?: string[] };
 
 type PartRule = { part: string; marks: number; specTags: string[] };
 
 const partRules: Record<string, PartRule[]> = {
+  ...chemistryPartRulesArchive,
   ...chemistryPartRules2024,
   "chem-2025-1C-1": [
     { part:"a", marks:3, specTags:["1c"] },
