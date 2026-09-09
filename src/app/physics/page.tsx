@@ -6,6 +6,7 @@ import { physicsSections, physicsTopicTitle } from "@/lib/physicsSpec";
 import { physicsQuestions } from "@/lib/physicsQuestions";
 import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
+import { exportPhysicsPaperToWord } from "@/lib/exportPhysicsWord";
 import PaperReview from "@/components/PaperReview";
 
 export default function PhysicsPage() {
@@ -18,6 +19,7 @@ export default function PhysicsPage() {
   const [mode, setMode] = useState<"generate" | "bank">("generate");
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -80,6 +82,18 @@ export default function PhysicsPage() {
     setPaper(current => current.map((q, i) => i === index ? candidates[Math.floor(Math.random() * candidates.length)] : q));
   }
 
+  async function downloadWord() {
+    if (!paper.length || exporting) return;
+    setExporting(true);
+    try {
+      await exportPhysicsPaperToWord(paper);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not create the Physics Word paper.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
   return <main>
@@ -123,7 +137,7 @@ export default function PhysicsPage() {
             <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => swapQuestion(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
             <div className="marks">{q.marks}<small>marks</small></div>
           </article>)}</div>
-          <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
+          <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
           {reviewOpen && <PaperReview paper={paper} title="Physics paper review" onClose={() => setReviewOpen(false)}/>} 
         </>}
       </div>
