@@ -1,6 +1,7 @@
 import type { Question } from "./questions";
 
 export const FORMATTED_BUCKET = "examwizard-papers";
+export const PHYSICS_BUCKET = "physics-papers";
 
 const sourceByPaper: Record<string, string> = {
   "2022|January|1HR": "January_2022_R_ExamWizard_Style.docx",
@@ -25,10 +26,18 @@ const sourceByPaper: Record<string, string> = {
   "2025|May/June|2C": "May_June_2025_Chemistry_Paper_2C_ExamWizard_Style.docx.docx",
   "2025|November|1C": "November_2025_Chemistry_Paper_1C_ExamWizard_Style_FINAL.docx",
   "2025|November|2C": "November_2025_Chemistry_Paper_2C_ExamWizard_Style.docx",
+
+  // Physics formatted papers live in the physics-papers bucket.
+  "2025|November|1P": "November_2025_Physics_Paper_1P.docx",
+  "2025|November|2P": "November_2025_Physics_Paper_2P.docx",
 };
 
 export function getFormattedSource(q: Question): string | null {
   return sourceByPaper[`${q.year}|${q.session}|${q.paper}`] ?? null;
+}
+
+export function getFormattedSourceBucket(q: Question): string {
+  return /P$/i.test(q.paper) && !/C$/i.test(q.paper) ? PHYSICS_BUCKET : FORMATTED_BUCKET;
 }
 
 export function hasFormattedSource(q: Question): boolean {
