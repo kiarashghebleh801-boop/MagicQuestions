@@ -44,26 +44,26 @@ export default function IgcsePage() {
     });
   }, [router]);
 
-  if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions</div></main>;
+  if (!ready) return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",background:"#080808",color:"#f5e3a3"}}><div className="authLogo" style={{margin:0,color:"inherit"}}><span style={{color:"#d4af37"}}>✦</span> MagicQuestions</div></main>;
 
-  return <main>
-    <header className="nav">
-      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">IGCSE</span></div>
-      <nav className="tabs"><button onClick={()=>router.push("/")}>Home</button><button className="active">IGCSE</button></nav>
-      <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={()=>router.push("/")}>Back</button></div>
+  return <main style={{minHeight:"100vh",background:"#080808",color:"#f4ecd4"}}>
+    <header className="nav" style={{background:"rgba(8,8,8,.96)",borderBottom:"1px solid rgba(212,175,55,.22)",color:"#f4ecd4"}}>
+      <div className="brand"><span className="spark" style={{color:"#d4af37"}}>✦</span> MagicQuestions <span className="ownerTag" style={{background:"rgba(212,175,55,.10)",color:"#d4af37"}}>IGCSE</span></div>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <div className="badge" style={{background:"rgba(212,175,55,.08)",borderColor:"rgba(212,175,55,.22)",color:"#d9c98c"}}>{email}</div>
+      </div>
     </header>
 
     <section className="hero" style={{paddingBottom:28}}>
-      <p className="eyebrow">INTERNATIONAL GCSE</p>
-      <h1>Choose your<br/><span>subject.</span></h1>
-      <p className="subtitle">Pick a subject to open its question generator and question bank.</p>
+      <p className="eyebrow" style={{color:"#d4af37"}}>INTERNATIONAL GCSE</p>
+      <h1 style={{color:"#fffaf0"}}>Choose your<br/><span style={{color:"#d4af37"}}>subject.</span></h1>
+      <p className="subtitle" style={{color:"#aaa38f"}}>Pick a subject to open its question generator and question bank.</p>
     </section>
 
     <section style={{maxWidth:1180,margin:"0 auto 64px",padding:"0 20px",display:"grid",gap:16}}>
       {subjects.map(subject => <button
         key={subject.title}
         onClick={()=>router.push(subject.route)}
-        className="panel"
         style={{
           width:"100%",
           minHeight:94,
@@ -74,18 +74,22 @@ export default function IgcsePage() {
           gap:18,
           textAlign:"left",
           cursor:"pointer",
-          color:"inherit",
-          border:"1px solid var(--border, rgba(127,127,127,.22))",
+          color:"#fffaf0",
+          background:"#111111",
+          border:"1px solid rgba(212,175,55,.24)",
           borderRadius:18,
+          boxShadow:"0 8px 24px rgba(0,0,0,.22)",
           transition:"transform .16s ease, border-color .16s ease, background .16s ease",
         }}
         onMouseEnter={e=>{
           e.currentTarget.style.transform="translateY(-1px)";
-          e.currentTarget.style.borderColor="rgba(212,175,55,.42)";
+          e.currentTarget.style.borderColor="rgba(212,175,55,.6)";
+          e.currentTarget.style.background="#15130d";
         }}
         onMouseLeave={e=>{
           e.currentTarget.style.transform="translateY(0)";
-          e.currentTarget.style.borderColor="var(--border, rgba(127,127,127,.22))";
+          e.currentTarget.style.borderColor="rgba(212,175,55,.24)";
+          e.currentTarget.style.background="#111111";
         }}
       >
         <div style={{
@@ -96,17 +100,18 @@ export default function IgcsePage() {
           placeItems:"center",
           background:"rgba(212,175,55,.10)",
           color:"#d4af37",
+          border:"1px solid rgba(212,175,55,.12)",
         }}><FolderIcon/></div>
 
         <div>
           <h2 style={{margin:0,fontSize:"clamp(21px,2vw,27px)",fontWeight:800,letterSpacing:"-.02em"}}>{subject.title}</h2>
-          <div className="qMeta" style={{marginTop:5,opacity:.7}}>{subject.subtitle}</div>
+          <div className="qMeta" style={{marginTop:5,color:"#9c9584"}}>{subject.subtitle}</div>
         </div>
 
-        <div style={{opacity:.6,display:"grid",placeItems:"center"}}><ChevronIcon/></div>
+        <div style={{color:"#d4af37",opacity:.72,display:"grid",placeItems:"center"}}><ChevronIcon/></div>
       </button>)}
 
-      <div className="panel" style={{
+      <div style={{
         minHeight:94,
         padding:"18px 22px",
         display:"grid",
@@ -114,11 +119,13 @@ export default function IgcsePage() {
         alignItems:"center",
         gap:18,
         borderRadius:18,
-        borderStyle:"dashed",
-        opacity:.62,
+        border:"1px dashed rgba(212,175,55,.2)",
+        background:"#0d0d0d",
+        color:"#b6ad94",
+        opacity:.82,
       }}>
-        <div style={{width:46,height:46,borderRadius:13,display:"grid",placeItems:"center",background:"rgba(127,127,127,.09)",color:"inherit"}}><FolderIcon/></div>
-        <div><h2 style={{margin:0,fontSize:22}}>More subjects</h2><div className="qMeta" style={{marginTop:5}}>Physics, Biology, Economics and more can be added here.</div></div>
+        <div style={{width:46,height:46,borderRadius:13,display:"grid",placeItems:"center",background:"rgba(212,175,55,.07)",color:"#b99936"}}><FolderIcon/></div>
+        <div><h2 style={{margin:0,fontSize:22,color:"#e7ddc3"}}>More subjects</h2><div className="qMeta" style={{marginTop:5,color:"#8f8979"}}>Physics, Biology, Economics and more can be added here.</div></div>
       </div>
     </section>
   </main>;
