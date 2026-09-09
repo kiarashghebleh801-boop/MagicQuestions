@@ -12,7 +12,7 @@ const PANEL = "#101010";
 const subjects = [
   {
     title: "Mathematics",
-    subtitle: "Edexcel IGCSE Mathematics A",
+    subtitle: "Edexcel International GCSE Mathematics A 4MA1",
     route: "/mathematics",
   },
   {
