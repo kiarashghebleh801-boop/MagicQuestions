@@ -2,7 +2,7 @@
 
 import JSZip from "jszip";
 import type { Question } from "./questions";
-import { FORMATTED_BUCKET, getFormattedSource } from "./sourceDocs";
+import { getFormattedSource, getFormattedSourceBucket } from "./sourceDocs";
 import { supabase } from "./supabase";
 
 export type ReviewQuestion = Question & { selectedParts?: string[] };
@@ -23,10 +23,11 @@ function textOf(node: Element): string {
     .trim();
 }
 
-async function documentXml(filename: string): Promise<string> {
-  if (!cache.has(filename)) {
-    cache.set(filename, (async () => {
-      const { data, error } = await supabase.storage.from(FORMATTED_BUCKET).download(filename);
+async function documentXml(filename: string, bucket: string): Promise<string> {
+  const cacheKey = `${bucket}:${filename}`;
+  if (!cache.has(cacheKey)) {
+    cache.set(cacheKey, (async () => {
+      const { data, error } = await supabase.storage.from(bucket).download(filename);
       if (error || !data) throw new Error(`Could not load ${filename}`);
       const zip = await JSZip.loadAsync(await data.arrayBuffer());
       const file = zip.file("word/document.xml");
@@ -34,7 +35,7 @@ async function documentXml(filename: string): Promise<string> {
       return file.async("text");
     })());
   }
-  return cache.get(filename)!;
+  return cache.get(cacheKey)!;
 }
 
 function questionNodes(xml: string, questionNumber: number): Element[] {
@@ -63,9 +64,7 @@ function extractParts(nodes: Element[], totalMarks: number): ReviewPart[] {
   for (const node of nodes) {
     if (node.localName === "p") paragraphs.push(textOf(node));
     else {
-      for (const p of Array.from(node.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "p"))) {
-        paragraphs.push(textOf(p));
-      }
+      for (const p of Array.from(node.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "p"))) paragraphs.push(textOf(p));
     }
   }
 
@@ -86,11 +85,7 @@ function extractParts(nodes: Element[], totalMarks: number): ReviewPart[] {
 
   if (!parts.length) return [{ key: "whole", label: "Whole question", marks: totalMarks }];
   const known = parts.reduce((sum, p) => sum + p.marks, 0);
-  if (known !== totalMarks) {
-    // Keep the structured parts, but make sure their maximum adds up to the bank total.
-    // Any marks not exposed as standalone Word mark labels are assigned to the last part.
-    parts[parts.length - 1].marks = Math.max(0, parts[parts.length - 1].marks + (totalMarks - known));
-  }
+  if (known !== totalMarks) parts[parts.length - 1].marks = Math.max(0, parts[parts.length - 1].marks + (totalMarks - known));
   return parts.map(p => ({ key: p.part, originalPart: p.part, label: `(${p.part})`, marks: p.marks }));
 }
 
@@ -98,7 +93,8 @@ export async function getReviewParts(q: ReviewQuestion): Promise<ReviewPart[]> {
   const filename = getFormattedSource(q);
   if (!filename) return [{ key: "whole", label: "Whole question", marks: q.marks }];
   try {
-    const parts = extractParts(questionNodes(await documentXml(filename), q.questionNumber), q.marks);
+    const bucket = getFormattedSourceBucket(q);
+    const parts = extractParts(questionNodes(await documentXml(filename, bucket), q.questionNumber), q.marks);
     if (!q.selectedParts?.length || parts.length === 1 && parts[0].key === "whole") return parts;
     const wanted = new Set(q.selectedParts.map(p => p.toLowerCase()));
     const selected = parts.filter(p => p.originalPart && wanted.has(p.originalPart));
