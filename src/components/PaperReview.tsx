@@ -37,7 +37,7 @@ export default function PaperReview({ paper, title, onClose }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [tab, setTab] = useState<"marks" | "focus" | "history">("marks");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const subject = /Chemistry/i.test(title) ? "chemistry" : "mathematics";
+  const subject = /Chemistry/i.test(title) ? "chemistry" : /Physics/i.test(title) ? "physics" : "mathematics";
 
   async function historyKey() {
     const { data } = await supabase.auth.getSession();
@@ -121,9 +121,12 @@ export default function PaperReview({ paper, title, onClose }: Props) {
         const next=[entry,...(Array.isArray(existing)?existing:[])].slice(0,25);
         window.localStorage.setItem(key,JSON.stringify(next)); setHistory(next);
       }
-      if(subject==="chemistry"){
+      if(subject==="chemistry" || subject==="physics"){
         const {data}=await supabase.auth.getSession(); const userId=data.session?.user.id;
-        if(userId){window.localStorage.setItem(`mq-chemistry-review-${userId}`,JSON.stringify({percent:totals.percent,score:totals.got,possible:totals.possible,topics:topicFocus,savedAt:now}));window.dispatchEvent(new CustomEvent("mq-chemistry-review-updated",{detail:{userId}}));}
+        if(userId){
+          window.localStorage.setItem(`mq-${subject}-review-${userId}`,JSON.stringify({percent:totals.percent,score:totals.got,possible:totals.possible,topics:topicFocus,savedAt:now}));
+          window.dispatchEvent(new CustomEvent(`mq-${subject}-review-updated`,{detail:{userId}}));
+        }
       }
     }catch{}
   }
