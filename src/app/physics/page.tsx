@@ -8,15 +8,18 @@ import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 import { exportPhysicsPaperToWord } from "@/lib/exportPhysicsWord";
 import PaperReview from "@/components/PaperReview";
+import PhysicsReviewTracker from "@/components/PhysicsReviewTracker";
 
 export default function PhysicsPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState("");
+  const [trackerKey, setTrackerKey] = useState("mq-physics-tracker");
   const [selectedTopics, setSelectedTopics] = useState<string[]>(["1b"]);
+  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [count, setCount] = useState(5);
   const [paper, setPaper] = useState<Question[]>([]);
-  const [mode, setMode] = useState<"generate" | "bank">("generate");
+  const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -25,12 +28,26 @@ export default function PhysicsPage() {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
       setEmail(data.session.user.email || "Account");
+      const key = `mq-physics-tracker-${data.session.user.id}`;
+      setTrackerKey(key);
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(key) || "[]");
+        if (Array.isArray(saved)) setCompletedTopics(saved.filter(x => typeof x === "string"));
+      } catch {}
       const { data: profile } = await supabase.from("profiles").select("banned").eq("id", data.session.user.id).maybeSingle();
       if (profile?.banned) { router.replace("/banned"); return; }
       await supabase.rpc("touch_last_seen");
       setReady(true);
     });
   }, [router]);
+
+  useEffect(() => {
+    if (!ready) return;
+    window.localStorage.setItem(trackerKey, JSON.stringify(completedTopics));
+  }, [completedTopics, ready, trackerKey]);
+
+  const allSpecTopics = useMemo(() => physicsSections.flatMap(section => section.subtopics.map(sub => ({ tag: `${section.number}${sub.code}`, sectionNumber: section.number, sectionTitle: section.title, code: sub.code, title: sub.title }))), []);
+  const trackerPercent = allSpecTopics.length ? Math.round((completedTopics.length / allSpecTopics.length) * 100) : 0;
 
   const matchingQuestions = useMemo(() => {
     if (!selectedTopics.length) return physicsQuestions;
@@ -48,6 +65,10 @@ export default function PhysicsPage() {
 
   function toggleTopic(tag: string) {
     setSelectedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]);
+  }
+
+  function toggleCompleted(tag: string) {
+    setCompletedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]);
   }
 
   function generate() {
@@ -102,6 +123,7 @@ export default function PhysicsPage() {
       <nav className="tabs">
         <button className={mode === "generate" ? "active" : ""} onClick={() => setMode("generate")}>Generate</button>
         <button className={mode === "bank" ? "active" : ""} onClick={() => setMode("bank")}>Question bank</button>
+        <button className={mode === "tracker" ? "active" : ""} onClick={() => setMode("tracker")}>Tracker</button>
         <button onClick={() => router.push("/igcse")}>Subjects</button>
       </nav>
       <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
@@ -141,10 +163,32 @@ export default function PhysicsPage() {
           {reviewOpen && <PaperReview paper={paper} title="Physics paper review" onClose={() => setReviewOpen(false)}/>} 
         </>}
       </div>
-    </section> : <section className="bank panel">
+    </section> : mode === "bank" ? <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">PHYSICS QUESTION BANK</p><h2>Browse {bankResults.length} matching questions</h2></div><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Physics questions…"/></div>
       <div style={{marginTop:18,display:"flex",flexDirection:"column",gap:12}}>{physicsSections.map(section => <div key={section.number}><div className="qMeta" style={{marginBottom:6}}>{section.number}. {section.title}</div><div className="topics compact" style={{margin:0}}>{section.subtopics.map(sub => { const tag = `${section.number}${sub.code}`; const n = physicsQuestions.filter(q => q.topics.includes(tag)).length; return <button key={tag} className={selectedTopics.includes(tag) ? "topic selected" : "topic"} onClick={() => toggleTopic(tag)}>({sub.code}) {sub.title} · {n}</button>; })}</div></div>)}</div>
       <div className="bankResults" style={{marginTop:20}}>{bankResults.map(q => <article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Q{q.questionNumber}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b><button onClick={() => addQuestion(q)}>+ Add</button></div></article>)}</div>
+    </section> : <section className="bank panel" style={{maxWidth:1100,margin:"0 auto 48px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"220px 1fr",gap:28,alignItems:"center",marginBottom:28}}>
+        <div style={{width:180,height:180,borderRadius:"50%",display:"grid",placeItems:"center",background:`conic-gradient(var(--accent, #d4af37) ${trackerPercent}%, rgba(127,127,127,.18) 0)`,padding:14,margin:"0 auto"}}><div style={{width:"100%",height:"100%",borderRadius:"50%",background:"var(--panel, #11100d)",display:"grid",placeItems:"center",textAlign:"center"}}><div><strong style={{fontSize:38}}>{trackerPercent}%</strong><div className="qMeta">complete</div></div></div></div>
+        <div><p className="eyebrow">PHYSICS SPECIFICATION TRACKER</p><h2 style={{margin:"4px 0 8px"}}>{completedTopics.length} of {allSpecTopics.length} topics completed</h2><p className="subtitle" style={{textAlign:"left",margin:"0 0 16px",maxWidth:650}}>Tick each Edexcel International GCSE Physics specification topic when you finish revising it. Your progress is saved on this device. Units are excluded.</p><div style={{height:16,borderRadius:999,background:"rgba(127,127,127,.18)",overflow:"hidden"}}><div style={{height:"100%",width:`${trackerPercent}%`,borderRadius:999,background:"var(--accent, #d4af37)",transition:"width .25s ease"}}/></div><div className="qMeta" style={{marginTop:8}}>{trackerPercent}% towards 100%</div></div>
+      </div>
+
+      <PhysicsReviewTracker/>
+
+      <div style={{display:"flex",flexDirection:"column",gap:18}}>{physicsSections.map(section => {
+        const sectionTags = section.subtopics.map(sub => `${section.number}${sub.code}`);
+        const sectionDone = sectionTags.filter(tag => completedTopics.includes(tag)).length;
+        const sectionPercent = Math.round((sectionDone / sectionTags.length) * 100);
+        return <div key={section.number} style={{border:"1px solid var(--border, rgba(212,175,55,.22))",borderRadius:16,padding:18}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",marginBottom:12}}><div><div className="qMeta">SECTION {section.number}</div><h3 style={{margin:"2px 0"}}>{section.title}</h3></div><b>{sectionPercent}%</b></div>
+          <div style={{height:8,borderRadius:999,background:"rgba(127,127,127,.16)",overflow:"hidden",marginBottom:14}}><div style={{height:"100%",width:`${sectionPercent}%`,background:"var(--accent, #d4af37)",borderRadius:999}}/></div>
+          <div style={{display:"grid",gap:9}}>{section.subtopics.map(sub => {
+            const tag = `${section.number}${sub.code}`;
+            const done = completedTopics.includes(tag);
+            return <label key={tag} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,cursor:"pointer",background:done?"rgba(212,175,55,.10)":"rgba(127,127,127,.06)"}}><input type="checkbox" checked={done} onChange={()=>toggleCompleted(tag)} style={{width:18,height:18}}/><span style={{textDecoration:done?"line-through":"none",opacity:done?.72:1}}><b>{section.number}({sub.code})</b> {sub.title}</span></label>;
+          })}</div>
+        </div>;
+      })}</div>
     </section>}
   </main>;
 }
