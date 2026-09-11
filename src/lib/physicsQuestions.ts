@@ -22,4 +22,50 @@ export const physicsQuestions: Question[] = [
   { id:"phys-2025-nov-2P-6",year:2025,session:"November",paper:"2P",questionNumber:6,marks:7,topics:["8d"],difficulty:"Hard",summary:"Galaxy red-shift, recession velocity and cosmic microwave background evidence." },
   { id:"phys-2025-nov-2P-7",year:2025,session:"November",paper:"2P",questionNumber:7,marks:9,topics:["5c"],difficulty:"Hard",summary:"Heating and melting a metal, specific heat capacity and particle motion in gases." },
   { id:"phys-2025-nov-2P-8",year:2025,session:"November",paper:"2P",questionNumber:8,marks:13,topics:["7c","7b"],difficulty:"Hard",summary:"Nuclear fission chain reactions, fusion, radioactive decay and half-life." },
+
+  // May/June 2025 Paper 1P
+  { id:"phys-2025-mj-1P-1",year:2025,session:"May/June",paper:"1P",questionNumber:1,marks:7,topics:["1b","1c"],difficulty:"Easy",summary:"Average speed and distance, then friction and its effect on velocity." },
+  { id:"phys-2025-mj-1P-2",year:2025,session:"May/June",paper:"1P",questionNumber:2,marks:13,topics:["8b","8c"],difficulty:"Medium",summary:"Orbital paths, gravity, galaxies, stellar colour and stellar evolution." },
+  { id:"phys-2025-mj-1P-3",year:2025,session:"May/June",paper:"1P",questionNumber:3,marks:15,topics:["2c"],difficulty:"Hard",summary:"Thermistors, voltage, current and resistance, then calibrating a temperature-measuring circuit." },
+  { id:"phys-2025-mj-1P-4",year:2025,session:"May/June",paper:"1P",questionNumber:4,marks:8,topics:["7c"],difficulty:"Medium",summary:"Controlled nuclear fission, chain reactions and reactor control." },
+  { id:"phys-2025-mj-1P-5",year:2025,session:"May/June",paper:"1P",questionNumber:5,marks:6,topics:["6c"],difficulty:"Medium",summary:"How a direct-current motor turns continuously using brushes and a split-ring commutator." },
+  { id:"phys-2025-mj-1P-6",year:2025,session:"May/June",paper:"1P",questionNumber:6,marks:12,topics:["4b","4c"],difficulty:"Medium",summary:"An experiment to determine power while running upstairs, including energy transfer and measurement." },
+  { id:"phys-2025-mj-1P-7",year:2025,session:"May/June",paper:"1P",questionNumber:7,marks:7,topics:["5b"],difficulty:"Medium",summary:"Pressure in liquids and gases, including forces on bubbles and pressure changes with depth." },
+  { id:"phys-2025-mj-1P-8",year:2025,session:"May/June",paper:"1P",questionNumber:8,marks:11,topics:["3b"],difficulty:"Medium",summary:"Ripple-tank waves, transverse waves, wavelength, frequency and wave behaviour." },
+  { id:"phys-2025-mj-1P-9",year:2025,session:"May/June",paper:"1P",questionNumber:9,marks:8,topics:["7b"],difficulty:"Medium",summary:"Protactinium-234m radioactivity, radiation detection, safety and decay measurements." },
+  { id:"phys-2025-mj-1P-10",year:2025,session:"May/June",paper:"1P",questionNumber:10,marks:11,topics:["6c"],difficulty:"Hard",summary:"Investigating the magnetic force on a current-carrying conductor using a balance." },
+  { id:"phys-2025-mj-1P-11",year:2025,session:"May/June",paper:"1P",questionNumber:11,marks:12,topics:["2c","7b"],difficulty:"Hard",summary:"Fluorescent tube lamps, voltage and current, ionisation and energy transfers." },
+
+  // May/June 2025 Paper 2P
+  { id:"phys-2025-mj-2P-1",year:2025,session:"May/June",paper:"2P",questionNumber:1,marks:7,topics:["5b"],difficulty:"Medium",summary:"Measuring mass and irregular volume by displacement, then calculating density." },
+  { id:"phys-2025-mj-2P-2",year:2025,session:"May/June",paper:"2P",questionNumber:2,marks:6,topics:["3d"],difficulty:"Medium",summary:"Sound-wave frequency range, wave properties and oscilloscope traces." },
+  { id:"phys-2025-mj-2P-3",year:2025,session:"May/June",paper:"2P",questionNumber:3,marks:9,topics:["4b","4d","2d"],difficulty:"Medium",summary:"Solar energy transfers, renewable generation, thermal absorption and charge transfer." },
+  { id:"phys-2025-mj-2P-4",year:2025,session:"May/June",paper:"2P",questionNumber:4,marks:9,topics:["1c"],difficulty:"Medium",summary:"Moments and the principle of moments applied to a spring-loaded gate mechanism." },
+  { id:"phys-2025-mj-2P-5",year:2025,session:"May/June",paper:"2P",questionNumber:5,marks:12,topics:["2d"],difficulty:"Hard",summary:"Static electricity, charge transfer, electrostatic forces and an inverse-square relationship investigation." },
+  { id:"phys-2025-mj-2P-6",year:2025,session:"May/June",paper:"2P",questionNumber:6,marks:5,topics:["7b"],difficulty:"Medium",summary:"Gamma radiation, ionisation, penetration and the inverse-square law." },
+  { id:"phys-2025-mj-2P-7",year:2025,session:"May/June",paper:"2P",questionNumber:7,marks:14,topics:["6d","4b"],difficulty:"Hard",summary:"Transformer turns ratio, efficiency and the use of transformers in power transmission." },
+  { id:"phys-2025-mj-2P-8",year:2025,session:"May/June",paper:"2P",questionNumber:8,marks:8,topics:["8d"],difficulty:"Hard",summary:"Big Bang evidence, red-shift and calculating the observed wavelength of light from galaxies." },
+
+  // May/June 2025 regional Paper 1PR
+  { id:"phys-2025-mj-1PR-1",year:2025,session:"May/June",paper:"1PR",questionNumber:1,marks:5,topics:["1b","1c"],difficulty:"Easy",summary:"Resultant force, thinking distance, braking distance and stopping-distance factors." },
+  { id:"phys-2025-mj-1PR-2",year:2025,session:"May/June",paper:"1PR",questionNumber:2,marks:7,topics:["6b"],difficulty:"Medium",summary:"Uniform magnetic fields, induced magnetism and permanent versus temporary magnets." },
+  { id:"phys-2025-mj-1PR-3",year:2025,session:"May/June",paper:"1PR",questionNumber:3,marks:12,topics:["2c"],difficulty:"Hard",summary:"Circuit components, thermistors, resistance and current, including series resistance." },
+  { id:"phys-2025-mj-1PR-4",year:2025,session:"May/June",paper:"1PR",questionNumber:4,marks:13,topics:["4b"],difficulty:"Hard",summary:"Investigating thermal conduction in metals, control variables, graphing and interpreting results." },
+  { id:"phys-2025-mj-1PR-5",year:2025,session:"May/June",paper:"1PR",questionNumber:5,marks:10,topics:["7b"],difficulty:"Medium",summary:"Alpha radiation, nuclear equations, safety and interpreting cloud-chamber tracks." },
+  { id:"phys-2025-mj-1PR-6",year:2025,session:"May/June",paper:"1PR",questionNumber:6,marks:10,topics:["1b"],difficulty:"Medium",summary:"Rocket motion using acceleration, distance equations and velocity-time and distance-time graphs." },
+  { id:"phys-2025-mj-1PR-7",year:2025,session:"May/June",paper:"1PR",questionNumber:7,marks:11,topics:["3b","3d"],difficulty:"Hard",summary:"Transverse light waves, reflection, total internal reflection and refractive index." },
+  { id:"phys-2025-mj-1PR-8",year:2025,session:"May/June",paper:"1PR",questionNumber:8,marks:7,topics:["8b"],difficulty:"Medium",summary:"The Solar System, orbital paths, orbital speed and comparing orbital periods." },
+  { id:"phys-2025-mj-1PR-9",year:2025,session:"May/June",paper:"1PR",questionNumber:9,marks:14,topics:["4b","6d"],difficulty:"Hard",summary:"Energy stores in springs and electromagnetic induction in regenerative shock absorbers." },
+  { id:"phys-2025-mj-1PR-10",year:2025,session:"May/June",paper:"1PR",questionNumber:10,marks:11,topics:["5b"],difficulty:"Medium",summary:"Measuring mass and volume of a gold ring, density, anomalies and displacement accuracy." },
+  { id:"phys-2025-mj-1PR-11",year:2025,session:"May/June",paper:"1PR",questionNumber:11,marks:10,topics:["4b","3b"],difficulty:"Hard",summary:"Kinetic energy and the Doppler effect for reflected radio waves." },
+
+  // May/June 2025 regional Paper 2PR
+  { id:"phys-2025-mj-2PR-1",year:2025,session:"May/June",paper:"2PR",questionNumber:1,marks:6,topics:["2d"],difficulty:"Medium",summary:"Charging by friction, electrostatic forces and earthing in a flour mill." },
+  { id:"phys-2025-mj-2PR-2",year:2025,session:"May/June",paper:"2PR",questionNumber:2,marks:7,topics:["7b"],difficulty:"Medium",summary:"Isotopes, nuclear particles, beta decay and half-life." },
+  { id:"phys-2025-mj-2PR-3",year:2025,session:"May/June",paper:"2PR",questionNumber:3,marks:9,topics:["4d","4b","4c"],difficulty:"Medium",summary:"Tidal power advantages and disadvantages, gravitational energy and power." },
+  { id:"phys-2025-mj-2PR-4",year:2025,session:"May/June",paper:"2PR",questionNumber:4,marks:7,topics:["6d"],difficulty:"Medium",summary:"Step-up transformer structure, power and output voltage." },
+  { id:"phys-2025-mj-2PR-5",year:2025,session:"May/June",paper:"2PR",questionNumber:5,marks:15,topics:["1c","1b"],difficulty:"Hard",summary:"Forces and momentum in a bouncing ball, then designing a coefficient-of-restitution investigation." },
+  { id:"phys-2025-mj-2PR-6",year:2025,session:"May/June",paper:"2PR",questionNumber:6,marks:10,topics:["8d","3b"],difficulty:"Hard",summary:"Cosmic microwave background radiation, wavelength and red-shift evidence for the Big Bang." },
+  { id:"phys-2025-mj-2PR-7",year:2025,session:"May/June",paper:"2PR",questionNumber:7,marks:10,topics:["4b"],difficulty:"Medium",summary:"Thermal radiation and insulation, then cooling curves and rates of temperature change." },
+  { id:"phys-2025-mj-2PR-8",year:2025,session:"May/June",paper:"2PR",questionNumber:8,marks:6,topics:["3d"],difficulty:"Medium",summary:"Human hearing, sound frequency and oscilloscope settings." },
 ];
