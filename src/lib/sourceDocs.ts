@@ -30,6 +30,10 @@ const sourceByPaper: Record<string, string> = {
   // Physics formatted papers live in the physics-papers bucket.
   "2025|November|1P": "November_2025_Physics_Paper_1P.docx",
   "2025|November|2P": "November_2025_Physics_Paper_2P.docx",
+  "2025|May/June|1P": "May_June_2025_Physics_Paper_1P.docx",
+  "2025|May/June|2P": "May_June_2025_Physics_Paper_2P.docx",
+  "2025|May/June|1PR": "May_June_2025_Physics_Paper_1PR.docx",
+  "2025|May/June|2PR": "May_June_2025_Physics_Paper_2PR.docx",
 };
 
 export function getFormattedSource(q: Question): string | null {
@@ -37,7 +41,7 @@ export function getFormattedSource(q: Question): string | null {
 }
 
 export function getFormattedSourceBucket(q: Question): string {
-  return /P$/i.test(q.paper) && !/C$/i.test(q.paper) ? PHYSICS_BUCKET : FORMATTED_BUCKET;
+  return /P(?:R)?$/i.test(q.paper) && !/C$/i.test(q.paper) ? PHYSICS_BUCKET : FORMATTED_BUCKET;
 }
 
 export function hasFormattedSource(q: Question): boolean {
