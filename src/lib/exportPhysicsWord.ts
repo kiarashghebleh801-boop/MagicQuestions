@@ -167,15 +167,61 @@ function paragraphPlainText(paragraphXml: string): string {
   return text.join("").replace(/\s+/g, " ").trim();
 }
 
-function addBoldToAllRuns(paragraphXml: string): string {
-  return paragraphXml.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
-    if (!/<w:t\b/i.test(run)) return run;
-    if (/<w:rPr\b/i.test(run)) {
-      if (/<w:b\b/i.test(run)) return run;
-      return run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/><w:bCs/>`);
-    }
-    return run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr><w:b/><w:bCs/></w:rPr>`);
+function removeBoldFromRun(run: string): string {
+  return run
+    .replace(/<w:b\b[^>]*\/>/gi, "")
+    .replace(/<w:bCs\b[^>]*\/>/gi, "")
+    .replace(/<w:b\b[^>]*>[\s\S]*?<\/w:b>/gi, "")
+    .replace(/<w:bCs\b[^>]*>[\s\S]*?<\/w:bCs>/gi, "");
+}
+
+function addBoldToRun(run: string): string {
+  run = removeBoldFromRun(run);
+  if (/<w:rPr\b/i.test(run)) {
+    return run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/><w:bCs/>`);
+  }
+  return run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr><w:b/><w:bCs/></w:rPr>`);
+}
+
+function boldOnlyPhysicsOptionLetter(paragraphXml: string, letter: string): string {
+  let cleaned = paragraphXml.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+    return /<w:t\b/i.test(run) ? removeBoldFromRun(run) : run;
   });
+
+  let done = false;
+  cleaned = cleaned.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+    if (done || !/<w:t\b/i.test(run)) return run;
+    const plain = paragraphPlainText(run);
+    if (!new RegExp(`^${letter}(?:\\s|$)`).test(plain)) return run;
+
+    const textMatch = /<w:t([^>]*)>([\s\S]*?)<\/w:t>/i.exec(run);
+    if (!textMatch) return addBoldToRun(run);
+    const raw = textMatch[2];
+    const split = raw.match(new RegExp(`^(\\s*)${letter}(\\s+[\\s\\S]*)$`));
+    if (!split) {
+      done = true;
+      return addBoldToRun(run);
+    }
+
+    const openRun = /^<w:r(?=[\s>])[^>]*>/i.exec(run)?.[0] || "<w:r>";
+    const rPr = /<w:rPr\b[^>]*>[\s\S]*?<\/w:rPr>/i.exec(run)?.[0] || "";
+    const cleanRPr = removeBoldFromRun(rPr);
+    const textAttrs = textMatch[1] || "";
+    const beforeText = split[1] || "";
+    const restText = split[2] || "";
+    const closeRun = "</w:r>";
+    const boldRPr = cleanRPr
+      ? cleanRPr.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/><w:bCs/>`)
+      : "<w:rPr><w:b/><w:bCs/></w:rPr>";
+
+    const prefixRun = beforeText ? `${openRun}${cleanRPr}<w:t xml:space=\"preserve\">${beforeText}</w:t>${closeRun}` : "";
+    const letterRun = `${openRun}${boldRPr}<w:t${textAttrs}>${letter}</w:t>${closeRun}`;
+    const restRun = restText ? `${openRun}${cleanRPr}<w:t xml:space=\"preserve\">${restText}</w:t>${closeRun}` : "";
+    done = true;
+    return `${prefixRun}${letterRun}${restRun}`;
+  });
+
+  return cleaned;
 }
 
 function boldPhysicsMultipleChoiceOptions(xml: string): string {
@@ -210,7 +256,7 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!toBold.has(i)) continue;
     const p = paragraphs[i];
-    const updated = addBoldToAllRuns(p.xml);
+    const updated = boldOnlyPhysicsOptionLetter(p.xml, p.letter!);
     out = `${out.slice(0, p.start)}${updated}${out.slice(p.end)}`;
   }
   return out;
