@@ -167,16 +167,15 @@ function paragraphPlainText(paragraphXml: string): string {
   return text.join("").replace(/\s+/g, " ").trim();
 }
 
-function addBoldToFirstRun(paragraphXml: string): string {
-  const runMatch = /<w:r(?=[\s>])[\s\S]*?<\/w:r>/i.exec(paragraphXml);
-  if (!runMatch) return paragraphXml;
-  let run = runMatch[0];
-  if (/<w:rPr\b/i.test(run)) {
-    if (!/<w:b\b/i.test(run)) run = run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/>`);
-  } else {
-    run = run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr><w:b/></w:rPr>`);
-  }
-  return `${paragraphXml.slice(0, runMatch.index)}${run}${paragraphXml.slice(runMatch.index + runMatch[0].length)}`;
+function addBoldToAllRuns(paragraphXml: string): string {
+  return paragraphXml.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+    if (!/<w:t\b/i.test(run)) return run;
+    if (/<w:rPr\b/i.test(run)) {
+      if (/<w:b\b/i.test(run)) return run;
+      return run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/><w:bCs/>`);
+    }
+    return run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr><w:b/><w:bCs/></w:rPr>`);
+  });
 }
 
 function boldPhysicsMultipleChoiceOptions(xml: string): string {
@@ -185,7 +184,7 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   let match: RegExpExecArray | null;
   while ((match = re.exec(xml))) {
     const text = paragraphPlainText(match[0]);
-    const option = text.match(/^([ABCD])\s+.+/);
+    const option = text.match(/^([ABCD])(?:\s+.*)?$/);
     paragraphs.push({ start: match.index, end: match.index + match[0].length, xml: match[0], text, letter: option?.[1] ?? null });
   }
 
@@ -194,7 +193,7 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
     if (paragraphs[i].letter !== "A") continue;
     let expected = 1;
     const found = [i];
-    for (let j = i + 1; j < paragraphs.length && j <= i + 10 && expected < 4; j++) {
+    for (let j = i + 1; j < paragraphs.length && j <= i + 40 && expected < 4; j++) {
       const letter = paragraphs[j].letter;
       if (!letter) continue;
       if (letter === "ABCD"[expected]) {
@@ -211,10 +210,25 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!toBold.has(i)) continue;
     const p = paragraphs[i];
-    const updated = addBoldToFirstRun(p.xml);
+    const updated = addBoldToAllRuns(p.xml);
     out = `${out.slice(0, p.start)}${updated}${out.slice(p.end)}`;
   }
   return out;
+}
+
+function normalizePhysicsParagraphSpacing(xml: string): string {
+  const spacing = `<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (/<w:pPr\b/i.test(paragraph)) {
+      return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+        const cleaned = inner
+          .replace(/<w:spacing\b[^>]*\/>/gi, "")
+          .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+        return `<w:pPr${attrs}>${cleaned}${spacing}</w:pPr>`;
+      });
+    }
+    return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
+  });
 }
 
 function escapeXml(value: string): string {
@@ -402,6 +416,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
+    chunk = normalizePhysicsParagraphSpacing(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
