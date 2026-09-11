@@ -152,6 +152,71 @@ function renumberQuestion(xml: string, n: number): string {
   return out;
 }
 
+function paragraphPlainText(paragraphXml: string): string {
+  const text: string[] = [];
+  const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(paragraphXml))) {
+    text.push(match[1]
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'"));
+  }
+  return text.join("").replace(/\s+/g, " ").trim();
+}
+
+function addBoldToFirstRun(paragraphXml: string): string {
+  const runMatch = /<w:r(?=[\s>])[\s\S]*?<\/w:r>/i.exec(paragraphXml);
+  if (!runMatch) return paragraphXml;
+  let run = runMatch[0];
+  if (/<w:rPr\b/i.test(run)) {
+    if (!/<w:b\b/i.test(run)) run = run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1><w:b/>`);
+  } else {
+    run = run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr><w:b/></w:rPr>`);
+  }
+  return `${paragraphXml.slice(0, runMatch.index)}${run}${paragraphXml.slice(runMatch.index + runMatch[0].length)}`;
+}
+
+function boldPhysicsMultipleChoiceOptions(xml: string): string {
+  const paragraphs: { start: number; end: number; xml: string; text: string; letter: string | null }[] = [];
+  const re = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(xml))) {
+    const text = paragraphPlainText(match[0]);
+    const option = text.match(/^([ABCD])\s+.+/);
+    paragraphs.push({ start: match.index, end: match.index + match[0].length, xml: match[0], text, letter: option?.[1] ?? null });
+  }
+
+  const toBold = new Set<number>();
+  for (let i = 0; i < paragraphs.length; i++) {
+    if (paragraphs[i].letter !== "A") continue;
+    let expected = 1;
+    const found = [i];
+    for (let j = i + 1; j < paragraphs.length && j <= i + 10 && expected < 4; j++) {
+      const letter = paragraphs[j].letter;
+      if (!letter) continue;
+      if (letter === "ABCD"[expected]) {
+        found.push(j);
+        expected++;
+      } else if (letter === "A") {
+        break;
+      }
+    }
+    if (expected === 4) found.forEach(index => toBold.add(index));
+  }
+
+  let out = xml;
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    if (!toBold.has(i)) continue;
+    const p = paragraphs[i];
+    const updated = addBoldToFirstRun(p.xml);
+    out = `${out.slice(0, p.start)}${updated}${out.slice(p.end)}`;
+  }
+  return out;
+}
+
 function escapeXml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
 }
@@ -336,6 +401,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
+    chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
