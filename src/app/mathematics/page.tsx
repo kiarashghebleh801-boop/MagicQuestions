@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questionBank";
-import { exportPaperToWord } from "@/lib/exportWord";
+import { exportMathsPaperToWord } from "@/lib/exportMathsWord";
 import { exportMarkSchemeToWord } from "@/lib/exportMarkScheme";
 import { hasMarkSchemeSource } from "@/lib/markSchemeSources";
 import { hasFormattedSource } from "@/lib/sourceDocs";
@@ -117,7 +117,7 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,m
   const[draggedIndex,setDraggedIndex]=useState<number|null>(null);
   const[reviewOpen,setReviewOpen]=useState(false);
   const missingMarkSchemes=paper.filter(q=>!hasMarkSchemeSource(q));
-  async function downloadWord(){setExporting(true);try{await exportPaperToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the Word paper.");}finally{setExporting(false);}}
+  async function downloadWord(){setExporting(true);try{await exportMathsPaperToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the Word paper.");}finally{setExporting(false);}}
   async function downloadMarkScheme(){
     if(missingMarkSchemes.length){
       const missing=missingMarkSchemes.map(q=>`${q.session} ${q.year} Paper ${q.paper} Q${q.questionNumber}`).join("\n");
