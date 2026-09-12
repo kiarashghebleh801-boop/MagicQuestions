@@ -45,7 +45,6 @@ export default function MathematicsPage() {
   }, [router]);
 
   const formattedQuestions = useMemo(() => questions.filter(hasFormattedSource), []);
-  const exportReadyQuestions = useMemo(() => formattedQuestions.filter(hasMarkSchemeSource), [formattedQuestions]);
   const totalMarks = useMemo(() => paper.reduce((sum, q) => sum + q.marks, 0), [paper]);
   const results = useMemo(() => searchQuestions(query, selected).filter(hasFormattedSource), [query, selected]);
 
@@ -54,7 +53,9 @@ export default function MathematicsPage() {
   function wrapQuestion(q: Question): MathsPaperQuestion { return { ...q, sourceMarks: q.marks }; }
   function toggleTopic(topic: string) { setSelected(current => current.includes(topic) ? current.filter(item => item !== topic) : [...current, topic]); }
   function generate() {
-    const ranked = generateQuestions(selected, questions.length, difficulty).filter(q => hasFormattedSource(q) && hasMarkSchemeSource(q));
+    // Keep the generator and the visible question bank on the same source pool.
+    // A missing mark scheme must not hide an otherwise available formatted question.
+    const ranked = generateQuestions(selected, questions.length, difficulty).filter(hasFormattedSource);
     setPaper(ranked.slice(0, count).map(wrapQuestion));
   }
   function addQuestion(q: Question) { setPaper(current => current.some(item => item.id === q.id) ? current : [...current, wrapQuestion(q)]); }
@@ -78,8 +79,8 @@ export default function MathematicsPage() {
   function swapQuestion(index: number) {
     const old = paper[index]; if (!old) return;
     const usedIds = new Set(paper.map(q => q.id));
-    const candidates = exportReadyQuestions.filter(candidate => !usedIds.has(candidate.id) && candidate.topics.some(topic => old.topics.includes(topic)));
-    if (!candidates.length) { window.alert("No other question with a matching mark scheme is available for this topic yet."); return; }
+    const candidates = formattedQuestions.filter(candidate => !usedIds.has(candidate.id) && candidate.topics.some(topic => old.topics.includes(topic)));
+    if (!candidates.length) { window.alert("No other formatted question is available for this topic yet."); return; }
     candidates.sort((a,b)=>{
       const overlap=(q:Question)=>q.topics.filter(t=>old.topics.includes(t)).length;
       const score=(q:Question)=>overlap(q)*10+(q.difficulty===old.difficulty?3:0)-Math.abs(q.marks-(old.sourceMarks ?? old.marks));
@@ -128,7 +129,7 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,m
     if(hasPartialQuestions){window.alert("Partial Maths questions are supported in the question paper, but cropped sub-question mark schemes are not connected yet. Use the full-question mark scheme for now.");return;}
     if(missingMarkSchemes.length){
       const missing=missingMarkSchemes.map(q=>`${q.session} ${q.year} Paper ${q.paper} Q${q.questionNumber}`).join("\n");
-      window.alert(`These selected questions do not have a mark scheme connected yet:\n\n${missing}\n\nGenerate a new paper to get questions with mark schemes available.`);
+      window.alert(`These selected questions do not have a mark scheme connected yet:\n\n${missing}\n\nYou can still use/export the question paper; only the custom mark-scheme download is unavailable for those questions.`);
       return;
     }
     setExportingMarkScheme(true);try{await exportMarkSchemeToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the mark scheme.");}finally{setExportingMarkScheme(false);}
