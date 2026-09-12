@@ -10,6 +10,7 @@ const W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml";
 const FRONT_COVER_FILE = "FrontCover.docx";
 const TARGET_ANSWER_DOTS = 43;
 
+type MathsExportQuestion = Question & { selectedParts?: string[] };
 type LoadedDoc = {
   filename: string;
   zip: JSZip;
@@ -20,7 +21,6 @@ type LoadedDoc = {
   contentTypesText: string;
   contentTypesXml: XMLDocument;
 };
-
 type RelState = { xml: string; used: Set<string>; counter: number; mediaCounter: number };
 type ContentTypesState = { xml: string };
 
@@ -42,16 +42,16 @@ function nodeText(node: Node): string {
   return out.join("").replace(/\s+/g, " ").trim();
 }
 
-function isQuestionMarker(node: Node): number | null {
-  if (node.nodeType !== Node.ELEMENT_NODE || (node as Element).localName !== "p") return null;
-  const match = nodeText(node).match(/^Q(\d+)\.$/i);
-  return match ? Number(match[1]) : null;
-}
-
 function getBody(doc: XMLDocument): Element {
   const body = Array.from(doc.getElementsByTagNameNS(W_NS, "body"))[0];
   if (!body) throw new Error("DOCX has no Word body");
   return body;
+}
+
+function isQuestionMarker(node: Node): number | null {
+  if (node.nodeType !== Node.ELEMENT_NODE || (node as Element).localName !== "p") return null;
+  const match = nodeText(node).match(/^Q(\d+)\.$/i);
+  return match ? Number(match[1]) : null;
 }
 
 async function loadSource(filename: string): Promise<LoadedDoc> {
@@ -68,13 +68,8 @@ async function loadSource(filename: string): Promise<LoadedDoc> {
       const relsXmlText = await relsFile.async("text");
       const contentTypesText = await contentTypesFile.async("text");
       return {
-        filename,
-        zip,
-        documentXmlText,
-        documentXml: parseXml(documentXmlText),
-        relsXmlText,
-        relsXml: parseXml(relsXmlText),
-        contentTypesText,
+        filename, zip, documentXmlText, documentXml: parseXml(documentXmlText),
+        relsXmlText, relsXml: parseXml(relsXmlText), contentTypesText,
         contentTypesXml: parseXml(contentTypesText),
       };
     })());
@@ -142,6 +137,105 @@ function extractQuestion(source: LoadedDoc, questionNumber: number): string {
   return source.documentXmlText.slice(start, end);
 }
 
+function paragraphText(xml: string): string {
+  const texts: string[] = [];
+  const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) texts.push(m[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+  return texts.join("").replace(/\s+/g, " ").trim();
+}
+
+function rawParagraphs(xml: string): { start: number; end: number; xml: string; text: string }[] {
+  const out: { start: number; end: number; xml: string; text: string }[] = [];
+  const re = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) out.push({ start: m.index, end: m.index + m[0].length, xml: m[0], text: paragraphText(m[0]) });
+  return out;
+}
+
+function partStarts(xml: string, selectedParts: string[]): { part: string; start: number }[] {
+  const paragraphs = rawParagraphs(xml);
+  const detected: { part: string; start: number }[] = [];
+  let expected = "a".charCodeAt(0);
+  for (const p of paragraphs) {
+    const match = p.text.match(/^\(([a-z])\)(?:\s|$)/i);
+    if (!match) continue;
+    const part = match[1].toLowerCase();
+    if (part.charCodeAt(0) !== expected) continue;
+    detected.push({ part, start: p.start });
+    expected++;
+  }
+
+  const requested = selectedParts.map(p => p.toLowerCase());
+  const available = new Set(detected.map(x => x.part));
+  for (const missing of requested.filter(p => !available.has(p))) {
+    const code = missing.charCodeAt(0);
+    const prev = detected.find(x => x.part.charCodeAt(0) === code - 1);
+    const next = detected.find(x => x.part.charCodeAt(0) === code + 1);
+    if (!prev || !next) continue;
+    const between = paragraphs.filter(p => p.start > prev.start && p.start < next.start);
+    const drawings = between.filter(p => /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml));
+    if (!drawings.length) continue;
+    detected.push({ part: missing, start: drawings[drawings.length - 1].start });
+    available.add(missing);
+  }
+  return detected.sort((a, b) => a.start - b.start);
+}
+
+function removeOriginalTotal(xml: string): string {
+  return xml.replace(/<w:p\b[^>]*>(?:(?!<\/w:p>)[\s\S])*?Total for question(?:(?!<\/w:p>)[\s\S])*?<\/w:p>/gi, "");
+}
+
+function renumberPartMarker(xml: string, oldPart: string, newPart: string): string {
+  const escaped = oldPart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return xml.replace(new RegExp(`(<w:t(?:\\s[^>]*)?>\\s*)\\(${escaped}\\)(?=\\s|<)`, "i"), `$1(${newPart})`);
+}
+
+function removeFirstPartLabel(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const first = paragraphs.find(p => /^\([a-z]\)(?:\s|$)/i.test(p.text));
+  if (!first) return xml;
+  const updated = first.xml.replace(/(<w:t(?:\s[^>]*)?>\s*)\([a-z]\)(\s*)/i, "$1$2");
+  return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
+}
+
+function stripPageBreaks(xml: string): string {
+  return xml
+    .replace(/<w:lastRenderedPageBreak\s*\/>/gi, "")
+    .replace(/<w:br\b[^>]*w:type=(?:\"page\"|'page')[^>]*\/>/gi, "")
+    .replace(/<w:pageBreakBefore\b[^>]*\/>/gi, "");
+}
+
+function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
+  if (!selectedParts?.length) return xml;
+  const boundaries = partStarts(xml, selectedParts);
+  if (!boundaries.length) throw new Error("Could not locate the selected Maths sub-question labels in the Word source.");
+  const wanted = new Set(selectedParts.map(p => p.toLowerCase()));
+  const available = new Set(boundaries.map(p => p.part));
+  const missing = selectedParts.filter(p => !available.has(p.toLowerCase()));
+  if (missing.length) throw new Error(`Could not isolate Maths part(s) ${missing.map(p => `(${p})`).join(", ")}.`);
+
+  const preamble = xml.slice(0, boundaries[0].start);
+  const chunks: string[] = [];
+  let newIndex = 0;
+  for (let i = 0; i < boundaries.length; i++) {
+    const current = boundaries[i];
+    if (!wanted.has(current.part)) continue;
+    const end = i + 1 < boundaries.length ? boundaries[i + 1].start : xml.length;
+    let chunk = xml.slice(current.start, end);
+    chunk = removeOriginalTotal(chunk);
+    chunk = stripPageBreaks(chunk);
+    chunk = renumberPartMarker(chunk, current.part, String.fromCharCode(97 + newIndex));
+    newIndex++;
+    chunks.push(chunk);
+  }
+
+  let selected = stripPageBreaks(`${preamble}${chunks.join("")}`);
+  if (selectedParts.length === 1) selected = removeFirstPartLabel(selected);
+  const total = `<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>(Total for question = ${marks} ${marks === 1 ? "mark" : "marks"})</w:t></w:r></w:p>`;
+  return `${selected}${total}`;
+}
+
 function renumberQuestion(xml: string, n: number): string {
   let changed = false;
   const out = xml.replace(/(<w:t(?:\s[^>]*)?>\s*)Q\d+\.(\s*<\/w:t>)/i, (_m, a, b) => {
@@ -152,15 +246,9 @@ function renumberQuestion(xml: string, n: number): string {
   return out;
 }
 
-// Older papers sometimes contain answer lines that run almost the full page width.
-// Only sequences that are clearly answer dots are shortened; normal punctuation and
-// mathematical notation are untouched. All Maths exports therefore use the same
-// compact answer-line length as the newer formatted papers.
 function normalizeMathsAnswerLines(xml: string): string {
   const target = ".".repeat(TARGET_ANSWER_DOTS);
-  return xml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode =>
-    textNode.replace(/\.{55,}/g, target)
-  );
+  return xml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode => textNode.replace(/\.{55,}/g, target));
 }
 
 function escapeXml(value: string): string {
@@ -257,8 +345,7 @@ function setCellText(doc: XMLDocument, cell: Element, value: string) {
   const run = doc.createElementNS(W_NS, "w:r");
   const text = doc.createElementNS(W_NS, "w:t");
   text.textContent = value;
-  run.appendChild(text);
-  p.appendChild(run);
+  run.appendChild(text); p.appendChild(run);
 }
 
 function buildCover(cover: LoadedDoc, totalMarks: number): string {
@@ -273,9 +360,7 @@ function buildCover(cover: LoadedDoc, totalMarks: number): string {
     setCellText(doc, cells[5], "");
   }
   const serializer = new XMLSerializer();
-  let xml = Array.from(body.childNodes)
-    .filter(node => !(node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === "sectPr"))
-    .map(node => serializer.serializeToString(node)).join("");
+  let xml = Array.from(body.childNodes).filter(node => !(node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === "sectPr")).map(node => serializer.serializeToString(node)).join("");
   xml += `<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>`;
   return xml;
 }
@@ -312,16 +397,14 @@ function download(bytes: Uint8Array) {
   const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "MagicQuestions-Mathematics-Paper.docx";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = url; a.download = "MagicQuestions-Mathematics-Paper.docx";
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-export async function exportMathsPaperToWord(questions: Question[]) {
-  if (!questions.length) return;
+export async function exportMathsPaperToWord(inputQuestions: Question[]) {
+  if (!inputQuestions.length) return;
+  const questions = inputQuestions as MathsExportQuestion[];
   const filenames = questions.map(q => getFormattedSource(q));
   const missing = questions.filter((q, i) => !filenames[i]);
   if (missing.length) throw new Error(`Maths Word source not mapped for: ${missing.map(q => `${q.paper} Q${q.questionNumber}`).join(", ")}`);
@@ -346,7 +429,9 @@ export async function exportMathsPaperToWord(questions: Question[]) {
 
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
-    let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
+    let chunk = extractQuestion(sources[i], questions[i].questionNumber);
+    chunk = selectQuestionParts(chunk, questions[i].selectedParts, questions[i].marks);
+    chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
