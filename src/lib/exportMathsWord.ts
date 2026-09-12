@@ -9,6 +9,7 @@ const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml";
 const FRONT_COVER_FILE = "FrontCover.docx";
 const TARGET_ANSWER_DOTS = 43;
+const TARGET_DOTTED_TAB_POS = 5200;
 
 type MathsExportQuestion = Question & { selectedParts?: string[] };
 type LoadedDoc = {
@@ -68,8 +69,13 @@ async function loadSource(filename: string): Promise<LoadedDoc> {
       const relsXmlText = await relsFile.async("text");
       const contentTypesText = await contentTypesFile.async("text");
       return {
-        filename, zip, documentXmlText, documentXml: parseXml(documentXmlText),
-        relsXmlText, relsXml: parseXml(relsXmlText), contentTypesText,
+        filename,
+        zip,
+        documentXmlText,
+        documentXml: parseXml(documentXmlText),
+        relsXmlText,
+        relsXml: parseXml(relsXmlText),
+        contentTypesText,
         contentTypesXml: parseXml(contentTypesText),
       };
     })());
@@ -141,7 +147,12 @@ function paragraphText(xml: string): string {
   const texts: string[] = [];
   const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/gi;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(xml))) texts.push(m[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+  while ((m = re.exec(xml))) texts.push(m[1]
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'"));
   return texts.join("").replace(/\s+/g, " ").trim();
 }
 
@@ -151,6 +162,12 @@ function rawParagraphs(xml: string): { start: number; end: number; xml: string; 
   let m: RegExpExecArray | null;
   while ((m = re.exec(xml))) out.push({ start: m.index, end: m.index + m[0].length, xml: m[0], text: paragraphText(m[0]) });
   return out;
+}
+
+function removePaperTotal(xml: string): string {
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph =>
+    /total\s+for\s+paper/i.test(paragraphText(paragraph)) ? "" : paragraph
+  );
 }
 
 function partStarts(xml: string, selectedParts: string[]): { part: string; start: number }[] {
@@ -248,7 +265,21 @@ function renumberQuestion(xml: string, n: number): string {
 
 function normalizeMathsAnswerLines(xml: string): string {
   const target = ".".repeat(TARGET_ANSWER_DOTS);
-  return xml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode => textNode.replace(/\.{55,}/g, target));
+  let out = xml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode =>
+    textNode.replace(/\.{45,}/g, target)
+  );
+
+  // Some older Edexcel papers use a right-aligned dotted tab leader instead of
+  // literal full stops. Those lines were still spanning almost the whole page.
+  // Shorten only dotted answer-line tabs; ordinary tabs are left untouched.
+  out = out.replace(/<w:tab\b[^>]*\/>/gi, tab => {
+    if (!/w:leader=(?:\"dot\"|'dot')/i.test(tab)) return tab;
+    if (/w:pos=(?:\"\d+\"|'\d+')/i.test(tab)) {
+      return tab.replace(/w:pos=(?:\"\d+\"|'\d+')/i, `w:pos=\"${TARGET_DOTTED_TAB_POS}\"`);
+    }
+    return tab.replace(/\/>$/, ` w:pos=\"${TARGET_DOTTED_TAB_POS}\"/>`);
+  });
+  return out;
 }
 
 function escapeXml(value: string): string {
@@ -341,11 +372,14 @@ async function remapRelationships(chunk: string, source: LoadedDoc, outputZip: J
 function setCellText(doc: XMLDocument, cell: Element, value: string) {
   let p = Array.from(cell.getElementsByTagNameNS(W_NS, "p"))[0];
   if (!p) { p = doc.createElementNS(W_NS, "w:p"); cell.appendChild(p); }
-  for (const child of Array.from(p.childNodes)) if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
+  for (const child of Array.from(p.childNodes)) {
+    if (child.nodeType === Node.ELEMENT_NODE && (child as Element).localName === "r") p.removeChild(child);
+  }
   const run = doc.createElementNS(W_NS, "w:r");
   const text = doc.createElementNS(W_NS, "w:t");
   text.textContent = value;
-  run.appendChild(text); p.appendChild(run);
+  run.appendChild(text);
+  p.appendChild(run);
 }
 
 function buildCover(cover: LoadedDoc, totalMarks: number): string {
@@ -360,7 +394,9 @@ function buildCover(cover: LoadedDoc, totalMarks: number): string {
     setCellText(doc, cells[5], "");
   }
   const serializer = new XMLSerializer();
-  let xml = Array.from(body.childNodes).filter(node => !(node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === "sectPr")).map(node => serializer.serializeToString(node)).join("");
+  let xml = Array.from(body.childNodes)
+    .filter(node => !(node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === "sectPr"))
+    .map(node => serializer.serializeToString(node)).join("");
   xml += `<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>`;
   return xml;
 }
@@ -397,8 +433,11 @@ function download(bytes: Uint8Array) {
   const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = "MagicQuestions-Mathematics-Paper.docx";
-  document.body.appendChild(a); a.click(); a.remove();
+  a.href = url;
+  a.download = "MagicQuestions-Mathematics-Paper.docx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
@@ -430,7 +469,9 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = extractQuestion(sources[i], questions[i].questionNumber);
+    chunk = removePaperTotal(chunk);
     chunk = selectQuestionParts(chunk, questions[i].selectedParts, questions[i].marks);
+    chunk = removePaperTotal(chunk);
     chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
