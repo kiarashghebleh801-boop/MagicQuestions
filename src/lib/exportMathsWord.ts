@@ -263,22 +263,52 @@ function renumberQuestion(xml: string, n: number): string {
   return out;
 }
 
+function rightAlignMathsAnswerLine(paragraph: string): string {
+  const opening = paragraph.match(/^<w:p\b[^>]*>/i)?.[0];
+  if (!opening) return paragraph;
+
+  let pPr = paragraph.match(/<w:pPr\b[^>]*>[\s\S]*?<\/w:pPr>/i)?.[0] ?? "<w:pPr></w:pPr>";
+  pPr = pPr
+    .replace(/<w:jc\b[^>]*\/>/gi, "")
+    .replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "")
+    .replace(/<w:ind\b[^>]*\/>/gi, "")
+    .replace(/<\/w:pPr>$/i, '<w:jc w:val="right"/></w:pPr>');
+
+  const target = ".".repeat(TARGET_ANSWER_DOTS);
+  return `${opening}${pPr}<w:r><w:t xml:space="preserve">${target}</w:t></w:r></w:p>`;
+}
+
 function normalizeMathsAnswerLines(xml: string): string {
   const target = ".".repeat(TARGET_ANSWER_DOTS);
-  let out = xml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode =>
-    textNode.replace(/\.{45,}/g, target)
-  );
 
-  // Some older Edexcel papers use a right-aligned dotted tab leader instead of
-  // literal full stops. Those lines were still spanning almost the whole page.
-  // Shorten only dotted answer-line tabs; ordinary tabs are left untouched.
-  out = out.replace(/<w:tab\b[^>]*\/>/gi, tab => {
-    if (!/w:leader=(?:\"dot\"|'dot')/i.test(tab)) return tab;
-    if (/w:pos=(?:\"\d+\"|'\d+')/i.test(tab)) {
-      return tab.replace(/w:pos=(?:\"\d+\"|'\d+')/i, `w:pos=\"${TARGET_DOTTED_TAB_POS}\"`);
+  // Standardise every standalone Maths answer line so none are odd ones out:
+  // same dot count, same right alignment and no inherited indentation/tab width.
+  let out = xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    const text = paragraphText(paragraph);
+    const onlyDots = /^\.{20,}$/.test(text.replace(/\s/g, ""));
+    const dottedLeader = /<w:tab\b[^>]*w:leader=(?:"dot"|'dot')[^>]*\/>/i.test(paragraph);
+    const actualTab = /<w:tab\s*\/>/i.test(paragraph);
+    const hasDrawing = /<w:(?:drawing|pict)\b/i.test(paragraph);
+
+    if (!hasDrawing && (onlyDots || (dottedLeader && actualTab && text.length === 0))) {
+      return rightAlignMathsAnswerLine(paragraph);
     }
-    return tab.replace(/\/>$/, ` w:pos=\"${TARGET_DOTTED_TAB_POS}\"/>`);
+
+    return paragraph.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/gi, textNode =>
+      textNode.replace(/\.{20,}/g, target)
+    );
   });
+
+  // For any older inline dotted tab leader that cannot safely be converted into a
+  // standalone line, keep it but force the same compact tab position.
+  out = out.replace(/<w:tab\b[^>]*\/>/gi, tab => {
+    if (!/w:leader=(?:"dot"|'dot')/i.test(tab)) return tab;
+    if (/w:pos=(?:"\d+"|'\d+')/i.test(tab)) {
+      return tab.replace(/w:pos=(?:"\d+"|'\d+')/i, `w:pos="${TARGET_DOTTED_TAB_POS}"`);
+    }
+    return tab.replace(/\/>$/, ` w:pos="${TARGET_DOTTED_TAB_POS}"/>`);
+  });
+
   return out;
 }
 
