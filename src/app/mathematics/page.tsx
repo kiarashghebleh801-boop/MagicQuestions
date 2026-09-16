@@ -10,7 +10,6 @@ import { hasFormattedSource } from "@/lib/sourceDocs";
 import { supabase } from "@/lib/supabase";
 import PaperReview from "@/components/PaperReview";
 import MathsPartPicker, { type MathsPaperQuestion } from "@/components/MathsPartPicker";
-import MathsVisualPreview from "@/components/MathsVisualPreview";
 
 export default function MathematicsPage() {
   const router = useRouter();
@@ -54,6 +53,8 @@ export default function MathematicsPage() {
   function wrapQuestion(q: Question): MathsPaperQuestion { return { ...q, sourceMarks: q.marks }; }
   function toggleTopic(topic: string) { setSelected(current => current.includes(topic) ? current.filter(item => item !== topic) : [...current, topic]); }
   function generate() {
+    // Keep the generator and the visible question bank on the same source pool.
+    // A missing mark scheme must not hide an otherwise available formatted question.
     const ranked = generateQuestions(selected, questions.length, difficulty).filter(hasFormattedSource);
     setPaper(ranked.slice(0, count).map(wrapQuestion));
   }
@@ -121,7 +122,6 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,m
   const[exportingMarkScheme,setExportingMarkScheme]=useState(false);
   const[draggedIndex,setDraggedIndex]=useState<number|null>(null);
   const[reviewOpen,setReviewOpen]=useState(false);
-  const[previewMode,setPreviewMode]=useState<"editor"|"paper">("editor");
   const missingMarkSchemes=paper.filter(q=>!hasMarkSchemeSource(q));
   const hasPartialQuestions=paper.some(q=>q.selectedParts?.length);
   async function downloadWord(){setExporting(true);try{await exportMathsPaperToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the Word paper.");}finally{setExporting(false);}}
@@ -134,23 +134,7 @@ function PaperPreview({paper,totalMarks,removeQuestion,regenerate,swapQuestion,m
     }
     setExportingMarkScheme(true);try{await exportMarkSchemeToWord(paper);}catch(error){window.alert(error instanceof Error?error.message:"Could not build the mark scheme.");}finally{setExportingMarkScheme(false);}
   }
-  return <div className="panel preview">
-    <div className="previewHead">
-      <div><p>YOUR PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        {paper.length>0&&<div style={{display:"flex",padding:3,border:"1px solid rgba(201,162,39,.24)",borderRadius:999,background:"rgba(0,0,0,.28)"}}>
-          <button type="button" onClick={()=>setPreviewMode("editor")} style={{border:0,borderRadius:999,padding:"7px 11px",fontSize:11,fontWeight:800,cursor:"pointer",background:previewMode==="editor"?"#c9a227":"transparent",color:previewMode==="editor"?"#080808":"#aaa"}}>Editor</button>
-          <button type="button" onClick={()=>setPreviewMode("paper")} style={{border:0,borderRadius:999,padding:"7px 11px",fontSize:11,fontWeight:800,cursor:"pointer",background:previewMode==="paper"?"#c9a227":"transparent",color:previewMode==="paper"?"#080808":"#aaa"}}>Paper preview</button>
-        </div>}
-        <span>Higher</span>
-      </div>
-    </div>
-    {!paper.length?<div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div>:<>
-      {previewMode==="paper" ? <MathsVisualPreview paper={paper}/> : <>
-        <div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Drag and drop questions, swap them, or choose exactly which sub-questions to keep. Switch to Paper preview to see the Word-style layout.</small></div></div>
-        <div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`} draggable onDragStart={e=>{setDraggedIndex(index);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect="move";}} onDrop={e=>{e.preventDefault();if(draggedIndex!==null)reorderQuestion(draggedIndex,index);setDraggedIndex(null);}} onDragEnd={()=>setDraggedIndex(null)} style={{cursor:"grab",opacity:draggedIndex===index?.55:1,transition:"opacity .15s ease, transform .15s ease"}}><div className="qNumber" title="Drag to reorder">{index+1}<div style={{fontSize:10,lineHeight:1,opacity:.55,marginTop:4}}>⋮⋮</div></div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t=><span key={t}>{t}</span>)}</div><MathsPartPicker question={q} onChange={(parts,marks)=>updateQuestionParts(index,parts,marks)}/><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div>
-      </>}
-      <div className="paperActions"><button onClick={regenerate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting||exportingMarkScheme}>{exporting?"Building paper…":"Download Question Paper"}</button><button className="word" onClick={downloadMarkScheme} disabled={paper.length===0||exporting||exportingMarkScheme}>{exportingMarkScheme?"Building mark scheme…":"Download Mark Scheme"}</button><button onClick={()=>setReviewOpen(true)}>✓ Review paper</button><button className="print" onClick={()=>window.print()}>Print / Save PDF</button></div>
-      {reviewOpen&&<PaperReview paper={paper} title="Mathematics paper review" onClose={()=>setReviewOpen(false)}/>}</>}
+  return <div className="panel preview"><div className="previewHead"><div><p>YOUR PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>Higher</span></div>
+    {!paper.length?<div className="empty"><div>✦</div><h3>Your custom paper will appear here</h3><p>Pick topics and settings, then generate a balanced selection.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Edit before you export</b><small>Drag and drop questions, swap them, or choose exactly which sub-questions to keep.</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`} draggable onDragStart={e=>{setDraggedIndex(index);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect="move";}} onDrop={e=>{e.preventDefault();if(draggedIndex!==null)reorderQuestion(draggedIndex,index);setDraggedIndex(null);}} onDragEnd={()=>setDraggedIndex(null)} style={{cursor:"grab",opacity:draggedIndex===index?.55:1,transition:"opacity .15s ease, transform .15s ease"}}><div className="qNumber" title="Drag to reorder">{index+1}<div style={{fontSize:10,lineHeight:1,opacity:.55,marginTop:4}}>⋮⋮</div></div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t=><span key={t}>{t}</span>)}</div><MathsPartPicker question={q} onChange={(parts,marks)=>updateQuestionParts(index,parts,marks)}/><div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>swapQuestion(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={regenerate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting||exportingMarkScheme}>{exporting?"Building paper…":"Download Question Paper"}</button><button className="word" onClick={downloadMarkScheme} disabled={paper.length===0||exporting||exportingMarkScheme}>{exportingMarkScheme?"Building mark scheme…":"Download Mark Scheme"}</button><button onClick={()=>setReviewOpen(true)}>✓ Review paper</button><button className="print" onClick={()=>window.print()}>Print / Save PDF</button></div>{reviewOpen&&<PaperReview paper={paper} title="Mathematics paper review" onClose={()=>setReviewOpen(false)}/>}</>}
   </div>;
 }
