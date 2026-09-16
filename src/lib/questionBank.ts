@@ -6,6 +6,7 @@ import { questions_2025_may_1h } from "./questions2025May1H";
 import { questions_2024_november_1h } from "./questions2024November1H";
 import { questions_2024_november_2h } from "./questions2024November2H";
 import { questions_2017_2018 } from "./questions2017_2018";
+import { questions_2022_may_june } from "./questions2022MayJune";
 
 export type { Difficulty, Question } from "./questions";
 
@@ -17,6 +18,7 @@ export const questions: Question[] = [
   ...questions_2024_november_1h,
   ...questions_2024_november_2h,
   ...questions_2017_2018,
+  ...questions_2022_may_june,
 ];
 export const topics = Array.from(new Set(questions.flatMap(q => q.topics))).sort();
 
