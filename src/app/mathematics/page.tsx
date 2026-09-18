@@ -55,6 +55,34 @@ export default function MathematicsPage() {
   function toggleTopic(topic: string) { setSelected(current => current.includes(topic) ? current.filter(item => item !== topic) : [...current, topic]); }
   function generate() {
     const ranked = generateQuestions(selected, questions.length, difficulty).filter(hasFormattedSource);
+
+    setPaper(current => {
+      if (!current.length) return ranked.slice(0, count).map(wrapQuestion);
+
+      // Keep the user's existing paper edits (manual swaps, reordering and
+      // selected sub-parts) when they simply change the requested question count
+      // and generate again. Only drop questions that no longer match the current
+      // topic/difficulty settings.
+      const stillValid = current.filter(q =>
+        q.topics.some(topic => selected.includes(topic)) &&
+        (difficulty === "Mixed" || q.difficulty === difficulty)
+      );
+
+      const kept = stillValid.slice(0, count);
+      if (kept.length >= count) return kept;
+
+      const usedIds = new Set(kept.map(q => q.id));
+      const additions = ranked
+        .filter(q => !usedIds.has(q.id))
+        .slice(0, count - kept.length)
+        .map(wrapQuestion);
+
+      return [...kept, ...additions];
+    });
+  }
+
+  function regenerateAll() {
+    const ranked = generateQuestions(selected, questions.length, difficulty).filter(hasFormattedSource);
     setPaper(ranked.slice(0, count).map(wrapQuestion));
   }
   function addQuestion(q: Question) { setPaper(current => current.some(item => item.id === q.id) ? current : [...current, wrapQuestion(q)]); }
@@ -103,7 +131,7 @@ export default function MathematicsPage() {
         <div className="settingRow"><div className="counter"><button onClick={() => setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={() => setCount(Math.min(25,count+1))}>+</button></div><select value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty | "Mixed")}><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
         <button className="generate" onClick={generate}>✦ Generate my paper</button>
       </div>
-      <PaperPreview paper={paper} totalMarks={totalMarks} formattedQuestions={formattedQuestions} removeQuestion={removeQuestion} regenerate={generate} replaceQuestion={replaceQuestion} moveQuestion={moveQuestion} reorderQuestion={reorderQuestion} updateQuestionParts={updateQuestionParts}/>
+      <PaperPreview paper={paper} totalMarks={totalMarks} formattedQuestions={formattedQuestions} removeQuestion={removeQuestion} regenerate={regenerateAll} replaceQuestion={replaceQuestion} moveQuestion={moveQuestion} reorderQuestion={reorderQuestion} updateQuestionParts={updateQuestionParts}/>
     </section> : <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">QUESTION BANK</p><h2>Browse all {formattedQuestions.length} formatted questions</h2></div><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search topics, year, paper…"/></div>
       <div className="topics compact">{topics.map(topic => <button key={topic} className={selected.includes(topic) ? "topic selected" : "topic"} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div>
