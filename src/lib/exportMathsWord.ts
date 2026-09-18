@@ -223,6 +223,33 @@ function stripPageBreaks(xml: string): string {
     .replace(/<w:pageBreakBefore\b[^>]*\/>/gi, "");
 }
 
+// Source exam papers often contain explicit page-break-only paragraphs around
+// question boundaries. When several questions from different papers are merged,
+// those leftover breaks can stack up and create completely blank pages.
+// Remove only paragraphs whose purpose was a page break; keep normal empty
+// working-space paragraphs so the original question layout is preserved.
+function removeBreakOnlyParagraphs(xml: string): string {
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    const hadPageBreak =
+      /<w:lastRenderedPageBreak\s*\/>/i.test(paragraph) ||
+      /<w:br\b[^>]*w:type=(?:\"page\"|'page')[^>]*\/>/i.test(paragraph) ||
+      /<w:pageBreakBefore\b[^>]*\/>/i.test(paragraph);
+
+    if (!hadPageBreak) return paragraph;
+
+    const hasText = paragraphText(paragraph).length > 0;
+    const hasContent =
+      /<w:(?:drawing|pict|object|fldSimple|hyperlink|tbl)\b/i.test(paragraph);
+
+    if (!hasText && !hasContent) return "";
+    return stripPageBreaks(paragraph);
+  });
+}
+
+function normalizeMathsPagination(xml: string): string {
+  return stripPageBreaks(removeBreakOnlyParagraphs(xml));
+}
+
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
@@ -499,8 +526,12 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = extractQuestion(sources[i], questions[i].questionNumber);
+    // Always strip source-paper pagination before merging questions. This
+    // prevents leftover page breaks from producing blank pages in custom Maths papers.
+    chunk = normalizeMathsPagination(chunk);
     chunk = removePaperTotal(chunk);
     chunk = selectQuestionParts(chunk, questions[i].selectedParts, questions[i].marks);
+    chunk = normalizeMathsPagination(chunk);
     chunk = removePaperTotal(chunk);
     chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
