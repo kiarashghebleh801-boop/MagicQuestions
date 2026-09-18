@@ -250,6 +250,79 @@ function normalizeMathsPagination(xml: string): string {
   return stripPageBreaks(removeBreakOnlyParagraphs(xml));
 }
 
+function setParagraphProperty(paragraph: string, propertyName: string, propertyXml: string): string {
+  const opening = paragraph.match(/^<w:p\b[^>]*>/i)?.[0];
+  if (!opening) return paragraph;
+
+  const propertyRe = new RegExp(`<w:${propertyName}\\b[^>]*\\/>`, "gi");
+  let pPr = paragraph.match(/<w:pPr\b[^>]*>[\s\S]*?<\/w:pPr>/i)?.[0];
+
+  if (pPr) {
+    pPr = pPr.replace(propertyRe, "").replace(/<\/w:pPr>$/i, `${propertyXml}</w:pPr>`);
+    return paragraph.replace(/<w:pPr\b[^>]*>[\s\S]*?<\/w:pPr>/i, pPr);
+  }
+
+  return paragraph.replace(opening, `${opening}<w:pPr>${propertyXml}</w:pPr>`);
+}
+
+function keepQuestionOpeningTogether(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  if (!paragraphs.length) return xml;
+
+  // Keep the question number and the first few prompt paragraphs together so
+  // Word does not leave "Q6." or a one-line prompt stranded at the bottom.
+  const keepIndexes = new Set<number>();
+  let substantial = 0;
+  for (let i = 0; i < paragraphs.length && substantial < 4; i++) {
+    const p = paragraphs[i];
+    const text = p.text;
+    const isAnswerLine = /^\.{10,}$/.test(text.replace(/\s/g, ""));
+    const isTotal = /total\s+for\s+question/i.test(text);
+    if (isAnswerLine || isTotal) break;
+    keepIndexes.add(i);
+    if (text || /<w:(?:drawing|pict)\b/i.test(p.xml)) substantial++;
+  }
+
+  let out = "";
+  let cursor = 0;
+  paragraphs.forEach((p, index) => {
+    out += xml.slice(cursor, p.start);
+    let paragraph = p.xml;
+    if (keepIndexes.has(index)) {
+      paragraph = setParagraphProperty(paragraph, "keepNext", "<w:keepNext/>");
+      paragraph = setParagraphProperty(paragraph, "keepLines", "<w:keepLines/>");
+    }
+    out += paragraph;
+    cursor = p.end;
+  });
+  out += xml.slice(cursor);
+  return out;
+}
+
+function startQuestionOnNewPage(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const first = paragraphs[0];
+  if (!first) return xml;
+  const updated = setParagraphProperty(first.xml, "pageBreakBefore", "<w:pageBreakBefore/>");
+  return `${xml.slice(0, first.start)}${updated}${xml.slice(first.end)}`;
+}
+
+function improveMathsQuestionLayout(xml: string, marks: number, isFirstQuestion: boolean): string {
+  let out = keepQuestionOpeningTogether(xml);
+
+  const hasDiagramOrTable =
+    /<w:(?:drawing|pict|tbl)\b/i.test(out);
+
+  // Let genuinely small text-only questions share a page. Larger questions,
+  // and any question with a diagram/table, start on a fresh page so they do
+  // not get chopped across pages simply because the previous question left
+  // only a small amount of space.
+  const needsFreshPage = !isFirstQuestion && (marks >= 4 || hasDiagramOrTable);
+  if (needsFreshPage) out = startQuestionOnNewPage(out);
+
+  return out;
+}
+
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
@@ -535,6 +608,7 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
     chunk = removePaperTotal(chunk);
     chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
+    chunk = improveMathsQuestionLayout(chunk, questions[i].marks, i === 0);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
