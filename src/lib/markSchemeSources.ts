@@ -21,17 +21,9 @@ const markSchemeByPaper: Record<string, MarkSchemeSource> = {
     filenames: ["January_2022_2HR_MS.pdf"],
     positions: {1:[4,0.21866],2:[5,0.12091],3:[6,0.12171],4:[7,0.12171],5:[7,0.45869],6:[8,0.12091],7:[9,0.12171],8:[10,0.12171],9:[10,0.32587],10:[11,0.1203],11:[12,0.12192],12:[13,0.1203],13:[14,0.12171],14:[15,0.12171],15:[16,0.12171],16:[17,0.12171],17:[18,0.12171],18:[19,0.12171],19:[20,0.12171],20:[21,0.12171],21:[22,0.12171],22:[23,0.1203],23:[25,0.12091]},
   },
-  // Uploaded PDFs that have not been manually cropped yet. The exporter locates
-  // question boundaries from the PDF text and validates them before exporting.
-  "2024|November|1H": {
-    filenames: ["IGCSE_MATHEMATICS_A_2024_Nov_Higher_P1_MS.pdf"],
-    positions: {},
-    autoDetect: true,
-  },
   "2023|May/June|1HR": {
     filenames: ["IGCSE_MATHEMATICS_A_2023_MayJune_Higher_P1R_MS.pdf"],
-    positions: {},
-    autoDetect: true,
+    positions: {1:[4,0.1275],2:[5,0.0552],3:[5,0.3167],4:[6,0.0552],5:[7,0.0552],6:[7,0.3667],7:[7,0.6281],8:[8,0.0552],9:[8,0.3332],10:[9,0.0552],11:[9,0.2903],12:[10,0.055],13:[11,0.0552],14:[12,0.0552],15:[13,0.0552],16:[14,0.055],17:[15,0.0552],18:[16,0.0552],19:[17,0.0552],20:[18,0.0552],21:[19,0.0552],22:[20,0.0784],23:[21,0.055],24:[23,0.055],25:[25,0.0552]},
   },
   "2024|November|2H": {
     filenames: ["IGCSE_MATHEMATICS_A_2024_Nov_Higher_P2_MS.pdf"],
