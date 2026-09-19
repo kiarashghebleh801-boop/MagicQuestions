@@ -4,6 +4,10 @@ export const FORMATTED_BUCKET = "examwizard-papers";
 export const PHYSICS_BUCKET = "physics-papers";
 
 const sourceByPaper: Record<string, string> = {
+  "2012|January|3H": "January_2012_Maths_Paper_3H_ExamWizard_Style.docx",
+  "2012|January|4H": "January_2012_Maths_Paper_4H_ExamWizard_Style.docx",
+  "2013|January|3H": "January_2013_Maths_Paper_3H_ExamWizard_Style.docx",
+  "2013|January|4H": "January_2013_Maths_Paper_4H_ExamWizard_Style (1).docx",
   "2017|May/June|3H": "May_June_2017_Maths_Paper_3H_ExamWizard_Style.docx",
   "2017|May/June|4H": "May_June_2017_Maths_Paper_4H_ExamWizard_Style.docx",
   "2018|May/June|1H": "May_June_2018_Maths_Paper_1H_ExamWizard_Style.docx",
