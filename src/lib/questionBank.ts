@@ -6,6 +6,7 @@ import { questions_2025_may_1h } from "./questions2025May1H";
 import { questions_2024_november_1h } from "./questions2024November1H";
 import { questions_2024_november_2h } from "./questions2024November2H";
 import { questions_2017_2018 } from "./questions2017_2018";
+import { questions_2012_2013 } from "./questions2012_2013";
 import { questions_2022_may_june } from "./questions2022MayJune";
 import { questions_2023_may_june } from "./questions2023MayJune";
 
@@ -19,6 +20,7 @@ export const questions: Question[] = [
   ...questions_2024_november_1h,
   ...questions_2024_november_2h,
   ...questions_2017_2018,
+  ...questions_2012_2013,
   ...questions_2022_may_june,
   ...questions_2023_may_june,
 ];
