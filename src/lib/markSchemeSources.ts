@@ -30,28 +30,25 @@ const markSchemeByPaper: Record<string, MarkSchemeSource> = {
   "2023|May/June|2H": { filenames: ["June 2023 MS (1).pdf"], positions: {1:[5,0.2253],2:[6,0.1282],3:[7,0.1282],4:[8,0.1282],5:[9,0.1282],6:[10,0.1282],7:[10,0.2949],8:[11,0.1282],9:[12,0.1282],10:[13,0.1282],11:[14,0.1282],12:[15,0.1282],13:[16,0.1282],14:[17,0.1282],15:[18,0.1282],16:[19,0.1282],17:[20,0.1282],18:[21,0.5479],19:[22,0.1282],20:[23,0.1514],21:[24,0.1282],22:[25,0.1282],23:[27,0.1282],24:[28,0.1282],25:[28,0.51],26:[31,0.045]} },
   "2023|May/June|2HR": { filenames: ["June 2023 (R) MS (1).pdf"], positions: {1:[5,0.2485],2:[6,0.1282],3:[7,0.1514],4:[8,0.1282],5:[9,0.1282],6:[10,0.1282],7:[11,0.1282],8:[11,0.2523],9:[12,0.1282],10:[13,0.1282],11:[14,0.1282],12:[14,0.6906],13:[15,0.1514],14:[16,0.1514],15:[16,0.4898],16:[17,0.1282],17:[18,0.1282],18:[19,0.1282],19:[20,0.1282],20:[21,0.1282],21:[22,0.1282],22:[24,0.1282],23:[25,0.1282],24:[27,0.125],25:[28,0.128],26:[29,0.128],27:[30,0.045]} },
 
-  // January 2012/2013 Higher papers. Exact PDFs were confirmed in Supabase.
-  // The original 4MA0 files have rotated pages and frequently group multiple
-  // questions in a single table; boundaries are detected from the numbered rows.
+  // Verified question-by-question against the original January 2012/2013
+  // 4MA0 Higher PDFs. Coordinates are zero-based rendered PDF page indices
+  // and fractions of the rendered page height (including the 90-degree rotation).
+  // Each final entry is an end-of-paper sentinel, not an actual question.
   "2012|January|3H": {
     filenames: ["January 2012 MS.pdf"],
-    positions: {22:[8,0.045]}, // Stop before the publisher's closing page.
-    autoDetect: true,
+    positions: {1:[2,0.1361],2:[2,0.2891],3:[2,0.3765],4:[2,0.4655],5:[2,0.6639],6:[3,0.0908],7:[3,0.3076],8:[3,0.5664],9:[4,0.0689],10:[4,0.2571],11:[4,0.3664],12:[4,0.4739],13:[4,0.6706],14:[5,0.0689],15:[5,0.2437],16:[5,0.4824],17:[5,0.7008],18:[6,0.0706],19:[6,0.242],20:[6,0.3714],21:[7,0.0689],22:[8,0.045]},
   },
   "2012|January|4H": {
     filenames: ["January 2012 MS (1).pdf"],
-    positions: {23:[14,0.045]},
-    autoDetect: true,
+    positions: {1:[2,0.3345],2:[2,0.4538],3:[3,0.1798],4:[3,0.4773],5:[3,0.6521],6:[4,0.1798],7:[4,0.4521],8:[4,0.5647],9:[5,0.1798],10:[5,0.4941],11:[6,0.1798],12:[6,0.442],13:[7,0.1798],14:[9,0.1798],15:[9,0.5849],16:[10,0.1798],17:[11,0.1798],18:[12,0.1798],19:[12,0.3765],20:[13,0.1798],21:[13,0.516],22:[13,0.6202],23:[14,0.045]},
   },
   "2013|January|3H": {
     filenames: ["January 2013 MS.pdf"],
-    positions: {22:[13,0.045]},
-    autoDetect: true,
+    positions: {1:[4,0.1697],2:[4,0.3076],3:[5,0.1462],4:[5,0.4908],5:[5,0.7193],6:[6,0.1059],7:[6,0.4471],8:[6,0.6756],9:[7,0.1513],10:[7,0.3126],11:[7,0.6336],12:[8,0.1462],13:[8,0.3664],14:[8,0.5496],15:[9,0.1059],16:[9,0.3143],17:[9,0.4286],18:[9,0.5714],19:[10,0.1277],20:[11,0.1462],21:[12,0.1462],22:[13,0.045]},
   },
   "2013|January|4H": {
     filenames: ["January 2013 MS (1).pdf"],
-    positions: {27:[17,0.045]},
-    autoDetect: true,
+    positions: {1:[4,0.2084],2:[4,0.4118],3:[4,0.558],4:[4,0.7647],5:[5,0.1445],6:[5,0.4151],7:[6,0.0992],8:[7,0.0756],9:[7,0.4034],10:[8,0.0992],11:[8,0.5109],12:[8,0.7529],13:[9,0.0756],14:[9,0.3513],15:[10,0.1227],16:[10,0.3294],17:[11,0.0756],18:[12,0.0992],19:[12,0.5059],20:[13,0.0857],21:[13,0.4034],22:[14,0.0756],23:[14,0.3496],24:[14,0.5765],25:[15,0.0756],26:[16,0.0756],27:[17,0.045]},
   },
   "2022|January|1HR": {
     filenames: ["January_2022_1HR_MS.pdf"],
@@ -100,5 +97,5 @@ export function getMarkSchemeSource(q: Question): MarkSchemeSource | null {
 
 export function hasMarkSchemeSource(q: Question): boolean {
   const source = getMarkSchemeSource(q);
-  return !!source && (source.autoDetect === true || !!source.positions[q.questionNumber]);
+  return !!source && !!source.positions[q.questionNumber];
 }
