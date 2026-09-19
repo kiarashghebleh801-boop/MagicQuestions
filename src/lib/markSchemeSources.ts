@@ -13,6 +13,29 @@ export type MarkSchemeSource = {
 // the Supabase mark-scheme bucket are enabled here. Fixed positions keep the
 // export deterministic instead of guessing table rows from PDF text.
 const markSchemeByPaper: Record<string, MarkSchemeSource> = {
+  // January 2012/2013 Higher papers. Exact PDFs were confirmed in Supabase.
+  // The original 4MA0 files have rotated pages and frequently group multiple
+  // questions in a single table; boundaries are detected from the numbered rows.
+  "2012|January|3H": {
+    filenames: ["January 2012 MS.pdf"],
+    positions: {22:[8,0.045]}, // Stop before the publisher's closing page.
+    autoDetect: true,
+  },
+  "2012|January|4H": {
+    filenames: ["January 2012 MS (1).pdf"],
+    positions: {23:[14,0.045]},
+    autoDetect: true,
+  },
+  "2013|January|3H": {
+    filenames: ["January 2013 MS.pdf"],
+    positions: {22:[13,0.045]},
+    autoDetect: true,
+  },
+  "2013|January|4H": {
+    filenames: ["January 2013 MS (1).pdf"],
+    positions: {27:[17,0.045]},
+    autoDetect: true,
+  },
   "2022|January|1HR": {
     filenames: ["January_2022_1HR_MS.pdf"],
     positions: {1:[4,0.15926],2:[4,0.60441],3:[5,0.06206],4:[5,0.48323],5:[6,0.06206],6:[6,0.27052],7:[7,0.06206],8:[7,0.43143],9:[7,0.63142],10:[8,0.09878],11:[8,0.65561],12:[9,0.06206],13:[10,0.06206],14:[11,0.06206],15:[12,0.06206],16:[13,0.06206],17:[13,0.57861],18:[14,0.06206],19:[14,0.50339],20:[15,0.06206],21:[15,0.29189],22:[16,0.06206],23:[17,0.09878],24:[18,0.08041]},
