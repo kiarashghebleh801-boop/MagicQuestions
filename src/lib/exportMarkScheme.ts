@@ -103,6 +103,41 @@ function nextPosition(source: MarkSchemeSource, questionNumber: number) {
   return null;
 }
 
+// Uploaded mark schemes can be available before their per-question crop map is
+// recorded. Locate a numbered first-column row for every question at runtime.
+// Fail closed rather than risk attaching the wrong answer to a question.
+async function resolveMarkSchemePositions(pdf: PdfDocumentProxy, source: MarkSchemeSource, required: number[]): Promise<MarkSchemeSource> {
+  if (!source.autoDetect) return source;
+  const found: Record<number, [number, number]> = {};
+  let expected = 1;
+  for (let pageIndex = 3; pageIndex < pdf.numPages && expected <= 35; pageIndex++) {
+    const page = await pdf.getPage(pageIndex + 1);
+    const viewport = page.getViewport({ scale: 1 });
+    const text = await page.getTextContent();
+    const items = (text.items as Array<{str?: string; transform?: number[]}>)
+      .filter(item => typeof item.str === "string" && item.transform?.length)
+      .map(item => ({
+        label: item.str!.trim(),
+        x: item.transform![4],
+        top: (viewport.height - item.transform![5]) / viewport.height,
+      }))
+      .sort((a, b) => a.top - b.top || a.x - b.x);
+
+    for (const item of items) {
+      const label = item.label.match(/^(?:Q(?:uestion)?\s*)?(\d{1,2})\.?$/i);
+      if (!label || Number(label[1]) !== expected) continue;
+      if (item.x > viewport.width * 0.30 || item.top < 0.07 || item.top > 0.91) continue;
+      found[expected] = [pageIndex, Math.max(0.045, item.top - 0.018)];
+      expected++;
+    }
+  }
+
+  if (expected < 11 || required.some(q => !found[q])) {
+    throw new Error("This PDF is uploaded, but its question boundaries could not be verified automatically. Its mark scheme needs a manual question map before a custom download can be built.");
+  }
+  return { ...source, positions: found, autoDetect: false };
+}
+
 async function extractQuestionCrops(pdf: PdfDocumentProxy, source: MarkSchemeSource, questionNumber: number): Promise<Crop[]> {
   const start = source.positions[questionNumber];
   if (!start) throw new Error(`Mark scheme mapping is not available for original Q${questionNumber}.`);
@@ -140,11 +175,19 @@ export async function exportMarkSchemeToWord(questions: Question[]) {
   const grouped = new Map<string, { source: MarkSchemeSource; pdf: PdfDocumentProxy }>();
   for (const q of questions) {
     const source = getMarkSchemeSource(q);
-    if (!source || !source.positions[q.questionNumber]) {
-      throw new Error(`A verified mark scheme is not available yet for ${q.session} ${q.year} Paper ${q.paper}, original Q${q.questionNumber}.`);
+    if (!source) {
+      throw new Error(`A mark scheme source is not available for ${q.session} ${q.year} Paper ${q.paper}, original Q${q.questionNumber}.`);
     }
     const key = `${q.year}|${q.session}|${q.paper}`;
-    if (!grouped.has(key)) grouped.set(key, { source, pdf: await loadPdf(source.filenames) });
+    if (!grouped.has(key)) {
+      const pdf = await loadPdf(source.filenames);
+      const required = questions.filter(other => `${other.year}|${other.session}|${other.paper}` === key).map(other => other.questionNumber);
+      const resolved = await resolveMarkSchemePositions(pdf, source, required);
+      grouped.set(key, { source: resolved, pdf });
+    }
+    if (!grouped.get(key)!.source.positions[q.questionNumber]) {
+      throw new Error(`A verified mark scheme is not available yet for ${q.session} ${q.year} Paper ${q.paper}, original Q${q.questionNumber}.`);
+    }
   }
 
   const children: Paragraph[] = [
