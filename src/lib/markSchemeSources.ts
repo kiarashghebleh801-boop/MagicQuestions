@@ -6,6 +6,7 @@ export type MarkSchemePosition = [pageIndex: number, topRatio: number];
 export type MarkSchemeSource = {
   filenames: string[];
   positions: Record<number, MarkSchemePosition>;
+  autoDetect?: boolean;
 };
 
 // Only papers whose exact Higher-tier mark-scheme PDF is currently present in
@@ -19,6 +20,18 @@ const markSchemeByPaper: Record<string, MarkSchemeSource> = {
   "2022|January|2HR": {
     filenames: ["January_2022_2HR_MS.pdf"],
     positions: {1:[4,0.21866],2:[5,0.12091],3:[6,0.12171],4:[7,0.12171],5:[7,0.45869],6:[8,0.12091],7:[9,0.12171],8:[10,0.12171],9:[10,0.32587],10:[11,0.1203],11:[12,0.12192],12:[13,0.1203],13:[14,0.12171],14:[15,0.12171],15:[16,0.12171],16:[17,0.12171],17:[18,0.12171],18:[19,0.12171],19:[20,0.12171],20:[21,0.12171],21:[22,0.12171],22:[23,0.1203],23:[25,0.12091]},
+  },
+  // Uploaded PDFs that have not been manually cropped yet. The exporter locates
+  // question boundaries from the PDF text and validates them before exporting.
+  "2024|November|1H": {
+    filenames: ["IGCSE_MATHEMATICS_A_2024_Nov_Higher_P1_MS.pdf"],
+    positions: {},
+    autoDetect: true,
+  },
+  "2023|May/June|1HR": {
+    filenames: ["IGCSE_MATHEMATICS_A_2023_MayJune_Higher_P1R_MS.pdf"],
+    positions: {},
+    autoDetect: true,
   },
   "2024|November|2H": {
     filenames: ["IGCSE_MATHEMATICS_A_2024_Nov_Higher_P2_MS.pdf"],
@@ -48,5 +61,5 @@ export function getMarkSchemeSource(q: Question): MarkSchemeSource | null {
 
 export function hasMarkSchemeSource(q: Question): boolean {
   const source = getMarkSchemeSource(q);
-  return !!source?.positions[q.questionNumber];
+  return !!source && (source.autoDetect === true || !!source.positions[q.questionNumber]);
 }
