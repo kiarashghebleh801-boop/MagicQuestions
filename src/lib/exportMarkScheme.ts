@@ -110,23 +110,25 @@ async function resolveMarkSchemePositions(pdf: PdfDocumentProxy, source: MarkSch
   if (!source.autoDetect) return source;
   const found: Record<number, [number, number]> = {};
   let expected = 1;
-  for (let pageIndex = 3; pageIndex < pdf.numPages && expected <= 35; pageIndex++) {
+  const pdfjs = await getPdfJs();
+  for (let pageIndex = 2; pageIndex < pdf.numPages && expected <= 35; pageIndex++) {
     const page = await pdf.getPage(pageIndex + 1);
     const viewport = page.getViewport({ scale: 1 });
     const text = await page.getTextContent();
     const items = (text.items as Array<{str?: string; transform?: number[]}>)
       .filter(item => typeof item.str === "string" && item.transform?.length)
-      .map(item => ({
-        label: item.str!.trim(),
-        x: item.transform![4],
-        top: (viewport.height - item.transform![5]) / viewport.height,
-      }))
+      .map(item => {
+        // Apply the viewport matrix: legacy 4MA0 PDFs are rotated 90 degrees.
+        // Raw PDF text coordinates cannot be compared to the rendered page.
+        const [x, y] = pdfjs.Util.applyTransform(viewport.transform, item.transform!);
+        return { label: item.str!.trim(), x, top: y / viewport.height };
+      })
       .sort((a, b) => a.top - b.top || a.x - b.x);
 
     for (const item of items) {
-      const label = item.label.match(/^(?:Q(?:uestion)?\s*)?(\d{1,2})\.?$/i);
+      const label = item.label.match(/^(?:Q(?:uestion)?\s*)?(\d{1,2})\s*\.(?:\s*\([a-z0-9]+\))*\s*$/i);
       if (!label || Number(label[1]) !== expected) continue;
-      if (item.x > viewport.width * 0.30 || item.top < 0.07 || item.top > 0.91) continue;
+      if (item.x < 0 || item.x > viewport.width * 0.30 || item.top < 0.045 || item.top > 0.92) continue;
       found[expected] = [pageIndex, Math.max(0.045, item.top - 0.018)];
       expected++;
     }
@@ -135,7 +137,9 @@ async function resolveMarkSchemePositions(pdf: PdfDocumentProxy, source: MarkSch
   if (expected < 11 || required.some(q => !found[q])) {
     throw new Error("This PDF is uploaded, but its question boundaries could not be verified automatically. Its mark scheme needs a manual question map before a custom download can be built.");
   }
-  return { ...source, positions: found, autoDetect: false };
+  // Preserve any supplied sentinel row, which prevents the final question's
+  // crop from pulling unrelated publisher material at the end of a PDF.
+  return { ...source, positions: { ...found, ...source.positions }, autoDetect: false };
 }
 
 async function extractQuestionCrops(pdf: PdfDocumentProxy, source: MarkSchemeSource, questionNumber: number): Promise<Crop[]> {
