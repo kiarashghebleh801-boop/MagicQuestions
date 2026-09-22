@@ -68,4 +68,51 @@ export const physicsQuestions: Question[] = [
   { id:"phys-2025-mj-2PR-6",year:2025,session:"May/June",paper:"2PR",questionNumber:6,marks:10,topics:["8d","3b"],difficulty:"Hard",summary:"Cosmic microwave background radiation, wavelength and red-shift evidence for the Big Bang." },
   { id:"phys-2025-mj-2PR-7",year:2025,session:"May/June",paper:"2PR",questionNumber:7,marks:10,topics:["4b"],difficulty:"Medium",summary:"Thermal radiation and insulation, then cooling curves and rates of temperature change." },
   { id:"phys-2025-mj-2PR-8",year:2025,session:"May/June",paper:"2PR",questionNumber:8,marks:6,topics:["3d"],difficulty:"Medium",summary:"Human hearing, sound frequency and oscilloscope settings." },
+
+  // May/June 2026 Paper 1P
+  { id:"phys-2026-mj-1P-1",year:2026,session:"May/June",paper:"1P",questionNumber:1,marks:8,topics:["8c","7c"],difficulty:"Medium",summary:"Stellar evolution and the process and required conditions of nuclear fusion." },
+  { id:"phys-2026-mj-1P-2",year:2026,session:"May/June",paper:"1P",questionNumber:2,marks:12,topics:["5b","5d"],difficulty:"Hard",summary:"Atmospheric pressure, gas temperature and pressure, and molecular kinetic energy on Venus." },
+  { id:"phys-2026-mj-1P-3",year:2026,session:"May/June",paper:"1P",questionNumber:3,marks:6,topics:["8b"],difficulty:"Medium",summary:"Elliptical orbits, gravitational force, orbital speed and gravitational field strength." },
+  { id:"phys-2026-mj-1P-4",year:2026,session:"May/June",paper:"1P",questionNumber:4,marks:13,topics:["1c"],difficulty:"Hard",summary:"Investigating force and extension in a metal wire, variables, safety and the elastic limit." },
+  { id:"phys-2026-mj-1P-5",year:2026,session:"May/June",paper:"1P",questionNumber:5,marks:13,topics:["2c","3d"],difficulty:"Hard",summary:"Parallel street lamps, reflection, refraction, refractive index and total internal reflection." },
+  { id:"phys-2026-mj-1P-6",year:2026,session:"May/June",paper:"1P",questionNumber:6,marks:7,topics:["3c","4b"],difficulty:"Medium",summary:"Electromagnetic waves in ovens, microwave frequency and heat transfer through food." },
+  { id:"phys-2026-mj-1P-7",year:2026,session:"May/June",paper:"1P",questionNumber:7,marks:12,topics:["7c","7b"],difficulty:"Hard",summary:"Thorium and uranium nuclear equations, fission chain reactions and radioactive half-life." },
+  { id:"phys-2026-mj-1P-8",year:2026,session:"May/June",paper:"1P",questionNumber:8,marks:8,topics:["6c","6d"],difficulty:"Medium",summary:"Alternating current, loudspeaker operation and electromagnetic induction in a microphone." },
+  { id:"phys-2026-mj-1P-9",year:2026,session:"May/June",paper:"1P",questionNumber:9,marks:12,topics:["1b"],difficulty:"Hard",summary:"Light-gate measurements, acceleration, graphing speed squared against distance and gradients." },
+  { id:"phys-2026-mj-1P-10",year:2026,session:"May/June",paper:"1P",questionNumber:10,marks:12,topics:["2c"],difficulty:"Hard",summary:"LDR circuits, voltmeter placement, resistance calculations and doubling current." },
+  { id:"phys-2026-mj-1P-11",year:2026,session:"May/June",paper:"1P",questionNumber:11,marks:7,topics:["4c","1c"],difficulty:"Medium",summary:"Kinetic energy, work done by braking forces and the effect of speed on braking distance." },
+
+  // May/June 2026 regional Paper 1PR
+  { id:"phys-2026-mj-1PR-1",year:2026,session:"May/June",paper:"1PR",questionNumber:1,marks:6,topics:["8b","8c"],difficulty:"Medium",summary:"Solar System objects and the future evolution of the Sun." },
+  { id:"phys-2026-mj-1PR-2",year:2026,session:"May/June",paper:"1PR",questionNumber:2,marks:6,topics:["6b"],difficulty:"Medium",summary:"Magnetic field diagrams, field direction and permanent magnetism in steel." },
+  { id:"phys-2026-mj-1PR-3",year:2026,session:"May/June",paper:"1PR",questionNumber:3,marks:10,topics:["2b","4b","4c"],difficulty:"Medium",summary:"Alternating current, electrical power and reducing heat loss from a water bath." },
+  { id:"phys-2026-mj-1PR-4",year:2026,session:"May/June",paper:"1PR",questionNumber:4,marks:9,topics:["3b","3c"],difficulty:"Medium",summary:"Microwave amplitude, wavelength, frequency, distance and reflection from metal." },
+  { id:"phys-2026-mj-1PR-5",year:2026,session:"May/June",paper:"1PR",questionNumber:5,marks:14,topics:["2c"],difficulty:"Hard",summary:"Electric current, series resistance and an investigation of current against resistor number." },
+  { id:"phys-2026-mj-1PR-6",year:2026,session:"May/June",paper:"1PR",questionNumber:6,marks:7,topics:["7c"],difficulty:"Medium",summary:"The process of nuclear fusion and the temperature and pressure conditions required." },
+  { id:"phys-2026-mj-1PR-7",year:2026,session:"May/June",paper:"1PR",questionNumber:7,marks:11,topics:["5b"],difficulty:"Hard",summary:"Determining the density of air by measuring displaced water and the mass of a balloon." },
+  { id:"phys-2026-mj-1PR-8",year:2026,session:"May/June",paper:"1PR",questionNumber:8,marks:12,topics:["5d"],difficulty:"Hard",summary:"Absolute zero, gas pressure and volume, and pressure changes at constant volume." },
+  { id:"phys-2026-mj-1PR-9",year:2026,session:"May/June",paper:"1PR",questionNumber:9,marks:8,topics:["3d"],difficulty:"Medium",summary:"Refraction through a prism, refractive index, dispersion and graph interpretation." },
+  { id:"phys-2026-mj-1PR-10",year:2026,session:"May/June",paper:"1PR",questionNumber:10,marks:13,topics:["7b","1b"],difficulty:"Hard",summary:"Beta particles, nuclear equations, ionisation and acceleration through aluminium." },
+  { id:"phys-2026-mj-1PR-11",year:2026,session:"May/June",paper:"1PR",questionNumber:11,marks:14,topics:["1b","1c"],difficulty:"Hard",summary:"Skydiving weight, resultant force, acceleration and distance from a velocity-time graph." },
+
+  // May/June 2026 Paper 2P
+  { id:"phys-2026-mj-2P-1",year:2026,session:"May/June",paper:"2P",questionNumber:1,marks:8,topics:["5c","4b"],difficulty:"Medium",summary:"A specific heat capacity investigation, electrical energy and calculation of specific heat capacity." },
+  { id:"phys-2026-mj-2P-2",year:2026,session:"May/June",paper:"2P",questionNumber:2,marks:9,topics:["1c"],difficulty:"Medium",summary:"Moments in equilibrium and how support forces change as a person crosses a beam." },
+  { id:"phys-2026-mj-2P-3",year:2026,session:"May/June",paper:"2P",questionNumber:3,marks:9,topics:["6b","6c"],difficulty:"Medium",summary:"Electromagnet construction, induced magnetism and magnetic field lines." },
+  { id:"phys-2026-mj-2P-4",year:2026,session:"May/June",paper:"2P",questionNumber:4,marks:10,topics:["7c","4b","4d"],difficulty:"Medium",summary:"Energy transfers in a fission power station, radiation safety and efficiency." },
+  { id:"phys-2026-mj-2P-5",year:2026,session:"May/June",paper:"2P",questionNumber:5,marks:7,topics:["2d"],difficulty:"Medium",summary:"Charging balloons by friction and testing the inverse-square electrostatic force relationship." },
+  { id:"phys-2026-mj-2P-6",year:2026,session:"May/June",paper:"2P",questionNumber:6,marks:11,topics:["3d"],difficulty:"Hard",summary:"Human hearing, oscilloscope measurements, sound frequency and presenting animal data." },
+  { id:"phys-2026-mj-2P-7",year:2026,session:"May/June",paper:"2P",questionNumber:7,marks:7,topics:["8d"],difficulty:"Medium",summary:"Red-shift evidence for the Big Bang and evaluating a star's recession speed." },
+  { id:"phys-2026-mj-2P-8",year:2026,session:"May/June",paper:"2P",questionNumber:8,marks:9,topics:["3b","1c"],difficulty:"Medium",summary:"The Doppler effect in sound and radio signals, followed by momentum during spacecraft docking." },
+
+  // May/June 2026 regional Paper 2PR
+  { id:"phys-2026-mj-2PR-1",year:2026,session:"May/June",paper:"2PR",questionNumber:1,marks:5,topics:["8d"],difficulty:"Medium",summary:"Direct evidence for the Big Bang and how physical quantities changed as the universe expanded." },
+  { id:"phys-2026-mj-2PR-2",year:2026,session:"May/June",paper:"2PR",questionNumber:2,marks:9,topics:["2d","2b"],difficulty:"Medium",summary:"Electrostatic air filtering, charging dust, attraction, insulation and earthing." },
+  { id:"phys-2026-mj-2PR-3",year:2026,session:"May/June",paper:"2PR",questionNumber:3,marks:10,topics:["4d","7c"],difficulty:"Medium",summary:"Fuel energy density, renewable wood and the products and disadvantages of nuclear fission." },
+  { id:"phys-2026-mj-2PR-4",year:2026,session:"May/June",paper:"2PR",questionNumber:4,marks:14,topics:["1c"],difficulty:"Hard",summary:"Measuring pool-ball speed and contact time, then calculating momentum and force." },
+  { id:"phys-2026-mj-2PR-5",year:2026,session:"May/June",paper:"2PR",questionNumber:5,marks:9,topics:["5c"],difficulty:"Medium",summary:"Particle changes during melting and calculating the mass of heated liquid gallium." },
+  { id:"phys-2026-mj-2PR-6",year:2026,session:"May/June",paper:"2PR",questionNumber:6,marks:8,topics:["7b"],difficulty:"Medium",summary:"Becquerel's discovery of radioactivity and identifying radiation in a magnetic field." },
+  { id:"phys-2026-mj-2PR-7",year:2026,session:"May/June",paper:"2PR",questionNumber:7,marks:6,topics:["1c"],difficulty:"Medium",summary:"Moments of a uniform bar and calculating the upward forces at two supports." },
+  { id:"phys-2026-mj-2PR-8",year:2026,session:"May/June",paper:"2PR",questionNumber:8,marks:9,topics:["6d","3d"],difficulty:"Medium",summary:"Microphone electromagnetic induction, damage from loud sounds and measuring frequency." },
+
 ];
