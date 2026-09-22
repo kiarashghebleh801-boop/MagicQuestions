@@ -8,6 +8,7 @@ import { FORMATTED_BUCKET, PHYSICS_BUCKET, getFormattedSource } from "./sourceDo
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml";
 const FRONT_COVER_FILE = "FrontCover.docx";
+const PHYSICS_FORMULAE_FILE = "formulae-sheet-physics.docx";
 
 type LoadedDoc = {
   filename: string;
@@ -442,9 +443,11 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
 
   const sources = await Promise.all(filenames.map(filename => loadSource(PHYSICS_BUCKET, filename!)));
   const cover = await loadSource(FORMATTED_BUCKET, FRONT_COVER_FILE);
+  // The uploaded Physics formulae sheet must be present for every export.
+  const formulae = await loadSource(PHYSICS_BUCKET, PHYSICS_FORMULAE_FILE);
   const template = sources[0];
   const outputZip = await JSZip.loadAsync(await template.zip.generateAsync({ type: "uint8array" }));
-  const templateXml = mergeNamespaces(template.documentXmlText, [...sources, cover]);
+  const templateXml = mergeNamespaces(template.documentXmlText, [...sources, cover, formulae]);
   const { openEnd, closeStart } = bodyBounds(templateXml);
   const sectStart = rawSectPrStart(templateXml);
   const prefix = templateXml.slice(0, openEnd);
@@ -458,6 +461,19 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
 
+  // Insert the complete original image-based formulae page after the cover.
+  // Remap its embedded image and unique drawing IDs into the generated DOCX.
+  const formulaeBody = getBody(formulae.documentXml);
+  const serializer = new XMLSerializer();
+  let formulaeChunk = Array.from(formulaeBody.childNodes)
+    .filter(node => !(node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === "sectPr"))
+    .map(node => serializer.serializeToString(node)).join("");
+  formulaeChunk = await remapRelationships(formulaeChunk, formulae, outputZip, relState, contentState);
+  formulaeChunk = renumberDrawingIds(formulaeChunk, drawingCounter);
+  // The cover already ends with a page break; start questions on the page
+  // following the formulae sheet, without adding another empty page.
+  formulaeChunk += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
@@ -468,7 +484,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
     chunks.push(chunk);
   }
 
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${chunks.join("")}${sectPr}${suffix}`);
+  outputZip.file("word/document.xml", `${prefix}${coverChunk}${formulaeChunk}${chunks.join("")}${sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml);
   outputZip.file("[Content_Types].xml", contentState.xml);
   download(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
