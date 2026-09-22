@@ -9,6 +9,8 @@ import { supabase } from "@/lib/supabase";
 import { exportPhysicsPaperToWord } from "@/lib/exportPhysicsWord";
 import PaperReview from "@/components/PaperReview";
 import PhysicsReviewTracker from "@/components/PhysicsReviewTracker";
+import ScienceQuestionDetails from "@/components/ScienceQuestionDetails";
+import ScienceSwapModal from "@/components/ScienceSwapModal";
 
 export default function PhysicsPage() {
   const router = useRouter();
@@ -23,6 +25,8 @@ export default function PhysicsPage() {
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -94,13 +98,8 @@ export default function PhysicsPage() {
     });
   }
 
-  function swapQuestion(index: number) {
-    const old = paper[index];
-    if (!old) return;
-    const used = new Set(paper.map(q => q.id));
-    const candidates = matchingQuestions.filter(q => !used.has(q.id) && q.topics.some(tag => old.topics.includes(tag)));
-    if (!candidates.length) { window.alert("No other Physics question is available for this specification area yet."); return; }
-    setPaper(current => current.map((q, i) => i === index ? candidates[Math.floor(Math.random() * candidates.length)] : q));
+  function replaceQuestion(index: number, replacement: Question) {
+    setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
 
   async function downloadWord() {
@@ -156,12 +155,13 @@ export default function PhysicsPage() {
           <div className="editorHint"><span>✦</span><div><b>November 2025 bank connected</b><small>Questions are organised using the official 4PH1 specification subtopics, with Units excluded.</small></div></div>
           <div className="questionList">{paper.map((q, index) => <article className="question" key={`${q.id}-${index}`}>
             <div className="qNumber">{index + 1}</div>
-            <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => swapQuestion(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
+            <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><button type="button" onClick={() => setExpandedQuestionId(current => current === q.id ? null : q.id)} aria-expanded={expandedQuestionId === q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId === q.id ? "Hide full question ↑" : "View full question ↓"}</button>{expandedQuestionId === q.id && <ScienceQuestionDetails question={q}/>}<div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => setSwapIndex(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
             <div className="marks">{q.marks}<small>marks</small></div>
           </article>)}</div>
           <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
           {reviewOpen && <PaperReview paper={paper} title="Physics paper review" onClose={() => setReviewOpen(false)}/>} 
         </>}
+        {swapIndex !== null && paper[swapIndex] && <ScienceSwapModal subject="Physics" current={paper[swapIndex]} paper={paper} questions={matchingQuestions} topicLabel={tag => `Spec ${tag[0]}(${tag.slice(1)}) · ${physicsTopicTitle.get(tag) || tag}`} onClose={() => setSwapIndex(null)} onChoose={q => {replaceQuestion(swapIndex, q);setSwapIndex(null);}}/>}
       </div>
     </section> : mode === "bank" ? <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">PHYSICS QUESTION BANK</p><h2>Browse {bankResults.length} matching questions</h2></div><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Physics questions…"/></div>
