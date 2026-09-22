@@ -54,6 +54,10 @@ const sourceByPaper: Record<string, string> = {
   "2025|May/June|2P": "May_June_2025_Physics_Paper_2P.docx",
   "2025|May/June|1PR": "May_June_2025_Physics_Paper_1PR.docx",
   "2025|May/June|2PR": "May_June_2025_Physics_Paper_2PR.docx",
+  "2026|May/June|1P": "June_2026_Physics_Paper_1P_ExamWizard_Style.docx",
+  "2026|May/June|1PR": "June_2026_Physics_Paper_1PR_ExamWizard_Style.docx",
+  "2026|May/June|2P": "June_2026_Physics_Paper_2P_ExamWizard_Style.docx",
+  "2026|May/June|2PR": "June_2026_Physics_Paper_2PR_ExamWizard_Style.docx",
 };
 
 export function getFormattedSource(q: Question): string | null {
