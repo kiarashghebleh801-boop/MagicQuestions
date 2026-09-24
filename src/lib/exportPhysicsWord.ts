@@ -263,18 +263,62 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   return out;
 }
 
-function normalizePhysicsParagraphSpacing(xml: string): string {
-  const spacing = `<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"300\" w:lineRule=\"auto\"/>`;
-  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
-    if (/<w:pPr\b/i.test(paragraph)) {
-      return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
-        const cleaned = inner
-          .replace(/<w:spacing\b[^>]*\/>/gi, "")
-          .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
-        return `<w:pPr${attrs}>${cleaned}${spacing}</w:pPr>`;
-      });
+const WRITTEN_LINE_END_TWIPS = "9800";
+const WRITTEN_LINE_SPACING_TWIPS = "420";
+
+function isWrittenAnswerLine(paragraph: string): boolean {
+  return paragraphPlainText(paragraph) === ""
+    && /<w:tab\b[^>]*\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
+    && /<w:tab\s*\/>/i.test(paragraph);
+}
+
+function replaceParagraphSpacing(paragraph: string, spacing: string): string {
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner
+        .replace(/<w:spacing\b[^>]*\/>/gi, "")
+        .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+      return `<w:pPr${attrs}>${cleaned}${spacing}</w:pPr>`;
+    });
+  }
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
+}
+
+function shortenWrittenAnswerLine(paragraph: string): string {
+  return paragraph.replace(/<w:tab\b[^>]*\/>/gi, tab => {
+    if (!/\bw:leader=(?:"dot"|'dot')/i.test(tab)) return tab;
+    if (/\bw:pos=(?:"[^"]*"|'[^']*')/i.test(tab)) {
+      return tab.replace(/\bw:pos=(?:"[^"]*"|'[^']*')/i, `w:pos="${WRITTEN_LINE_END_TWIPS}"`);
     }
-    return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
+    return tab.replace(/\/>$/, ` w:pos="${WRITTEN_LINE_END_TWIPS}"/>`);
+  });
+}
+
+function normalizePhysicsParagraphSpacing(xml: string): string {
+  const standardSpacing = `<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="auto"/>`;
+  const writtenLineSpacing = `<w:spacing w:before="0" w:after="0" w:line="${WRITTEN_LINE_SPACING_TWIPS}" w:lineRule="exact"/>`;
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (isWrittenAnswerLine(paragraph)) {
+      return replaceParagraphSpacing(shortenWrittenAnswerLine(paragraph), writtenLineSpacing);
+    }
+    return replaceParagraphSpacing(paragraph, standardSpacing);
+  });
+}
+
+function ensureQuestionStartsOnNewPage(xml: string, shouldBreak: boolean): string {
+  if (!shouldBreak) return xml;
+  const firstParagraph = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/i.exec(xml)?.[0] || "";
+  if (/<w:pageBreakBefore\b/i.test(firstParagraph)) return xml;
+  return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>${xml}`;
+}
+
+function preventPhysicsTableRowSplits(xml: string): string {
+  return xml.replace(/<w:tr(?=[\s>])[\s\S]*?<\/w:tr>/gi, row => {
+    if (/<w:cantSplit\b/i.test(row)) return row;
+    if (/<w:trPr\b/i.test(row)) {
+      return row.replace(/<w:trPr\b([^>]*)>/i, `<w:trPr$1><w:cantSplit/>`);
+    }
+    return row.replace(/<w:tr(?=[\s>])([^>]*)>/i, `<w:tr$1><w:trPr><w:cantSplit/></w:trPr>`);
   });
 }
 
@@ -477,8 +521,10 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
+    chunk = ensureQuestionStartsOnNewPage(chunk, i > 0);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = normalizePhysicsParagraphSpacing(chunk);
+    chunk = preventPhysicsTableRowSplits(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
