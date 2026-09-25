@@ -246,7 +246,9 @@ export function specialiseChemistryQuestion(q: ChemistryQuestion, selectedTopics
     ...q,
     id: `${q.id}-parts-${selectedParts.join("")}`,
     selectedParts,
-    availableParts: selectedParts,
+    // Show every lettered part in the picker. Topic-matched parts start
+    // selected, while the remaining parts stay available as opt-ins.
+    availableParts: rules.map(rule => rule.part),
     specTags: usedTags,
     marks: matched.reduce((sum, rule) => sum + rule.marks, 0),
     summary: `${q.summary} Selected parts: ${selectedParts.map(part => `(${part})`).join(", ")}.`,
