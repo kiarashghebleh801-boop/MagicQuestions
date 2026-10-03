@@ -249,6 +249,8 @@ function withParagraphProperties(paragraph: string, properties: string): string 
 const CHEMISTRY_WRITTEN_LINE_END_TWIPS = "9800";
 const CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS = "420";
 const SHORT_CHEMISTRY_QUESTION_MARKS = 4;
+const CHEMISTRY_CHECKBOX_IMAGE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAABkAAAAbCAMAAAC+/9RaAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAGzUExURf///9LR0ZGPkIF/gISCg4WCg4KAgIyLjMTDxP7+/qWjpExJS2toaoB+gHx6fH17fH17fWxqbEdFR5KRk56cnWxqa7W1t9LT1dTU1tDQ08zNz87O0NHR09fX2NTV17e3uGhnaI6Mjv39/aCen318fcnKzPLy8/v8/PT09ePk5d7g4uHi5ODi5PT09vf4+Xp5epCOj5+en8jJy/z9/e/w8N7f4dna3P38/crKzI+OkMXGx+Lj5uvs7f79/u7u8OPj5fz8/ezs7uLj5cfHyJCOkMXGyOHi5fj4+cfIycbGyNvc3urr6/r6+uvr7cfIyuDh4vb29uDh49/f4e/v8fDw8fT19fv7+8TFx+Tl5/Dw8Orr7err7MbHyfX29vX2993e4Ovr7MzNzn58fcvMzvf3+fLy9OLk5uPk5vHz8/v7/PDx883Nz3p6ep2bnGtoaa6usMrLzcfHycTExsXFx8rLzLCwsWZlZo2Ljaimp0ZERFpXWGxra2poaW1rbFtYWUM/QZqYmuDg4Ly7u7W0tLe2try6uhVQQywAAAAJcEhZcwAAFxEAABcRAcom8z8AAAFJSURBVChTYxiygJGJmYUVAVjY2DkgEpxc3Dy8fPwCEMDPxysoJMwJkRERFROXkJSSBgEpGVk5eQVFJYiMsoqqmrqGppa2jraWpi6nnrS+AVTGUN/ImIHTxNTM3MzUBChmYWkFk7G2sbVjULJ3cHSwV2JwsnW2dIGZZu3q5m7H4OHp5enB4O3j62fpD5cJCDQHSnkHeTPYuZtrByPJhPiGmoeFA9nhEeahvpEoMuZmUdFAdnSMmTmaTGhsHIinFBeLpkfbIZ6TQT0hkYEz3kEbWSYpOYWTwS7VIc2OgTMlOR0ho2+TAZRwNw81jwBKZRrBZQz1LTgZvN2zQs1Ds7KNGdRz4GGgnJuXz1BQqO3r66tdVFxSWlYO01NRWVXtXFNbBwJJAen1DY1NEBmG5pbWtnYE6Ojs6oZIMPT09vUjg74JPVAZbICBAQCCzFvtwRkxcAAAAABJRU5ErkJggg==";
+const CHEMISTRY_CHECKBOX_MEDIA_TARGET = "media/mq_chemistry_checkbox.png";
 
 function isChemistryWrittenAnswerLine(paragraph: string): boolean {
   const text = paragraphText(paragraph);
@@ -304,14 +306,72 @@ function normalizeChemistryParagraphSpacing(xml: string): string {
   });
 }
 
-function chemistryCheckboxField(name: string): string {
-  return '<w:r><w:rPr><w:sz w:val="20"/></w:rPr><w:fldChar w:fldCharType="begin"><w:ffData>'
-    + '<w:name w:val="' + escapeXml(name) + '"/><w:enabled/><w:calcOnExit w:val="0"/>'
-    + '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>'
-    + '</w:ffData></w:fldChar></w:r>'
-    + '<w:r><w:instrText xml:space="preserve"> FORMCHECKBOX </w:instrText></w:r>'
-    + '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
-    + '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
+function chemistryCheckboxImage(relationshipId: string): string {
+  const cx = "158750";
+  const cy = "171450";
+  const relId = escapeXml(relationshipId);
+  return [
+    '<w:r><w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<wp:inline distT="0" distB="0" distL="0" distR="0">',
+    '<wp:extent cx="' + cx + '" cy="' + cy + '"/>',
+    '<wp:effectExtent l="0" t="0" r="0" b="0"/>',
+    '<wp:docPr id="1" name="Chemistry multiple choice box"/>',
+    '<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>',
+    '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">',
+    '<pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="Chemistry multiple choice box"/>',
+    '<pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + relId + '"/>',
+    '<a:stretch><a:fillRect/></a:stretch></pic:blipFill>',
+    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm>',
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>',
+    '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>',
+    '<w:r><w:t xml:space="preserve"> </w:t></w:r>',
+  ].join("");
+}
+
+function removeExistingChemistryCheckboxes(paragraph: string): string {
+  const runs = Array.from(paragraph.matchAll(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi));
+  const removals: Array<{ start: number; end: number }> = [];
+  let fieldStart: number | null = null;
+
+  for (const run of runs) {
+    const start = run.index;
+    if (start === undefined) continue;
+    const end = start + run[0].length;
+    const beginsCheckbox = /<w:fldChar\b[^>]*\bw:fldCharType=(?:"begin"|'begin')/i.test(run[0])
+      && /<w:checkBox\b/i.test(run[0]);
+    if (beginsCheckbox) {
+      fieldStart = start;
+      continue;
+    }
+    if (fieldStart !== null && /<w:fldChar\b[^>]*\bw:fldCharType=(?:"end"|'end')/i.test(run[0])) {
+      removals.push({ start: fieldStart, end });
+      fieldStart = null;
+    }
+  }
+  if (fieldStart !== null) removals.push({ start: fieldStart, end: fieldStart });
+
+  let out = paragraph;
+  for (let i = removals.length - 1; i >= 0; i--) {
+    out = out.slice(0, removals[i].start) + out.slice(removals[i].end);
+  }
+
+  out = out
+    .replace(/<w:sdt(?=[\s>])(?:(?!<\/w:sdt>)[\s\S])*?<w14:checkbox\b(?:(?!<\/w:sdt>)[\s\S])*?<\/w:sdt>/gi, "")
+    .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:sym\b[^>]*\/>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
+    .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:t\b[^>]*>\s*<\/w:t>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
+    .replace(/[☐☒☑□]/g, "");
+
+  out = out.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+    if (!/<w:drawing\b/i.test(run)) return run;
+    const cx = Number(/<wp:extent\b[^>]*\bcx=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[1] || /<wp:extent\b[^>]*\bcx=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[2] || 0);
+    const cy = Number(/<wp:extent\b[^>]*\bcy=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[1] || /<wp:extent\b[^>]*\bcy=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[2] || 0);
+    return cx > 0 && cy > 0 && cx <= 400000 && cy <= 400000 ? "" : run;
+  });
+
+  return out;
 }
 
 function insertAtParagraphContentStart(paragraph: string, content: string): string {
@@ -325,7 +385,7 @@ function insertAtParagraphContentStart(paragraph: string, content: string): stri
   return paragraph.slice(0, paragraphOpenEnd + 1) + content + paragraph.slice(paragraphOpenEnd + 1);
 }
 
-function normalizeChemistryMultipleChoiceBoxes(xml: string): string {
+function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string): string {
   const paragraphs = rawParagraphs(xml);
   const optionIndexes = new Set<number>();
 
@@ -347,25 +407,14 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string): string {
   }
 
   let out = xml;
-  let boxNumber = 1;
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!optionIndexes.has(i)) continue;
     const paragraph = paragraphs[i];
-    let updated = paragraph.xml;
-    const hasLegacyCheckbox = /<w:checkBox\b/i.test(updated);
-
-    if (hasLegacyCheckbox) {
-      updated = updated.replace(
-        /<w:checkBox\b[^>]*>[\s\S]*?<\/w:checkBox>/gi,
-        '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>',
-      );
-    } else {
-      updated = updated
-        .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:sym\b[^>]*\/>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
-        .replace(/[☐☒☑□]/g, "");
-      updated = insertAtParagraphContentStart(updated, chemistryCheckboxField("MQChemBox" + boxNumber++));
-    }
-
+    const cleaned = removeExistingChemistryCheckboxes(paragraph.xml);
+    const updated = insertAtParagraphContentStart(
+      cleaned,
+      chemistryCheckboxImage(relationshipId),
+    );
     out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
   }
   return out;
@@ -582,6 +631,32 @@ function ensureContentTypeDefault(contentTypesXml: string, extension: string, co
   return insertBeforeClosing(contentTypesXml, "</Types>", `<Default Extension=\"${escapeXml(ext)}\" ContentType=\"${escapeXml(contentType)}\"/>`);
 }
 
+function installChemistryCheckboxAsset(
+  outputZip: JSZip,
+  relState: RelState,
+  contentTypesState: ContentTypesState,
+): string {
+  const idCounter = { value: relState.counter };
+  const relationshipId = nextRelationshipId(relState.used, idCounter);
+  relState.counter = idCounter.value;
+  const binary = atob(CHEMISTRY_CHECKBOX_IMAGE_BASE64);
+  const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+  outputZip.file("word/" + CHEMISTRY_CHECKBOX_MEDIA_TARGET, bytes);
+  relState.xml = insertBeforeClosing(
+    relState.xml,
+    "</Relationships>",
+    '<Relationship Id="' + escapeXml(relationshipId) + '"'
+      + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+      + ' Target="' + CHEMISTRY_CHECKBOX_MEDIA_TARGET + '"/>',
+  );
+  contentTypesState.xml = ensureContentTypeDefault(
+    contentTypesState.xml,
+    "png",
+    "image/png",
+  );
+  return relationshipId;
+}
+
 function mergeRootNamespaces(templateXml: string, sources: LoadedDoc[]): string {
   const start = templateXml.indexOf("<w:document");
   if (start < 0) return templateXml;
@@ -678,13 +753,14 @@ function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number):
   return xml;
 }
 
-function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string): string {
+function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string, chemistryCheckboxRelationshipId?: string): string {
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry/i.test(subject)) {
+    if (!chemistryCheckboxRelationshipId) throw new Error("Chemistry checkbox image was not installed.");
     chunk = normalizeChemistryParagraphSpacing(chunk);
-    chunk = normalizeChemistryMultipleChoiceBoxes(chunk);
+    chunk = normalizeChemistryMultipleChoiceBoxes(chunk, chemistryCheckboxRelationshipId);
     chunk = improveChemistryPageLayout(chunk);
     chunk = applyChemistryQuestionPagination(chunk, newNumber, q.marks);
   }
@@ -700,10 +776,13 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const relState: RelState = { xml: source.relsXmlText, used: usedRelationshipIds(source.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: source.contentTypesText };
   const drawingCounter = { value: 1 };
+  const chemistryCheckboxRelationshipId = /Chemistry/i.test(subject)
+    ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState)
+    : undefined;
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1, subject), drawingCounter)).join("");
+  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1, subject, chemistryCheckboxRelationshipId), drawingCounter)).join("");
   outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
@@ -719,11 +798,14 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const relState: RelState = { xml: template.relsXmlText, used: usedRelationshipIds(template.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: template.contentTypesText };
   const drawingCounter = { value: 1 };
+  const chemistryCheckboxRelationshipId = /Chemistry/i.test(subject)
+    ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState)
+    : undefined;
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
-    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
+    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject, chemistryCheckboxRelationshipId);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
