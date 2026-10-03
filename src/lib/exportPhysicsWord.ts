@@ -354,6 +354,48 @@ function removeTrailingPageBreakParagraphs(xml: string): string {
   }
 }
 
+function moveStandalonePageBreaksToFollowingContent(xml: string): string {
+  const paragraphs = Array.from(xml.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi));
+  const replacements: Array<{ start: number; end: number; replacement: string }> = [];
+  let consumedUntil = -1;
+
+  for (let i = 0; i < paragraphs.length; i++) {
+    const paragraph = paragraphs[i];
+    const paragraphStart = paragraph.index;
+    if (paragraphStart === undefined || paragraphStart < consumedUntil) continue;
+
+    const standalonePageBreak = paragraphPlainText(paragraph[0]) === ""
+      && /<w:br\b[^>]*\bw:type=(?:"page"|'page')/i.test(paragraph[0]);
+    if (!standalonePageBreak) continue;
+
+    let previousEnd = paragraphStart + paragraph[0].length;
+    for (let j = i + 1; j < paragraphs.length; j++) {
+      const nextParagraph = paragraphs[j];
+      const nextStart = nextParagraph.index;
+      if (nextStart === undefined || xml.slice(previousEnd, nextStart).trim()) break;
+
+      const nextEnd = nextStart + nextParagraph[0].length;
+      if (paragraphPlainText(nextParagraph[0]) !== "") {
+        replacements.push({
+          start: paragraphStart,
+          end: nextEnd,
+          replacement: addPageBreakBefore(nextParagraph[0]),
+        });
+        consumedUntil = nextEnd;
+        break;
+      }
+      previousEnd = nextEnd;
+    }
+  }
+
+  let out = xml;
+  for (let i = replacements.length - 1; i >= 0; i--) {
+    const { start, end, replacement } = replacements[i];
+    out = out.slice(0, start) + replacement + out.slice(end);
+  }
+  return out;
+}
+
 function preventPhysicsTableRowSplits(xml: string): string {
   return xml.replace(/<w:tr(?=[\s>])[\s\S]*?<\/w:tr>/gi, row => {
     if (/<w:cantSplit\b/i.test(row)) return row;
@@ -562,6 +604,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
       removeTrailingPageBreakParagraphs(extractQuestion(sources[i], questions[i].questionNumber)),
       i + 1,
     );
+    chunk = moveStandalonePageBreaksToFollowingContent(chunk);
     chunk = ensureQuestionStartsOnNewPage(chunk);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = normalizePhysicsParagraphSpacing(chunk);
