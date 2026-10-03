@@ -269,9 +269,9 @@ const WRITTEN_LINE_SPACING_TWIPS = "420";
 function isWrittenAnswerLine(paragraph: string): boolean {
   const text = paragraphPlainText(paragraph);
   const tabLeaderLine = text === ""
-    && /<w:tab\\b[^>]*\\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
-    && /<w:tab\\s*\\/>/i.test(paragraph);
-  const typedDotLine = /^\\.{10,}$/.test(text.replace(/\\s+/g, ""));
+    && /<w:tab\b[^>]*\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
+    && /<w:tab\s*\/>/i.test(paragraph);
+  const typedDotLine = /^\.{10,}$/.test(text.replace(/\s+/g, ""));
   return tabLeaderLine || typedDotLine;
 }
 
@@ -289,13 +289,13 @@ function replaceParagraphSpacing(paragraph: string, spacing: string): string {
 
 function normalizeWrittenAnswerLine(paragraph: string): string {
   const tabs = `<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="${WRITTEN_LINE_END_TWIPS}"/></w:tabs>`;
-  if (/<w:pPr\\b/i.test(paragraph)) {
-    paragraph = paragraph.replace(/<w:pPr\\b([^>]*)>([\\s\\S]*?)<\\/w:pPr>/i, (_all, attrs, inner) => {
-      const cleaned = inner.replace(/<w:tabs\\b[^>]*>[\\s\\S]*?<\\/w:tabs>/gi, "");
+  if (/<w:pPr\b/i.test(paragraph)) {
+    paragraph = paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner.replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "");
       return `<w:pPr${attrs}>${cleaned}${tabs}</w:pPr>`;
     });
   } else {
-    paragraph = paragraph.replace(/<w:p(?=[\\s>])([^>]*)>/i, `<w:p$1><w:pPr>${tabs}</w:pPr>`);
+    paragraph = paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${tabs}</w:pPr>`);
   }
 
   const pPrEnd = paragraph.indexOf("</w:pPr>");
@@ -318,23 +318,23 @@ function normalizePhysicsParagraphSpacing(xml: string): string {
 }
 
 function addPageBreakBefore(paragraph: string): string {
-  if (/<w:pageBreakBefore\\b/i.test(paragraph)) return paragraph;
-  if (/<w:pPr\\b/i.test(paragraph)) {
-    return paragraph.replace(/<w:pPr\\b([^>]*)>([\\s\\S]*?)<\\/w:pPr>/i, (_all, attrs, inner) => {
-      const insertionPoint = inner.search(/<w:(?:spacing|tabs|ind|jc|rPr)\\b/i);
+  if (/<w:pageBreakBefore\b/i.test(paragraph)) return paragraph;
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const insertionPoint = inner.search(/<w:(?:spacing|tabs|ind|jc|rPr)\b/i);
       const updated = insertionPoint >= 0
         ? `${inner.slice(0, insertionPoint)}<w:pageBreakBefore/>${inner.slice(insertionPoint)}`
         : `${inner}<w:pageBreakBefore/>`;
       return `<w:pPr${attrs}>${updated}</w:pPr>`;
     });
   }
-  return paragraph.replace(/<w:p(?=[\\s>])([^>]*)>/i, `<w:p$1><w:pPr><w:pageBreakBefore/></w:pPr>`);
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr><w:pageBreakBefore/></w:pPr>`);
 }
 
 function ensureQuestionStartsOnNewPage(xml: string): string {
   let updated = false;
-  return xml.replace(/<w:p(?=[\\s>])[\\s\\S]*?<\\/w:p>/gi, paragraph => {
-    if (updated || !/^Q\\d+\\.$/i.test(paragraphPlainText(paragraph))) return paragraph;
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (updated || !/^Q\d+\.$/i.test(paragraphPlainText(paragraph))) return paragraph;
     updated = true;
     return addPageBreakBefore(paragraph);
   });
@@ -343,12 +343,12 @@ function ensureQuestionStartsOnNewPage(xml: string): string {
 function removeTrailingPageBreakParagraphs(xml: string): string {
   let out = xml;
   while (true) {
-    const paragraphs = Array.from(out.matchAll(/<w:p(?=[\\s>])[\\s\\S]*?<\\/w:p>/gi));
+    const paragraphs = Array.from(out.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi));
     const last = paragraphs[paragraphs.length - 1];
     if (!last || last.index === undefined) return out;
     const trailing = out.slice(last.index + last[0].length);
     const isEmptyPageBreak = paragraphPlainText(last[0]) === ""
-      && /<w:br\\b[^>]*\\bw:type=(?:"page"|'page')/i.test(last[0]);
+      && /<w:br\b[^>]*\bw:type=(?:"page"|'page')/i.test(last[0]);
     if (trailing.trim() || !isEmptyPageBreak) return out;
     out = out.slice(0, last.index);
   }
