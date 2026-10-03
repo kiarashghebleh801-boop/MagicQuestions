@@ -267,9 +267,12 @@ const WRITTEN_LINE_END_TWIPS = "9800";
 const WRITTEN_LINE_SPACING_TWIPS = "420";
 
 function isWrittenAnswerLine(paragraph: string): boolean {
-  return paragraphPlainText(paragraph) === ""
-    && /<w:tab\b[^>]*\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
-    && /<w:tab\s*\/>/i.test(paragraph);
+  const text = paragraphPlainText(paragraph);
+  const tabLeaderLine = text === ""
+    && /<w:tab\\b[^>]*\\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
+    && /<w:tab\\s*\\/>/i.test(paragraph);
+  const typedDotLine = /^\\.{10,}$/.test(text.replace(/\\s+/g, ""));
+  return tabLeaderLine || typedDotLine;
 }
 
 function replaceParagraphSpacing(paragraph: string, spacing: string): string {
@@ -284,14 +287,23 @@ function replaceParagraphSpacing(paragraph: string, spacing: string): string {
   return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
 }
 
-function shortenWrittenAnswerLine(paragraph: string): string {
-  return paragraph.replace(/<w:tab\b[^>]*\/>/gi, tab => {
-    if (!/\bw:leader=(?:"dot"|'dot')/i.test(tab)) return tab;
-    if (/\bw:pos=(?:"[^"]*"|'[^']*')/i.test(tab)) {
-      return tab.replace(/\bw:pos=(?:"[^"]*"|'[^']*')/i, `w:pos="${WRITTEN_LINE_END_TWIPS}"`);
-    }
-    return tab.replace(/\/>$/, ` w:pos="${WRITTEN_LINE_END_TWIPS}"/>`);
-  });
+function normalizeWrittenAnswerLine(paragraph: string): string {
+  const tabs = `<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="${WRITTEN_LINE_END_TWIPS}"/></w:tabs>`;
+  if (/<w:pPr\\b/i.test(paragraph)) {
+    paragraph = paragraph.replace(/<w:pPr\\b([^>]*)>([\\s\\S]*?)<\\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner.replace(/<w:tabs\\b[^>]*>[\\s\\S]*?<\\/w:tabs>/gi, "");
+      return `<w:pPr${attrs}>${cleaned}${tabs}</w:pPr>`;
+    });
+  } else {
+    paragraph = paragraph.replace(/<w:p(?=[\\s>])([^>]*)>/i, `<w:p$1><w:pPr>${tabs}</w:pPr>`);
+  }
+
+  const pPrEnd = paragraph.indexOf("</w:pPr>");
+  const pEnd = paragraph.lastIndexOf("</w:p>");
+  if (pPrEnd >= 0 && pEnd > pPrEnd) {
+    paragraph = `${paragraph.slice(0, pPrEnd + 8)}<w:r><w:tab/></w:r>${paragraph.slice(pEnd)}`;
+  }
+  return paragraph;
 }
 
 function normalizePhysicsParagraphSpacing(xml: string): string {
@@ -299,17 +311,47 @@ function normalizePhysicsParagraphSpacing(xml: string): string {
   const writtenLineSpacing = `<w:spacing w:before="0" w:after="0" w:line="${WRITTEN_LINE_SPACING_TWIPS}" w:lineRule="exact"/>`;
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
     if (isWrittenAnswerLine(paragraph)) {
-      return replaceParagraphSpacing(shortenWrittenAnswerLine(paragraph), writtenLineSpacing);
+      return replaceParagraphSpacing(normalizeWrittenAnswerLine(paragraph), writtenLineSpacing);
     }
     return replaceParagraphSpacing(paragraph, standardSpacing);
   });
 }
 
-function ensureQuestionStartsOnNewPage(xml: string, shouldBreak: boolean): string {
-  if (!shouldBreak) return xml;
-  const firstParagraph = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/i.exec(xml)?.[0] || "";
-  if (/<w:pageBreakBefore\b/i.test(firstParagraph)) return xml;
-  return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>${xml}`;
+function addPageBreakBefore(paragraph: string): string {
+  if (/<w:pageBreakBefore\\b/i.test(paragraph)) return paragraph;
+  if (/<w:pPr\\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\\b([^>]*)>([\\s\\S]*?)<\\/w:pPr>/i, (_all, attrs, inner) => {
+      const insertionPoint = inner.search(/<w:(?:spacing|tabs|ind|jc|rPr)\\b/i);
+      const updated = insertionPoint >= 0
+        ? `${inner.slice(0, insertionPoint)}<w:pageBreakBefore/>${inner.slice(insertionPoint)}`
+        : `${inner}<w:pageBreakBefore/>`;
+      return `<w:pPr${attrs}>${updated}</w:pPr>`;
+    });
+  }
+  return paragraph.replace(/<w:p(?=[\\s>])([^>]*)>/i, `<w:p$1><w:pPr><w:pageBreakBefore/></w:pPr>`);
+}
+
+function ensureQuestionStartsOnNewPage(xml: string): string {
+  let updated = false;
+  return xml.replace(/<w:p(?=[\\s>])[\\s\\S]*?<\\/w:p>/gi, paragraph => {
+    if (updated || !/^Q\\d+\\.$/i.test(paragraphPlainText(paragraph))) return paragraph;
+    updated = true;
+    return addPageBreakBefore(paragraph);
+  });
+}
+
+function removeTrailingPageBreakParagraphs(xml: string): string {
+  let out = xml;
+  while (true) {
+    const paragraphs = Array.from(out.matchAll(/<w:p(?=[\\s>])[\\s\\S]*?<\\/w:p>/gi));
+    const last = paragraphs[paragraphs.length - 1];
+    if (!last || last.index === undefined) return out;
+    const trailing = out.slice(last.index + last[0].length);
+    const isEmptyPageBreak = paragraphPlainText(last[0]) === ""
+      && /<w:br\\b[^>]*\\bw:type=(?:"page"|'page')/i.test(last[0]);
+    if (trailing.trim() || !isEmptyPageBreak) return out;
+    out = out.slice(0, last.index);
+  }
 }
 
 function preventPhysicsTableRowSplits(xml: string): string {
@@ -514,14 +556,13 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
     .map(node => serializer.serializeToString(node)).join("");
   formulaeChunk = await remapRelationships(formulaeChunk, formulae, outputZip, relState, contentState);
   formulaeChunk = renumberDrawingIds(formulaeChunk, drawingCounter);
-  // The cover already ends with a page break; start questions on the page
-  // following the formulae sheet, without adding another empty page.
-  formulaeChunk += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
-
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
-    let chunk = renumberQuestion(extractQuestion(sources[i], questions[i].questionNumber), i + 1);
-    chunk = ensureQuestionStartsOnNewPage(chunk, i > 0);
+    let chunk = renumberQuestion(
+      removeTrailingPageBreakParagraphs(extractQuestion(sources[i], questions[i].questionNumber)),
+      i + 1,
+    );
+    chunk = ensureQuestionStartsOnNewPage(chunk);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = normalizePhysicsParagraphSpacing(chunk);
     chunk = preventPhysicsTableRowSplits(chunk);
