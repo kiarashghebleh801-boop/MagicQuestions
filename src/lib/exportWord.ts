@@ -246,19 +246,174 @@ function withParagraphProperties(paragraph: string, properties: string): string 
   return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${properties}</w:pPr>`);
 }
 
+const CHEMISTRY_WRITTEN_LINE_END_TWIPS = "9800";
+const CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS = "420";
+const SHORT_CHEMISTRY_QUESTION_MARKS = 4;
+
+function isChemistryWrittenAnswerLine(paragraph: string): boolean {
+  const text = paragraphText(paragraph);
+  const tabLeaderLine = text === ""
+    && /<w:tab\b[^>]*\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
+    && /<w:tab\s*\/>/i.test(paragraph);
+  const typedDotLine = /^\.{10,}$/.test(text.replace(/\s+/g, ""));
+  return tabLeaderLine || typedDotLine;
+}
+
+function replaceChemistryParagraphSpacing(paragraph: string, spacing: string): string {
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner
+        .replace(/<w:spacing\b[^>]*\/>/gi, "")
+        .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+      return "<w:pPr" + attrs + ">" + cleaned + spacing + "</w:pPr>";
+    });
+  }
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, "<w:p$1><w:pPr>" + spacing + "</w:pPr>");
+}
+
+function normalizeChemistryWrittenAnswerLine(paragraph: string): string {
+  const tabs = '<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="' + CHEMISTRY_WRITTEN_LINE_END_TWIPS + '"/></w:tabs>';
+  if (/<w:pPr\b/i.test(paragraph)) {
+    paragraph = paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner.replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "");
+      return "<w:pPr" + attrs + ">" + cleaned + tabs + "</w:pPr>";
+    });
+  } else {
+    paragraph = paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, "<w:p$1><w:pPr>" + tabs + "</w:pPr>");
+  }
+
+  const pPrEnd = paragraph.indexOf("</w:pPr>");
+  const pEnd = paragraph.lastIndexOf("</w:p>");
+  if (pPrEnd >= 0 && pEnd > pPrEnd) {
+    paragraph = paragraph.slice(0, pPrEnd + 8) + "<w:r><w:tab/></w:r>" + paragraph.slice(pEnd);
+  }
+  return paragraph;
+}
+
 function normalizeChemistryParagraphSpacing(xml: string): string {
-  const spacing = `<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+  const standardSpacing = '<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="auto"/>';
+  const writtenLineSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS + '" w:lineRule="exact"/>';
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
-    if (/<w:pPr\b/i.test(paragraph)) {
-      return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
-        const cleaned = inner
-          .replace(/<w:spacing\b[^>]*\/>/gi, "")
-          .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
-        return `<w:pPr${attrs}>${cleaned}${spacing}</w:pPr>`;
-      });
+    if (isChemistryWrittenAnswerLine(paragraph)) {
+      return replaceChemistryParagraphSpacing(
+        normalizeChemistryWrittenAnswerLine(paragraph),
+        writtenLineSpacing,
+      );
     }
-    return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${spacing}</w:pPr>`);
+    return replaceChemistryParagraphSpacing(paragraph, standardSpacing);
   });
+}
+
+function chemistryCheckboxField(name: string): string {
+  return '<w:r><w:rPr><w:sz w:val="20"/></w:rPr><w:fldChar w:fldCharType="begin"><w:ffData>'
+    + '<w:name w:val="' + escapeXml(name) + '"/><w:enabled/><w:calcOnExit w:val="0"/>'
+    + '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>'
+    + '</w:ffData></w:fldChar></w:r>'
+    + '<w:r><w:instrText xml:space="preserve"> FORMCHECKBOX </w:instrText></w:r>'
+    + '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
+    + '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
+}
+
+function insertAtParagraphContentStart(paragraph: string, content: string): string {
+  const propertiesEnd = paragraph.indexOf("</w:pPr>");
+  if (propertiesEnd >= 0) {
+    const insertion = propertiesEnd + "</w:pPr>".length;
+    return paragraph.slice(0, insertion) + content + paragraph.slice(insertion);
+  }
+  const paragraphOpenEnd = paragraph.indexOf(">");
+  if (paragraphOpenEnd < 0) return paragraph;
+  return paragraph.slice(0, paragraphOpenEnd + 1) + content + paragraph.slice(paragraphOpenEnd + 1);
+}
+
+function normalizeChemistryMultipleChoiceBoxes(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const optionIndexes = new Set<number>();
+
+  for (let i = 0; i < paragraphs.length; i++) {
+    if (!/^A(?:\s|$)/.test(paragraphs[i].text)) continue;
+    let expected = 1;
+    const sequence = [i];
+    for (let j = i + 1; j < paragraphs.length && j <= i + 40 && expected < 4; j++) {
+      const match = paragraphs[j].text.match(/^([ABCD])(?:\s|$)/);
+      if (!match) continue;
+      if (match[1] === "ABCD"[expected]) {
+        sequence.push(j);
+        expected++;
+      } else if (match[1] === "A") {
+        break;
+      }
+    }
+    if (expected === 4) sequence.forEach(index => optionIndexes.add(index));
+  }
+
+  let out = xml;
+  let boxNumber = 1;
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    if (!optionIndexes.has(i)) continue;
+    const paragraph = paragraphs[i];
+    let updated = paragraph.xml;
+    const hasLegacyCheckbox = /<w:checkBox\b/i.test(updated);
+
+    if (hasLegacyCheckbox) {
+      updated = updated.replace(
+        /<w:checkBox\b[^>]*>[\s\S]*?<\/w:checkBox>/gi,
+        '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>',
+      );
+    } else {
+      updated = updated
+        .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:sym\b[^>]*\/>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
+        .replace(/[☐☒☑□]/g, "");
+      updated = insertAtParagraphContentStart(updated, chemistryCheckboxField("MQChemBox" + boxNumber++));
+    }
+
+    out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
+  }
+  return out;
+}
+
+function addChemistryQuestionPageBreak(xml: string): string {
+  const marker = rawParagraphs(xml).find(p => /^Q\d+\.$/i.test(p.text));
+  if (!marker) return xml;
+  const cleaned = marker.xml.replace(/<w:pageBreakBefore\b[^>]*\/>/gi, "");
+  const updated = withParagraphProperties(cleaned, "<w:pageBreakBefore/>");
+  return xml.slice(0, marker.start) + updated + xml.slice(marker.end);
+}
+
+function keepShortChemistryQuestionTogether(xml: string): string {
+  const paragraphs = rawParagraphs(xml);
+  const significant = paragraphs.filter(p =>
+    p.text.trim() || /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml),
+  );
+  if (significant.length < 2) return xml;
+  const lastStart = significant[significant.length - 1].start;
+  const replacements = new Map<number, string>();
+
+  for (const paragraph of significant) {
+    if (paragraph.start === lastStart) continue;
+    const cleaned = paragraph.xml
+      .replace(/<w:keepNext\b[^>]*\/>/gi, "")
+      .replace(/<w:keepLines\b[^>]*\/>/gi, "");
+    replacements.set(
+      paragraph.start,
+      withParagraphProperties(cleaned, "<w:keepNext/><w:keepLines/>"),
+    );
+  }
+
+  let out = xml;
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    const paragraph = paragraphs[i];
+    const updated = replacements.get(paragraph.start);
+    if (!updated) continue;
+    out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
+  }
+  return out;
+}
+
+function applyChemistryQuestionPagination(xml: string, questionNumber: number, marks: number): string {
+  if (marks <= SHORT_CHEMISTRY_QUESTION_MARKS) {
+    return keepShortChemistryQuestionTogether(xml);
+  }
+  return questionNumber > 1 ? addChemistryQuestionPageBreak(xml) : xml;
 }
 
 function improveChemistryPageLayout(xml: string): string {
@@ -288,7 +443,7 @@ function improveChemistryPageLayout(xml: string): string {
     const isTotal = /Total for question/i.test(text);
 
     let props = "";
-    if (isQuestionLabel) props += `<w:keepNext/><w:keepLines/><w:widowControl/><w:spacing w:before=\"180\" w:after=\"60\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+    if (isQuestionLabel) props += `<w:keepNext/><w:keepLines/><w:widowControl/><w:spacing w:before=\"0\" w:after=\"60\" w:line=\"300\" w:lineRule=\"auto\"/>`;
     else if (isMainPart || isSubPart) props += `<w:keepNext/><w:keepLines/><w:widowControl/>`;
     else if (hasDrawing) props += `<w:keepLines/><w:widowControl/>`;
     else if (isTotal) props += `<w:keepLines/><w:widowControl/>`;
@@ -529,7 +684,9 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry/i.test(subject)) {
     chunk = normalizeChemistryParagraphSpacing(chunk);
+    chunk = normalizeChemistryMultipleChoiceBoxes(chunk);
     chunk = improveChemistryPageLayout(chunk);
+    chunk = applyChemistryQuestionPagination(chunk, newNumber, q.marks);
   }
   return chunk;
 }
