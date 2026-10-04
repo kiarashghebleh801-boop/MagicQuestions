@@ -385,7 +385,17 @@ function insertAtParagraphContentStart(paragraph: string, content: string): stri
   return paragraph.slice(0, paragraphOpenEnd + 1) + content + paragraph.slice(paragraphOpenEnd + 1);
 }
 
-function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string): string {
+function chemistryCheckboxField(name: string): string {
+  return '<w:r><w:rPr><w:sz w:val="20"/></w:rPr><w:fldChar w:fldCharType="begin"><w:ffData>'
+    + '<w:name w:val="' + escapeXml(name) + '"/><w:enabled/><w:calcOnExit w:val="0"/>'
+    + '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>'
+    + '</w:ffData></w:fldChar></w:r>'
+    + '<w:r><w:instrText xml:space="preserve"> FORMCHECKBOX </w:instrText></w:r>'
+    + '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
+    + '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
+}
+
+function normalizeChemistryMultipleChoiceBoxes(xml: string): string {
   const paragraphs = rawParagraphs(xml);
   const optionIndexes = new Set<number>();
 
@@ -407,14 +417,22 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
   }
 
   let out = xml;
+  let boxNumber = 1;
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!optionIndexes.has(i)) continue;
     const paragraph = paragraphs[i];
-    const cleaned = removeExistingChemistryCheckboxes(paragraph.xml);
-    const updated = insertAtParagraphContentStart(
-      cleaned,
-      chemistryCheckboxImage(relationshipId),
-    );
+    let updated = paragraph.xml;
+    const hasLegacyCheckbox = /<w:checkBox\b/i.test(updated);
+
+    if (hasLegacyCheckbox) {
+      updated = updated.replace(
+        /<w:checkBox\b[^>]*>[\s\S]*?<\/w:checkBox>/gi,
+        '<w:checkBox><w:size w:val="20"/><w:default w:val="0"/></w:checkBox>',
+      );
+    } else {
+      updated = removeExistingChemistryCheckboxes(updated);
+      updated = insertAtParagraphContentStart(updated, chemistryCheckboxField("MQChemBox" + boxNumber++));
+    }
     out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
   }
   return out;
@@ -753,14 +771,13 @@ function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number):
   return xml;
 }
 
-function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string, chemistryCheckboxRelationshipId?: string): string {
+function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string): string {
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry/i.test(subject)) {
-    if (!chemistryCheckboxRelationshipId) throw new Error("Chemistry checkbox image was not installed.");
     chunk = normalizeChemistryParagraphSpacing(chunk);
-    chunk = normalizeChemistryMultipleChoiceBoxes(chunk, chemistryCheckboxRelationshipId);
+    chunk = normalizeChemistryMultipleChoiceBoxes(chunk);
     chunk = improveChemistryPageLayout(chunk);
     chunk = applyChemistryQuestionPagination(chunk, newNumber, q.marks);
   }
@@ -776,13 +793,10 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const relState: RelState = { xml: source.relsXmlText, used: usedRelationshipIds(source.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: source.contentTypesText };
   const drawingCounter = { value: 1 };
-  const chemistryCheckboxRelationshipId = /Chemistry/i.test(subject)
-    ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState)
-    : undefined;
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1, subject, chemistryCheckboxRelationshipId), drawingCounter)).join("");
+  const selected = questions.map((q, index) => renumberDrawingIds(buildQuestionChunk(source, q, index + 1, subject), drawingCounter)).join("");
   outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
@@ -798,14 +812,11 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const relState: RelState = { xml: template.relsXmlText, used: usedRelationshipIds(template.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: template.contentTypesText };
   const drawingCounter = { value: 1 };
-  const chemistryCheckboxRelationshipId = /Chemistry/i.test(subject)
-    ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState)
-    : undefined;
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
-    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject, chemistryCheckboxRelationshipId);
+    let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
