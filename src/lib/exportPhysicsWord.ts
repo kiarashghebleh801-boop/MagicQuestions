@@ -406,6 +406,88 @@ function preventPhysicsTableRowSplits(xml: string): string {
   });
 }
 
+function removePhysicsPaperTotals(xml: string): string {
+  // Read across Word runs: a total may be split into several differently formatted runs.
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    const text = paragraphPlainText(paragraph);
+    return /\btotal\s+(?:marks\s+)?(?:for\s+)?(?:the\s+)?paper\b/i.test(text) ? "" : paragraph;
+  });
+}
+
+function setPhysicsPagination(paragraph: string, keepNext: boolean): string {
+  const properties = `<w:keepNext w:val="${keepNext ? "1" : "0"}"/><w:keepLines/><w:widowControl/>`;
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const clean = inner.replace(/<w:(?:keepNext|keepLines|widowControl)\b[^>]*(?:\/>|>[\s\S]*?<\/w:(?:keepNext|keepLines|widowControl)>)/gi, "");
+      return `<w:pPr${attrs}>${properties}${clean}</w:pPr>`;
+    });
+  }
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, `<w:p$1><w:pPr>${properties}</w:pPr>`);
+}
+
+function estimatePhysicsParagraphHeight(paragraph: string): number {
+  const imageHeights = Array.from(paragraph.matchAll(/<wp:extent\b[^>]*\bcy="(\d+)"/gi))
+    .map(match => Number(match[1]) / 635);
+  if (imageHeights.length) return Math.max(...imageHeights) + 360;
+  if (isWrittenAnswerLine(paragraph)) return Number(WRITTEN_LINE_SPACING_TWIPS);
+  const text = paragraphPlainText(paragraph);
+  const breaks = (paragraph.match(/<w:br\b/g) || []).length;
+  return Math.max(1, Math.ceil(text.length / 80) + breaks) * 300;
+}
+
+function keepPhysicsPartsTogether(xml: string): string {
+  // Source-paper page breaks do not reflect the reflowed generated document.
+  // Retain only the generated question boundary; let Word paginate whole parts.
+  xml = xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (/^Q\d+\.$/i.test(paragraphPlainText(paragraph))) return paragraph;
+    return paragraph.replace(/<w:pageBreakBefore\b[^>]*\/>/gi, "")
+      .replace(/<w:br\b[^>]*\bw:type=(?:"page"|'page')[^>]*\/>/gi, "")
+      .replace(/<w:lastRenderedPageBreak\b[^>]*\/>/gi, "");
+  });
+  const paragraphs = Array.from(xml.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi));
+  const keep = new Set<number>();
+  const pageStarts = new Set<number>();
+  const pageBudget = 13200;
+  let usedHeight = 0;
+  let start = 0;
+  const finishGroup = (end: number) => {
+    if (end <= start) return;
+    const height = paragraphs.slice(start, end).reduce((sum, p) => sum + estimatePhysicsParagraphHeight(p[0]), 0);
+    // Keep a complete part together only if it comfortably fits a page. Never
+    // build a keepNext chain taller than a page, which causes gaps/blank pages.
+    if (usedHeight > 0 && usedHeight + height > pageBudget) {
+      pageStarts.add(start);
+      usedHeight = 0;
+    }
+    if (height <= pageBudget) {
+      for (let i = start; i < end - 1; i++) keep.add(i);
+    } else {
+      for (let i = start; i < end - 1; i++) {
+        const text = paragraphPlainText(paragraphs[i][0]);
+        const next = paragraphs[i + 1][0];
+        if (/^Q\d+\.$/i.test(text) || /^\([a-zivx]+\)/i.test(text)
+          || (text && /<w:drawing\b/.test(next))) keep.add(i);
+      }
+    }
+    usedHeight = (usedHeight + height) % pageBudget;
+    start = end;
+  };
+  for (let i = 1; i < paragraphs.length; i++) {
+    const text = paragraphPlainText(paragraphs[i][0]);
+    if (/^\((?:[a-z]|[ivx]+)\)(?:\s|$)/i.test(text)
+      || /<w:pageBreakBefore\b/.test(paragraphs[i][0])) finishGroup(i);
+  }
+  finishGroup(paragraphs.length);
+  let out = xml;
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    const p = paragraphs[i];
+    let updated = setPhysicsPagination(p[0], keep.has(i));
+    if (pageStarts.has(i)) updated = addPageBreakBefore(updated);
+    out = out.slice(0, p.index!) + updated + out.slice(p.index! + p[0].length);
+  }
+  return out;
+}
+
 function escapeXml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
 }
@@ -601,7 +683,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(
-      removeTrailingPageBreakParagraphs(extractQuestion(sources[i], questions[i].questionNumber)),
+      removeTrailingPageBreakParagraphs(removePhysicsPaperTotals(extractQuestion(sources[i], questions[i].questionNumber))),
       i + 1,
     );
     chunk = moveStandalonePageBreaksToFollowingContent(chunk);
@@ -609,6 +691,7 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = normalizePhysicsParagraphSpacing(chunk);
     chunk = preventPhysicsTableRowSplits(chunk);
+    chunk = keepPhysicsPartsTogether(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
