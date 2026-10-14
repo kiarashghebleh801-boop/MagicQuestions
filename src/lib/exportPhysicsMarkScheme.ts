@@ -111,7 +111,7 @@ async function extractSourceLines(pdf: PdfDocumentProxy): Promise<SourceLine[]> 
     const positioned = (content.items as TextItem[])
       .filter(item => typeof item.str === "string" && item.str!.trim() && item.transform?.length)
       .map(item => {
-        const [x, y] = pdfjs.Util.applyTransform(viewport.transform, item.transform!);
+        const [x, y] = pdfjs.Util.applyTransform([item.transform![4], item.transform![5]], viewport.transform);
         return { text: item.str!.trim(), x, top: y };
       })
       .sort((a, b) => a.top - b.top || a.x - b.x);
@@ -139,7 +139,7 @@ async function extractSourceLines(pdf: PdfDocumentProxy): Promise<SourceLine[]> 
       for (const item of group.items.sort((a, b) => a.x - b.x)) {
         const ratio = item.x / viewport.width;
         const isQuestionLabel = /^(?:\d{1,2}|\([a-z0-9]+\))$/i.test(item.text);
-        if (ratio < 0.25 && isQuestionLabel) question.push(item.text);
+        if (ratio < 0.195 && isQuestionLabel) question.push(item.text);
         else if (ratio < 0.575) answer.push(item.text);
         else if (ratio < 0.81) notes.push(item.text);
         else marks.push(item.text);
@@ -147,7 +147,7 @@ async function extractSourceLines(pdf: PdfDocumentProxy): Promise<SourceLine[]> 
       const line: SourceLine = {
         pageIndex,
         top: group.top / viewport.height,
-        question: cleanCellText(question.join(" ")),
+        question: cleanCellText(question.join(" ")).replace(/^(\d)\s+(\d)(?=\s|$)/, "$1$2"),
         answer: cleanCellText(answer.join(" ")),
         notes: cleanCellText(notes.join(" ")),
         marks: cleanCellText(marks.join(" ")),
@@ -172,6 +172,7 @@ function parseEntries(lines: SourceLine[], pageCount: number): ParsedMarkScheme 
 
   for (const line of lines) {
     if (isPageFurniture(line)) continue;
+    if (/Total for Question/i.test(`${line.question} ${line.answer} ${line.notes} ${line.marks}`)) continue;
     const startMatch = line.question.match(/^(\d{1,2})(?:\s+|$)(.*)$/);
     if (startMatch && Number(startMatch[1]) === expectedQuestion) {
       currentQuestion = expectedQuestion++;
@@ -238,7 +239,7 @@ async function parseMarkScheme(filename: string): Promise<ParsedMarkScheme> {
 }
 
 function needsVisualReference(entries: MarkSchemeEntry[]): boolean {
-  return entries.some(entry => /(?:correct tick|correct row)/i.test(entry.answer)
+  return entries.some(entry => /(?:correct tick|correct row|diagram|drawn|drawing|sketch|graph|ray|arrow|label|circuit|plotted)/i.test(entry.answer)
     || /(?:e\.g\.|example)\s*$/i.test(entry.answer.trim()));
 }
 
@@ -273,7 +274,7 @@ async function canvasToPng(canvas: HTMLCanvasElement): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-async function renderVisualReference(filename: string, bounds: QuestionBounds): Promise<Crop[]> {
+async function renderVisualReference(filename: string, bounds: QuestionBounds, fullTable = false): Promise<Crop[]> {
   const pdf = await loadPdf(filename);
   const crops: Crop[] = [];
   for (let pageIndex = bounds.startPage; pageIndex <= bounds.endPage; pageIndex++) {
@@ -286,10 +287,10 @@ async function renderVisualReference(filename: string, bounds: QuestionBounds): 
     if (!context) continue;
     await page.render({ canvasContext: context, viewport }).promise;
 
-    const fromTop = pageIndex === bounds.startPage ? bounds.startTop : 0.06;
+    const fromTop = pageIndex === bounds.startPage ? bounds.startTop : 0.14;
     const toTop = pageIndex === bounds.endPage ? bounds.endTop : 0.94;
-    const left = Math.floor(full.width * 0.19);
-    const right = Math.ceil(full.width * 0.61);
+    const left = Math.floor(full.width * (fullTable ? 0.07 : 0.19));
+    const right = Math.ceil(full.width * 0.94);
     const top = Math.max(0, Math.floor(full.height * fromTop));
     const bottom = Math.min(full.height, Math.ceil(full.height * toTop));
     if (right <= left || bottom <= top + 8) continue;
@@ -428,7 +429,8 @@ export async function exportPhysicsMarkSchemeToWord(questions: Question[]) {
     const filename = getPhysicsMarkSchemeSource(question)!;
     const parsed = await sourceFiles.get(filename)!;
     const entries = parsed.entries.get(question.questionNumber);
-    if (!entries?.length) {
+    const bounds = parsed.bounds.get(question.questionNumber);
+    if (!entries?.length && !bounds) {
       throw new Error(`Could not read the typed mark scheme for ${question.session} ${question.year} Paper ${question.paper}, original Q${question.questionNumber}.`);
     }
     if (index > 0) children.push(new Paragraph({ children: [new PageBreak()] }));
@@ -437,16 +439,15 @@ export async function exportPhysicsMarkSchemeToWord(questions: Question[]) {
       spacing: { before: 0, after: 90 },
       keepNext: true,
     }));
-    children.push(questionTable(entries));
-    if (needsVisualReference(entries)) {
-      const bounds = parsed.bounds.get(question.questionNumber);
+    if (entries?.length) children.push(questionTable(entries));
+    if (!entries?.length || needsVisualReference(entries)) {
       if (bounds) {
         children.push(new Paragraph({
           children: [arialRun("Visual answer detail", { bold: true, size: 18, color: "5F6672" })],
           spacing: { before: 100, after: 30 },
           keepNext: true,
         }));
-        const crops = await renderVisualReference(filename, bounds);
+        const crops = await renderVisualReference(filename, bounds, !entries?.length);
         for (const crop of crops) children.push(visualReferenceParagraph(crop));
       }
     }
