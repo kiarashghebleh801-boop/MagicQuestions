@@ -7,6 +7,7 @@ import { physicsQuestions } from "@/lib/physicsQuestions";
 import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 import { exportPhysicsPaperToWord } from "@/lib/exportPhysicsWord";
+import { exportPhysicsMarkSchemeToWord } from "@/lib/exportPhysicsMarkScheme";
 import PaperReview from "@/components/PaperReview";
 import PhysicsReviewTracker from "@/components/PhysicsReviewTracker";
 import ScienceQuestionDetails from "@/components/ScienceQuestionDetails";
@@ -25,6 +26,7 @@ export default function PhysicsPage() {
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportingMarkScheme, setExportingMarkScheme] = useState(false);
   const [swapIndex, setSwapIndex] = useState<number | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
@@ -114,6 +116,18 @@ export default function PhysicsPage() {
     }
   }
 
+  async function downloadMarkScheme() {
+    if (!paper.length || exportingMarkScheme) return;
+    setExportingMarkScheme(true);
+    try {
+      await exportPhysicsMarkSchemeToWord(paper);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not create the Physics mark scheme.");
+    } finally {
+      setExportingMarkScheme(false);
+    }
+  }
+
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
   return <main>
@@ -158,7 +172,7 @@ export default function PhysicsPage() {
             <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><button type="button" onClick={() => setExpandedQuestionId(current => current === q.id ? null : q.id)} aria-expanded={expandedQuestionId === q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId === q.id ? "Hide full question ↑" : "View full question ↓"}</button>{expandedQuestionId === q.id && <ScienceQuestionDetails question={q}/>}<div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => setSwapIndex(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
             <div className="marks">{q.marks}<small>marks</small></div>
           </article>)}</div>
-          <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
+          <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button className="word" onClick={() => void downloadMarkScheme()} disabled={exportingMarkScheme}>{exportingMarkScheme ? "Creating mark scheme…" : "↓ Download mark scheme"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
           {reviewOpen && <PaperReview paper={paper} title="Physics paper review" onClose={() => setReviewOpen(false)}/>} 
         </>}
         {swapIndex !== null && paper[swapIndex] && <ScienceSwapModal subject="Physics" current={paper[swapIndex]} paper={paper} questions={matchingQuestions} topicLabel={tag => `Spec ${tag[0]}(${tag.slice(1)}) · ${physicsTopicTitle.get(tag) || tag}`} onClose={() => setSwapIndex(null)} onChoose={q => {replaceQuestion(swapIndex, q);setSwapIndex(null);}}/>}
