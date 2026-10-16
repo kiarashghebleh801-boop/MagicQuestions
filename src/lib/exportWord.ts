@@ -427,9 +427,12 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
     // Use fixed tab stops rather than spaces so boxes, letters and wrapped
     // option text share the same positions for every source paper.
     updated = updated.replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "")
-      .replace(/<w:ind\b[^>]*\/>/gi, "");
+      .replace(/<w:ind\b[^>]*\/>/gi, "")
+      .replace(/<w:numPr\b[^>]*>[\s\S]*?<\/w:numPr>/gi, "")
+      .replace(/<w:numPr\b[^>]*\/>/gi, "");
     updated = withParagraphProperties(updated,
-      '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs>'
+      '<w:numPr><w:numId w:val="0"/></w:numPr>'
+      + '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs>'
       + '<w:ind w:left="1600" w:hanging="1000"/>');
     let foundLetter = false;
     let foundAnswer = false;
@@ -797,11 +800,29 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry/i.test(subject)) {
+    chunk = normalizeChemistryMarkColors(chunk);
     chunk = normalizeChemistryParagraphSpacing(chunk);
     chunk = improveChemistryPageLayout(chunk);
     chunk = applyChemistryQuestionPagination(chunk, newNumber, q.marks);
   }
   return chunk;
+}
+
+function normalizeChemistryMarkColors(xml: string): string {
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    const text = paragraphText(paragraph);
+    const isTotal = /total\s+for\s+question/i.test(text);
+    if (!isTotal && !/^\s*[([]\s*\d+\s*(?:marks?)?\s*[)\]]\s*$/i.test(text)) return paragraph;
+    const color = isTotal ? "000000" : "808080";
+    return paragraph.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+      if (!/<w:t\b/i.test(run)) return run;
+      const properties = '<w:b/><w:color w:val="' + color + '"/>';
+      run = run.replace(/<w:(?:color|b|bCs)\b[^>]*\/>/gi, "");
+      if (/<w:rPr\b[^>]*\/>/i.test(run)) return run.replace(/<w:rPr\b[^>]*\/>/i, '<w:rPr>' + properties + '</w:rPr>');
+      if (/<w:rPr\b/i.test(run)) return run.replace(/<w:rPr\b([^>]*)>/i, '<w:rPr$1>' + properties);
+      return run.replace(/<w:r(?=[\s>])([^>]*)>/i, '<w:r$1><w:rPr>' + properties + '</w:rPr>');
+    });
+  });
 }
 
 async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc, cover: LoadedDoc, subject: string) {
