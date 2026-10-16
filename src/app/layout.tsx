@@ -6,6 +6,11 @@ const favicon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHwAAAB+CAMAAADRC
 export const metadata = {
   title: "MagicQuestions",
   description: "Build custom past-paper practice in seconds.",
+  verification: {
+    other: {
+      "p:domain_verify": "303177ea33f451215fada76c5ee6a091",
+    },
+  },
   icons: {
     icon: favicon,
     shortcut: favicon,
