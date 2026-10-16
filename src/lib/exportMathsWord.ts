@@ -323,6 +323,43 @@ function improveMathsQuestionLayout(xml: string, marks: number, isFirstQuestion:
   return out;
 }
 
+function ensureMathsWorkingSpace(xml: string, marks: number): string {
+  if (marks !== 5 && marks !== 6) return xml;
+  const paragraphs = rawParagraphs(xml);
+  const mainParts = paragraphs.filter(p => /^\([a-z]\)(?:\s|$)/i.test(p.text));
+  const romanParts = paragraphs.filter(p => /^\((?:i|ii|iii|iv|v|vi)\)(?:\s|$)/i.test(p.text));
+  if (mainParts.length > 1 || romanParts.length > 1) return xml;
+
+  const total = paragraphs.find(p => /total\s+for\s+question/i.test(p.text));
+  const end = total?.start ?? xml.length;
+  const answer = [...paragraphs].reverse().find(p => p.start < end
+    && (/\.{10,}/.test(p.text) || /<w:tab\b[^>]*w:leader=["']dot["']/i.test(p.xml)));
+  const insertion = answer?.start ?? end;
+  // Two 22-point working rows per mark: 5 marks gets 10 rows, 6 gets 12.
+  // Count existing space first, including unusually tall source paragraphs.
+  const rowHeight = 440;
+  const targetHeight = marks * 2 * rowHeight;
+  let existingHeight = 0;
+  for (const p of [...paragraphs].reverse()) {
+    if (p.start >= insertion) continue;
+    if (/^\(\d+\)$/.test(p.text)) continue;
+    const isBlank = !p.text || /^\.{10,}$/.test(p.text.replace(/\s/g, ""));
+    if (!isBlank || /<(?:w:(?:drawing|pict|object)|m:oMath)\b/i.test(p.xml)) break;
+    const spacing = /<w:spacing\b[^>]*>/i.exec(p.xml)?.[0] || "";
+    const line = Number(/w:line=["'](\d+)["']/i.exec(spacing)?.[1] || 240);
+    const lineHeight = /w:lineRule=["'](?:exact|atLeast)["']/i.test(spacing) ? line : line * 1.2;
+    const breaks = (p.xml.match(/<w:br\b/g) || []).length;
+    existingHeight += lineHeight * (breaks + 1)
+      + Number(/w:before=["'](\d+)["']/i.exec(spacing)?.[1] || 0)
+      + Number(/w:after=["'](\d+)["']/i.exec(spacing)?.[1] || 0);
+  }
+  const rows = Math.max(0, Math.ceil((targetHeight - existingHeight) / rowHeight));
+  if (!rows) return xml;
+  const workingRow = '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="440" w:lineRule="exact"/>'
+    + '<w:keepLines/></w:pPr><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>';
+  return xml.slice(0, insertion) + workingRow.repeat(rows) + xml.slice(insertion);
+}
+
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
@@ -608,6 +645,7 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
     chunk = removePaperTotal(chunk);
     chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
+    chunk = ensureMathsWorkingSpace(chunk, questions[i].marks);
     chunk = improveMathsQuestionLayout(chunk, questions[i].marks, i === 0);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
