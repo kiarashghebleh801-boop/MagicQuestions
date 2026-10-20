@@ -32,6 +32,10 @@ const sourceByPaper: Record<string, string> = {
   "2024|November|2H": "November_2024_Paper_2_ExamWizard_Style (1).docx",
 
   // Chemistry formatted papers.
+  "2026|May/June|1C": "June_2026_Chemistry_Paper_1C_ExamWizard_Style.docx",
+  "2026|May/June|1CR": "June_2026_Chemistry_Paper_1CR_ExamWizard_Style.docx",
+  "2026|May/June|2C": "June_2026_Chemistry_Paper_2C_ExamWizard_Style.docx",
+  "2026|May/June|2CR": "June_2026_Chemistry_Paper_2CR_ExamWizard_Style.docx",
   "2022|May/June|1C": "May_June_2022_Chemistry_Paper_1C.docx",
   "2022|May/June|2C": "May_June_2022_Chemistry_Paper_2C.docx",
   "2023|November|1C": "November_2023_Chemistry_Paper_1C_ExamWizard_Style_FINAL.docx",

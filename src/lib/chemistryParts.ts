@@ -1,6 +1,7 @@
 import type { ChemistryQuestion } from "./chemistryQuestions";
 import { chemistryPartRules2024 } from "./chemistryParts2024";
 import { chemistryPartRulesArchive } from "./chemistryPartsArchive";
+import { chemistryPartRules2026 } from "./chemistryQuestions2026";
 
 export type ChemistryQuestionSelection = ChemistryQuestion & {
   selectedParts?: string[];
@@ -16,6 +17,7 @@ export type ChemistryPartOption = {
 type PartRule = ChemistryPartOption;
 
 const partRules: Record<string, PartRule[]> = {
+  ...chemistryPartRules2026,
   ...chemistryPartRulesArchive,
   ...chemistryPartRules2024,
   "chem-2025-1C-1": [

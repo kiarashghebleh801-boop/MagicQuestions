@@ -1,5 +1,6 @@
 import { chemistryQuestions2024 } from "./chemistryQuestions2024";
 import { chemistryQuestionsArchive } from "./chemistryQuestionsArchive";
+import { chemistryQuestions2026 } from "./chemistryQuestions2026";
 
 export type ChemistryQuestion = {
   id: string;
@@ -55,6 +56,7 @@ const addedChemistryPapers: ChemistryQuestion[] = [
 ];
 
 export const chemistryQuestions: ChemistryQuestion[] = [
+  ...chemistryQuestions2026,
   ...chemistryQuestionsArchive,
   ...chemistryQuestions2024,
   ...addedChemistryPapers,
