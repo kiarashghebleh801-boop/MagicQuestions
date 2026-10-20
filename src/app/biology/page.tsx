@@ -1,0 +1,143 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { biologySections, biologyTopicTitle } from "@/lib/biologySpec";
+import { biologyQuestions, type BiologyQuestion } from "@/lib/biologyQuestions";
+import { specialiseBiologyQuestion, type BiologyQuestionSelection } from "@/lib/biologyParts";
+import { getBiologyMarkSchemeSource } from "@/lib/biologyMarkSchemeSources";
+import { exportPaperToWord } from "@/lib/exportWord";
+import type { Question } from "@/lib/questions";
+import { supabase } from "@/lib/supabase";
+import PaperReview from "@/components/PaperReview";
+import BiologyReviewTracker from "@/components/BiologyReviewTracker";
+import ScienceQuestionDetails from "@/components/ScienceQuestionDetails";
+import ScienceSwapModal from "@/components/ScienceSwapModal";
+import BiologyPartPicker from "@/components/BiologyPartPicker";
+
+type PartialExportQuestion = Question & { selectedParts?: string[] };
+
+function asExportQuestion(q: BiologyQuestionSelection): PartialExportQuestion {
+  return {
+    id: q.id,
+    year: q.year,
+    session: q.session,
+    paper: q.paper,
+    questionNumber: q.questionNumber,
+    marks: q.marks,
+    topics: q.specTags,
+    difficulty: "Medium",
+    summary: q.summary,
+    selectedParts: q.selectedParts,
+  };
+}
+
+export default function BiologyPage() {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+  const [email, setEmail] = useState("");
+  const [trackerKey, setTrackerKey] = useState("mq-biology-tracker");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(["1A"]);
+  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
+  const [count, setCount] = useState(5);
+  const [paper, setPaper] = useState<BiologyQuestionSelection[]>([]);
+  const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
+  const [query, setQuery] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportingMarkScheme, setExportingMarkScheme] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) { router.replace("/login"); return; }
+      setEmail(data.session.user.email || "Account");
+      const key = `mq-biology-tracker-${data.session.user.id}`;
+      setTrackerKey(key);
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(key) || "[]");
+        if (Array.isArray(saved)) setCompletedTopics(saved.filter(x => typeof x === "string" && biologyTopicTitle.has(x)));
+      } catch {}
+      const { data: profile } = await supabase.from("profiles").select("banned").eq("id", data.session.user.id).maybeSingle();
+      if (profile?.banned) { router.replace("/banned"); return; }
+      setReady(true);
+    });
+  }, [router]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try { window.localStorage.setItem(trackerKey, JSON.stringify(completedTopics)); } catch {}
+  }, [completedTopics, ready, trackerKey]);
+
+  const allSpecTopics = useMemo(() => biologySections.flatMap(section => section.subtopics.map(sub => ({ tag: `${section.number}${sub.code}`, sectionNumber: section.number, sectionTitle: section.title, code: sub.code, title: sub.title }))), []);
+  const trackerPercent = allSpecTopics.length ? Math.round((completedTopics.length / allSpecTopics.length) * 100) : 0;
+  const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
+  const topicSpecificQuestions = useMemo(() => biologyQuestions.map(q => specialiseBiologyQuestion(q, selectedTopics)).filter((q): q is BiologyQuestionSelection => q !== null), [selectedTopics]);
+  const filteredBank = useMemo(() => { const needle = query.trim().toLowerCase(); return topicSpecificQuestions.filter(q => !needle || `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.map(tag=>biologyTopicTitle.get(tag) || tag).join(" ")}`.toLowerCase().includes(needle)); }, [query, topicSpecificQuestions]);
+
+  const missingMarkSchemes = Array.from(new Set(paper.filter(q => !getBiologyMarkSchemeSource(q)).map(q => `${q.session} ${q.year} Paper ${q.paper}`)));
+
+  if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions Biology</div></main>;
+
+  function toggleTopic(tag: string) { setSelectedTopics(current => current.includes(tag) ? current.filter(x=>x!==tag) : [...current, tag]); }
+  function toggleCompleted(tag: string) { setCompletedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]); }
+  function generate() { const shuffled = [...topicSpecificQuestions].sort(() => Math.random() - .5); setPaper(shuffled.slice(0, Math.min(count, shuffled.length))); }
+  function addQuestion(q: BiologyQuestion) { const specialised = specialiseBiologyQuestion(q, selectedTopics); if (!specialised) { window.alert("That question contains material outside the selected specification topic(s)."); return; } setPaper(current => current.some(x=>x.id===specialised.id) ? current : [...current,specialised]); }
+  function removeQuestion(id: string) { setPaper(current => current.filter(q=>q.id!==id)); }
+  function moveQuestion(index:number,direction:number) { setPaper(current => { const next=index+direction; if(next<0||next>=current.length) return current; const copy=[...current]; [copy[index],copy[next]]=[copy[next],copy[index]]; return copy; }); }
+  function replaceQuestion(index: number, replacement: BiologyQuestionSelection) {
+    setPaper(current => current.map((q, i) => i === index ? replacement : q));
+  }
+  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Biology" }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Biology Word paper."); } finally { setExporting(false); } }
+
+  async function downloadMarkScheme() {
+    if (!paper.length || exportingMarkScheme) return;
+    setExportingMarkScheme(true);
+    try {
+      const { exportBiologyMarkSchemeToWord } = await import("@/lib/exportBiologyMarkScheme");
+      await exportBiologyMarkSchemeToWord(paper);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not create the Biology mark scheme.");
+    } finally { setExportingMarkScheme(false); }
+  }
+
+  return <main>
+    <header className="nav biologyNav">
+      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">Biology</span></div>
+      <nav className="tabs" aria-label="Biology tools"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generator</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button><button className={mode==="tracker"?"active":""} onClick={()=>setMode("tracker")}>Tracker</button></nav>
+      <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={()=>router.push("/igcse")}>Back</button></div>
+    </header>
+
+    <section className="hero"><p className="eyebrow">EDEXCEL INTERNATIONAL GCSE BIOLOGY 4BI1</p><h1>Your topics. Your Biology paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose your main Biology topics. Build a practice paper, browse questions, and track your progress in one place.</p></section>
+
+
+
+    {mode==="generate" ? <section className="builder">
+      <div className="panel controls">
+        <div className="step"><span>1</span><div><b>Choose Biology topics</b><small>{selectedTopics.length} selected · topic-specific parts only</small></div></div>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>{biologySections.map(section=><div key={section.number}><div className="qMeta" style={{marginBottom:8}}>{section.number}. {section.title}</div><div className="topics">{section.subtopics.map(sub=>{const tag=`${section.number}${sub.code}`;return <button key={tag} className={selectedTopics.includes(tag)?"topic selected":"topic"} aria-pressed={selectedTopics.includes(tag)} onClick={()=>toggleTopic(tag)}>{tag} {sub.title}</button>})}</div></div>)}</div>
+        <div className="divider"/><div className="step"><span>2</span><div><b>Paper settings</b><small>Choose how many questions</small></div></div>
+        <div className="settingRow"><div className="counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={()=>setCount(Math.min(16,count+1))}>+</button></div></div>
+        <button className="generate" onClick={generate} disabled={!topicSpecificQuestions.length}>✦ Generate Biology paper</button>
+      </div>
+
+      <div className="panel preview">
+        <div className="previewHead"><div><p>YOUR BIOLOGY PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>4BI1</span></div>
+        {!paper.length?<div className="empty"><div>✦</div><h3>{biologyQuestions.length ? "Your Biology paper will appear here" : "Your Biology workspace is ready"}</h3><p>{biologyQuestions.length ? "Pick topics, choose the number of questions, then generate." : "The 19 topics and tracker are ready to use. Formatted Biology question papers still need to be added before you can generate a paper."}</p></div>:<><div className="editorHint"><span>✦</span><div><b>Topic-specific extraction is on</b><small>Unrelated subparts are removed. If original parts (c) and (d) are kept, they export as (a) and (b).</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}{q.selectedParts?.length?` · Parts ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>{biologyTopicTitle.get(tag) || tag}</span>)}</div><BiologyPartPicker question={q} onChange={updated=>setPaper(current=>current.map((item,i)=>i===index?updated:item))}/><button type="button" onClick={()=>setExpandedQuestionId(current=>current===q.id?null:q.id)} aria-expanded={expandedQuestionId===q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId===q.id?"Hide full question ↑":"View full question ↓"}</button>{expandedQuestionId===q.id&&<><div className="qMeta" style={{marginTop:8}}>Original source question{q.selectedParts?.length?` · Your export keeps only ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><ScienceQuestionDetails question={asExportQuestion(q)}/></>}<div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>setSwapIndex(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting?"Building Word…":"Download Word"}</button><button className="word" onClick={()=>void downloadMarkScheme()} disabled={exportingMarkScheme || missingMarkSchemes.length > 0}>{exportingMarkScheme?"Creating mark scheme…":"↓ Download mark scheme"}</button><button onClick={()=>setReviewOpen(true)}>✓ Review paper</button></div>{missingMarkSchemes.length > 0 && <p className="qMeta" role="status">Mark scheme not yet available for {missingMarkSchemes.join("; ")}. Remove or swap these questions to download a matching mark scheme.</p>}{reviewOpen&&<PaperReview paper={paper.map(asExportQuestion)} title="Biology paper review" onClose={()=>setReviewOpen(false)}/>}</>}
+        {swapIndex!==null&&paper[swapIndex]&&<ScienceSwapModal subject="Biology" current={asExportQuestion(paper[swapIndex])} paper={paper.map(asExportQuestion)} questions={topicSpecificQuestions.map(asExportQuestion)} topicLabel={tag=>biologyTopicTitle.get(tag) || tag} onClose={()=>setSwapIndex(null)} onChoose={q=>{const chosen=topicSpecificQuestions.find(candidate=>candidate.id===q.id);if(chosen)replaceQuestion(swapIndex,chosen);setSwapIndex(null);}}/>}
+      </div>
+    </section> : mode==="bank" ? <section className="bank panel">
+      <div className="bankTop"><div><p className="eyebrow">BIOLOGY QUESTION BANK</p><h2>{selectedTopics.length ? `Browse ${filteredBank.length} topic-specific question selections` : `Browse all ${biologyQuestions.length} formatted questions`}</h2></div><input aria-label="Search Biology questions" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search Biology questions…"/></div>
+      <div style={{marginTop:18,display:"flex",flexDirection:"column",gap:12}}>{biologySections.map(section=><div key={section.number}><div className="qMeta" style={{marginBottom:6}}>{section.number}. {section.title}</div><div className="topics compact" style={{margin:0}}>{section.subtopics.map(sub=>{const tag=`${section.number}${sub.code}`;const n=biologyQuestions.map(q=>specialiseBiologyQuestion(q,[tag])).filter(Boolean).length;return <button key={tag} className={selectedTopics.includes(tag)?"topic selected":"topic"} aria-pressed={selectedTopics.includes(tag)} onClick={()=>toggleTopic(tag)}>{tag} {sub.title} · {n}</button>})}</div></div>)}</div>
+      <div className="bankResults" style={{marginTop:20}}>{!filteredBank.length && <div className="empty" role="status"><h3>{biologyQuestions.length ? "No questions match your selection" : "Biology questions are not available yet"}</h3><p>{biologyQuestions.length ? "Choose other topics or clear your search." : "Formatted question papers need to be added. Your topic tracker is available now."}</p></div>}{filteredBank.map(q=><article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Q{q.questionNumber}{q.selectedParts?.length?` · ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>{biologyTopicTitle.get(tag) || tag}</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b><button onClick={()=>setPaper(current => current.some(x=>x.id===q.id) ? current : [...current,q])}>+ Add</button></div></article>)}</div>
+    </section> : <section className="bank panel" style={{maxWidth:1100,margin:"0 auto 48px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:28,alignItems:"center",marginBottom:28}}>
+        <div style={{width:180,height:180,borderRadius:"50%",display:"grid",placeItems:"center",background:`conic-gradient(var(--accent, #6c4cff) ${trackerPercent}%, rgba(127,127,127,.18) 0)`,padding:14,margin:"0 auto"}}><div style={{width:"100%",height:"100%",borderRadius:"50%",background:"var(--panel, #fff)",display:"grid",placeItems:"center",textAlign:"center"}}><div><strong style={{fontSize:38}}>{trackerPercent}%</strong><div className="qMeta">complete</div></div></div></div>
+        <div><p className="eyebrow">BIOLOGY SPECIFICATION TRACKER</p><h2 style={{margin:"4px 0 8px"}}>{completedTopics.length} of {allSpecTopics.length} topics completed</h2><p className="subtitle" style={{textAlign:"left",margin:"0 0 16px",maxWidth:650}}>Tick each Edexcel IGCSE Biology specification topic when you finish revising it. Your progress is saved on this device.</p><div style={{height:16,borderRadius:999,background:"rgba(127,127,127,.18)",overflow:"hidden"}}><div style={{height:"100%",width:`${trackerPercent}%`,borderRadius:999,background:"var(--accent, #6c4cff)",transition:"width .25s ease"}}/></div><div className="qMeta" style={{marginTop:8}}>{trackerPercent}% towards 100%</div></div>
+      </div>
+      <BiologyReviewTracker/>
+      <div style={{display:"flex",flexDirection:"column",gap:18}}>{biologySections.map(section => { const sectionTags = section.subtopics.map(sub => `${section.number}${sub.code}`); const sectionDone = sectionTags.filter(tag => completedTopics.includes(tag)).length; const sectionPercent = Math.round((sectionDone / sectionTags.length) * 100); return <div key={section.number} style={{border:"1px solid var(--border, rgba(127,127,127,.2))",borderRadius:16,padding:18}}><div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",marginBottom:12}}><div><div className="qMeta">SECTION {section.number}</div><h3 style={{margin:"2px 0"}}>{section.title}</h3></div><b>{sectionPercent}%</b></div><div style={{height:8,borderRadius:999,background:"rgba(127,127,127,.16)",overflow:"hidden",marginBottom:14}}><div style={{height:"100%",width:`${sectionPercent}%`,background:"var(--accent, #6c4cff)",borderRadius:999}}/></div><div style={{display:"grid",gap:9}}>{section.subtopics.map(sub => { const tag = `${section.number}${sub.code}`; const done = completedTopics.includes(tag); return <label key={tag} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,cursor:"pointer",background:done?"rgba(108,76,255,.10)":"rgba(127,127,127,.06)"}}><input type="checkbox" checked={done} onChange={()=>toggleCompleted(tag)} style={{width:18,height:18}}/><span style={{textDecoration:done?"line-through":"none",opacity:done?.7:1}}><b>{section.number}{sub.code}</b> {sub.title}</span></label> })}</div></div> })}</div>
+    </section>}
+  </main>;
+}

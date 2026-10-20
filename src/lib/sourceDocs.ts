@@ -1,4 +1,5 @@
 import type { Question } from "./questions";
+import { biologyQuestions } from "./biologyQuestions";
 
 export const FORMATTED_BUCKET = "examwizard-papers";
 export const PHYSICS_BUCKET = "physics-papers";
@@ -65,6 +66,7 @@ const sourceByPaper: Record<string, string> = {
 };
 
 export function getFormattedSource(q: Question): string | null {
+  if (/^[12]BR?$/.test(q.paper)) return biologyQuestions.find(source => source.year === q.year && source.session === q.session && source.paper === q.paper && source.questionNumber === q.questionNumber)?.sourceFile || null;
   return sourceByPaper[`${q.year}|${q.session}|${q.paper}`] ?? null;
 }
 

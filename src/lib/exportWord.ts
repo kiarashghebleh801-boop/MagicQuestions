@@ -799,7 +799,7 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
-  if (/Chemistry/i.test(subject)) {
+  if (/Chemistry|Biology/i.test(subject)) {
     chunk = normalizeChemistryMarkColors(chunk);
     chunk = normalizeChemistryParagraphSpacing(chunk);
     chunk = improveChemistryPageLayout(chunk);
@@ -837,7 +837,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
   const selected = questions.map((q, index) => {
     let chunk = buildQuestionChunk(source, q, index + 1, subject);
     if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId);
@@ -860,7 +860,7 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const drawingCounter = { value: 1 };
   let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);

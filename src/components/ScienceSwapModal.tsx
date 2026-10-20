@@ -5,7 +5,7 @@ import type { Question } from "@/lib/questions";
 import ScienceQuestionDetails from "@/components/ScienceQuestionDetails";
 
 type Props = {
-  subject: "Chemistry" | "Physics";
+  subject: "Chemistry" | "Physics" | "Biology";
   current: Question;
   paper: Question[];
   questions: Question[];

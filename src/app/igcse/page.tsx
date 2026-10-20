@@ -10,6 +10,7 @@ const BG = "#070707";
 const PANEL = "#101010";
 
 const subjects = [
+  { title: "Biology", subtitle: "Edexcel International GCSE Biology 4BI1", route: "/biology" },
   {
     title: "Mathematics",
     subtitle: "Edexcel International GCSE Mathematics A 4MA1",
@@ -110,7 +111,7 @@ export default function IgcsePage() {
 
       <div style={{minHeight:96,padding:"18px 22px",display:"grid",gridTemplateColumns:"56px 1fr",alignItems:"center",gap:18,borderRadius:18,border:"1px dashed rgba(212,175,55,.22)",background:"#0b0b0b",color:"#b9b098"}}>
         <div style={{width:46,height:46,borderRadius:13,display:"grid",placeItems:"center",background:"rgba(212,175,55,.07)",color:"#b99936"}}><FolderIcon/></div>
-        <div><h2 style={{margin:0,fontSize:22,color:"#e8dec4"}}>More subjects</h2><div style={{marginTop:5,fontSize:11,fontWeight:700,color:"#918978"}}>Biology, Economics and more can be added here.</div></div>
+        <div><h2 style={{margin:0,fontSize:22,color:"#e8dec4"}}>More subjects</h2><div style={{marginTop:5,fontSize:11,fontWeight:700,color:"#918978"}}>Economics and more can be added here.</div></div>
       </div>
     </section>
   </main>;
