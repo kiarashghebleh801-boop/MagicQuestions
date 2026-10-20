@@ -11,13 +11,14 @@ import re
 from pathlib import Path
 
 import fitz
+from markscheme_content import answer_content, typed_text
 
 
 def columns(page, words):
     headers = {}
     for w in sorted(words, key=lambda w: w[1]):
-        if w[4] in ('Answer', 'Notes', 'Marks') and w[1] < 200:
-            headers.setdefault(w[4], w)
+        if w[4] in ('Answer', 'Notes', 'Marks', 'Mark') and w[1] < 200:
+            headers.setdefault('Marks' if w[4] == 'Mark' else w[4], w)
     if len(headers) != 3:
         return None
     borders = [d['rect'].x0 for d in page.get_drawings()
@@ -59,33 +60,6 @@ def text_in(words, rect):
                      for line in sorted(lines)).strip().replace('\x00', '')
 
 
-def visual_answer(page, rect, text):
-    # Keep nested tables, graphs, bonds, arrows, electron dots and raster diagrams.
-    # Outer table borders and Word's invisible filled text boxes are excluded.
-    for drawing in page.get_drawings():
-        r = drawing['rect']
-        if not rect.intersects(r):
-            continue
-        internal = r.x0 > rect.x0 + 2 and r.x1 < rect.x1 - 2
-        if internal and (drawing['type'] != 'f' or r.width < 2 or r.height < 2
-                         or any(item[0] == 'c' for item in drawing['items'])):
-            return True
-    if any(rect.intersects(info['bbox']) for info in page.get_image_info()):
-        return True
-    if re.search(r'[\ue000-\uf8ff\ufffd]', text):
-        return True
-    if re.search(r'diagram|drawn|drawing|sketch|graph|plott|circl|displayed|dot.and.cross|repeating unit|structure shown|correct tick', text, re.I):
-        return True
-    # Sub/superscripts can be lost during plain text extraction; retain the source
-    # formula as a small image instead of silently changing its chemistry.
-    for block in page.get_text('dict', clip=rect)['blocks']:
-        for line in block.get('lines', []):
-            spans = line['spans']
-            if any(s['size'] < 8.5 and re.search(r'\d|[+−-]', s['text']) for s in spans):
-                return True
-    return False
-
-
 def index_pdf(path):
     doc = fitz.open(path)
     questions = {}
@@ -121,9 +95,16 @@ def index_pdf(path):
             events.append((top - 1, 'label', tokens))
         # Total rows end the answer, including the final question on the last page.
         for w in words:
-            if w[4].lower() == 'total' and w[0] > notes_x and w[1] > header_bottom:
-                tail = text_in(words, fitz.Rect(w[0] - 1, w[1] - 2, page.rect.width, w[3] + 18))
+            if w[4].lower() == 'total' and w[1] > header_bottom:
+                tail = text_in(words, fitz.Rect(w[0] - 1, w[1] - 2, page.rect.width, w[3] + 3))
+                if tail == 'Total' and w[0] > notes_x:
+                    tail = text_in(words, fitz.Rect(w[0]-1, w[1]-2, page.rect.width, w[3]+18))
+                if not re.match(r'^total(?:\s+for\s+question|\s*=|\s+\d+)', tail, re.I):
+                    continue
                 values = re.findall(r'\d+', tail)
+                if not values or ('question' in tail.lower() and len(values) < 2):
+                    tail = text_in(words, fitz.Rect(w[0]-1, w[1]-2, page.rect.width, w[3]+18))
+                    values = re.findall(r'\d+', tail)
                 events.append((w[1] - 1, 'total', int(values[-1]) if values else None))
         events.sort(key=lambda e: e[0])
         filtered = []
@@ -179,22 +160,14 @@ def index_pdf(path):
             marks = text_in(words, fitz.Rect(marks_x, top, page.rect.width * .96, bottom))
             values = re.findall(r'\b\d+\b', marks)
             marks = ' '.join(values)
-            visual = visual_answer(page, answer_rect, answer)
-            row = {'part': main_part, 'roman': roman_part, 'answer': answer, 'notes': notes, 'marks': marks}
-            if visual:
-                content = [fitz.Rect(w[:4]) for w in words if answer_rect.contains(fitz.Point((w[0]+w[2])/2, (w[1]+w[3])/2))]
-                content += [fitz.Rect(info['bbox']) & answer_rect for info in page.get_image_info() if answer_rect.intersects(info['bbox'])]
-                content += [d['rect'] & answer_rect for d in page.get_drawings()
-                            if d['rect'].x0 > answer_rect.x0 + 2 and d['rect'].x1 < answer_rect.x1 - 2
-                            and d['rect'].intersects(answer_rect) and (d['type'] != 'f' or d['rect'].width < 2 or d['rect'].height < 2
-                            or any(item[0] == 'c' for item in d['items']))]
-                if content:
-                    roman_here = [w for w in roman_words if top <= w[1] < bottom]
-                    left = min([answer_rect.x0] + [w[0]-1 for w in roman_here])
-                    crop = fitz.Rect(left, max(top, min(r.y0 for r in content)-2), answer_rect.x1,
-                                     min(bottom, max(r.y1 for r in content)+2))
-                    row['crop'] = {'page': page.number + 1, 'rect': [round(v, 3) for v in crop]}
-            if answer or notes or marks or visual:
+            roman_here = [w for w in roman_words if top <= w[1] < bottom]
+            text_left = min([answer_rect.x0] + [w[0]-1 for w in roman_here])
+            content = answer_content(page, answer_rect, text_left)
+            row_part = 'c' if path.name == 'IGCSE_PHYSICS_2026_June_P2_MS_1789834927427.pdf' and current_q == 4 and page.number == 8 else main_part
+            row = {'part': row_part, 'roman': roman_part,
+                   'notes': typed_text(page, fitz.Rect(notes_x, top, marks_x-1, bottom)),
+                   'marks': marks, 'content': content}
+            if answer or notes or marks or content:
                 questions[str(current_q)].append(row)
     if not questions:
         raise ValueError(f'No questions in {path}')
@@ -217,7 +190,7 @@ def main():
     for path in sorted(args.source_dir.glob('IGCSE_CHEMISTRY_*_MS*.pdf')):
         result[path.name] = index_pdf(path)
         questions = result[path.name]['questions']
-        print(path.name, len(questions), 'questions;', sum('crop' in r for rows in questions.values() for r in rows), 'visual rows')
+        print(path.name, len(questions), 'questions;', sum('crop' in b for rows in questions.values() for r in rows for b in r['content']), 'visual crops')
     output.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(f'Wrote {len(result)} indexed papers to {output}')
 

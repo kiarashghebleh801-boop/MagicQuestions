@@ -21,11 +21,13 @@ for (const q of covered) {
   assert.equal(source.totals[q.questionNumber], q.marks, q.id + ' total');
   for (const part of chemistryPartOptions(q)) assert(rows.some(row => row.part === part.part), `${q.id} (${part.part})`);
   for (const row of rows) {
-    assert(row.answer || row.notes || row.crop, q.id + ' empty answer');
-    if (row.crop) {
-      const { page, rect } = row.crop;
-      assert(page >= 1 && rect.length === 4 && rect[2] > rect[0] && rect[3] > rect[1], q.id + ' invalid crop');
-    } else assert(!/[\ue000-\uf8ff\ufffd]/.test(row.answer), q.id + ' unreadable typed glyph');
+    assert(row.content?.length || row.notes, q.id + ' empty answer');
+    for (const block of row.content) {
+      if (block.crop) {
+        const { page, rect } = block.crop;
+        assert(page >= 1 && rect.length === 4 && rect[2] > rect[0] && rect[3] > rect[1], q.id + ' invalid crop');
+      } else assert(!/[\ue000-\uf8ff\ufffd]/.test(block.text), q.id + ' unreadable typed glyph');
+    }
   }
 }
 if (process.argv[2]) for (const [filename, source] of Object.entries(index)) {
