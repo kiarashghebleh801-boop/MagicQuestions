@@ -2,6 +2,8 @@
 
 import JSZip from "jszip";
 import type { Question } from "./questions";
+import { biologyQuestions } from "./biologyQuestions";
+import { biologyPartOptions } from "./biologyParts";
 import { getFormattedSource, getFormattedSourceBucket } from "./sourceDocs";
 import { supabase } from "./supabase";
 
@@ -90,6 +92,12 @@ function extractParts(nodes: Element[], totalMarks: number): ReviewPart[] {
 }
 
 export async function getReviewParts(q: ReviewQuestion): Promise<ReviewPart[]> {
+  if (/^[12]BR?$/.test(q.paper)) {
+    const source = biologyQuestions.find(item => item.year === q.year && item.session === q.session && item.paper === q.paper && item.questionNumber === q.questionNumber);
+    const options = source ? biologyPartOptions(source) : [];
+    const selected = options.filter(part => !q.selectedParts?.length || q.selectedParts.includes(part.part));
+    if (selected.length) return selected.map((part, i) => ({ key: part.part, originalPart: part.part, marks: part.marks, label: q.selectedParts?.length ? (selected.length === 1 ? "Question" : `(${String.fromCharCode(97+i)})`) : `(${part.part})` }));
+  }
   const filename = getFormattedSource(q);
   if (!filename) return [{ key: "whole", label: "Whole question", marks: q.marks }];
   try {

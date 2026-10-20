@@ -1,1 +1,2017 @@
-{}
+{
+  "IGCSE_BIOLOGY_2026_MayJune_P1R_MS_1789837985665.pdf": {
+    "sha256": "6dc667fc1c3f7aac2574811ed0010fb7bef2ae477d274c063dfd1a47fdbbc0ee",
+    "questions": {
+      "1": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "Ignore move /\nsensitivity /\nrespond to\nsurroundings",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that makes reference to one of\nthe following points:\n• grow / eq (1)\n• respire / respiration (1)\n• nutrition / eq (1)\n• excrete / excretion (1)\n• control (internal conditions) (1)\n• reproduce / reproduction (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nC (Plasmodium)\nA is not the answer as Amoeba does not cause malaria\nB is not the answer as Chlorella does not cause malaria\nD is not the answer as Pneumococcus does not cause\nmalaria"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iii",
+          "notes": "Accept length\nbetween 43 mm\nand 45 mm\nOR\n4.3 cm to 4.5\ncm\nCorrect\nanswer gains\nall marks",
+          "marks": "2",
+          "content": [
+            {
+              "text": "44 / 3 = X14.33333 up to X15 (2 marks)\nOne mark for:\nCorrect measurement with units (43 mm /\n4.3 cm)\nOR\n÷3, ÷0.3, ÷30, answer between x1.43333\nand x1.5"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "Max one only\nfor one function\nbut no named\nwbc\nAccept\nphagocytosis for\ntwo marks",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to three\nof the following points:\n• lymphocytes (1)\n• (lymphocytes) release antibodies /\nantitoxins (1)\n• phagocytes (1)\n• (phagocytes) ingest / engulf / digest\n(pathogens) / eq (1)"
+            }
+          ]
+        }
+      ],
+      "2": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nC (L)\nA is not the answer as J does not make sperm\nB is not the answer as K does not make sperm\nD is not the answer as M does not make sperm"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Accept produces\nsperm with 23\nchromosomes\nAccept produces\none set of\nchromosomes\nAccept produces\nfull set of\nchromosomes\n(after\nfertilisation)\nAccept zygote\nhas 46\nchromosomes /\nfertilised egg has\n46 chromosomes",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to\ntwo of the following points:\n• (meiosis) halves the chromosome\nnumber / (meiosis) produces haploid\n(cells) / sperm are haploid / gametes\nare haploid / eq (1)\n• so chromosome number (of zygote) is\nrestored / zygote is diploid / eq (1)\n• generates genetic variation / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Accept 1.88 x\n10⁸\nAccept 1.875 ×\n10⁸\nAccept 1.87 ×\n10⁸\nAccept 187 500\n000\nAccept 187 000\n000\nAccept 188 000\n000\nAccept 19 x 10⁷\netc\nCorrect answer\nwith no\nworking gains\nboth marks",
+          "marks": "2",
+          "content": [
+            {
+              "text": "1.9 x 10⁸ (2 marks)\nOne mark for 190 000 000"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Accept not\nenough to ensure\nfertilisation",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to the\nfollowing points:\n• (some) sperm do not reach the egg\n/ (some) sperm die / (some) sperm\ndo not reach oviduct / (some) sperm\ncannot move (well) / (some) sperm\ncannot swim / (some) sperm are\ndefective / (some) sperm are not\nviable / eq (1)\n• so cannot fertilise egg / cannot fuse\nwith egg / fertilisation does not\noccur / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Also accept\nsperm digests\npath through\n(jelly) coat (1)",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to\nthree of the following points:\n• fertilisation occurs (1)\n• sperm and egg (nuclei) fuse (1)\n• zygote is formed (1)\n• mitosis occurs (to form embryo) (1)"
+            }
+          ]
+        }
+      ],
+      "3": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nA (amino acids)\nB is not the answer as fatty acids are not in proteins\nC is not the answer as glucose is not in proteins\nD is not the answer as maltose is not in proteins"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nD (stomach and pancreas)\nA is not the answer as the colon does not make protease\nB is not the answer as the gall bladder does not make\nprotease\nC is not the answer as the oesophagus does not make\nprotein"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iii",
+          "notes": "Accept adding\nNaOH and\ncopper sulfate\nAccept pink\nAccept use\nClinistix /\nAlbustix / uristix\nand goes green\n/ blue for two\nmarks",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that makes reference to two of\nthe following points:\nadd biuret (solution) / eq (1)\nlilac / purple / mauve / violet / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Accept range\nbetween 38 and\n40 inclusive",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that makes reference to two\nof the following points:\n• decrease and increase / eq (1)\n• (decrease up to) 39 °C / (increase\nafter) 39 °C / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Accept\nalternatives to\nparticles",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to two\nof the following points:\n• (kinetic) energy increases (1)\n• so particles / enzymes / substrates\nmove faster / eq (1)\n• more collisions (between enzyme and\nsubstrate) / more E/S complexes / eq\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept enzyme\nand substrate\nare not\ncomplementary",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to two\nof the following points:\n• (enzymes) denature (1)\n• so shape of enzyme changes / active\nsite changes / eq (1)\n• fewer E/S complexes / E/S complexes\ncannot form / substrate does not fit\ninto active site / enzyme and\nsubstrate do not bind / enzyme and\nprotein do not bind / pepsin and\nprotein do not bind /eq (1)"
+            }
+          ]
+        }
+      ],
+      "4": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nD (respiration)\nA is not the answer as combustion does not occur in cattle\nB is not the answer as decomposition does not occur from\ncattle\nC is not the answer as photosynthesis removes carbon\ndioxide"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nB (CFCs and water vapour)\nA is not the answer as oxygen is not a greenhouse gas\nC is not the answer as nitrogen is not a greenhouse gas\nD is not the answer as oxygen is not a greenhouse gas"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "i",
+          "notes": "Accept converse\nAccept converse\nAccept converse\nAccept converse\nIf no mp 2,3,4\nthen award one\nmark for: organic\nreleases less CO2 /\nconventional\nreleases more CO2",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that makes reference to five of the\nfollowing points:\n1. organic releases less methane / eq (1)\n2. organic releases less CO2 from food / eq\n(1)\n3. organic farming releases less CO2 from\nmachinery / eq (1)\n4. organic farming removes more CO2 in\nfields / plants eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "i",
+          "notes": "Accept overall\norganic has net\nreduction of\n(atmospheric) CO2\n/ conventional has\nnet release of\n(atmospheric) CO2\n/ eq\ne.g. 2 more\nmethane released /\n5x more CO2\nreleased from food\nAccept converse\nAccept less\nelectricity used in\norganic\nAccept no repeats\nAccept converse\nAccept more\nsustainable",
+          "marks": "",
+          "content": [
+            {
+              "text": "5. organic absorbs more CO2 than it\nreleases / conventional releases more\nCO2 than it absorbs / eq (1)\n6. credit correct manipulated data (1)\n7. less machinery in organic/ less fuel used\nin organic / eq (1)\n8. nitrous oxide release is the same for\nboth / eq (1)\n9. only one study / no information about\ngas impacts / unknown cattle breeds /\nunknown number of cattle / unknown\nareas of land used / unknown food used\n/ unknown plant species in fields / eq\n(1)\n10.organic is better (for environment) /\norganic is more sustainable / organic has\nless impact on greenhouse effect / eq\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "ii",
+          "notes": "Accept less acid\nrain / sulfur\ndioxide\nAccept they are\nan eyesore /\ndamages\npastures / takes\nup farmland / can\naffect food webs\n/ eq",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to three\nof the following points:\n• reduced greenhouse gas (release) /\nless fossil fuel burning / sustainable\nelectricity / less global warming / no\nfuel costs / can be used in remote\nlocations / less noise pollution /\nrenewable / less CO₂ release / eq (1)\n• do not work in dark / do not work at\nnight / not consistent supply of\nelectricity / damages habitats /\nincreased food prices / high initial\ncost / large area required / reliant\non weather / takes up space /\nbuying panels is expensive / eq (1)"
+            }
+          ]
+        }
+      ],
+      "5": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nA (W)\nB is not the answer as animal cells have no cell wall\nC is not the answer as animal cells have no chloroplasts\nD is not the answer as animal cells have no vacuole"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Accept cells\nhave long\nvertical shapes\nAccept to trap\nlight\nAccept exposed\nto light",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that makes reference to four\nof the following points:\n(mark in pairs)\n1. cells have rectangular shapes /\nelongated shapes / cells packed closely\ntogether / cells densely packed / eq (1)\n2. so exposed to (more) light / absorb\ncarbon dioxide / eq (1)\nOR\n3. many chloroplasts / chloroplasts move\n/ eq (1)\n4. to absorb light / eq (1)\nOR\n5. close to upper surface / close to\n(upper) epidermis / at top of leaf /\nnear cuticle / eq (1)\n6. receives more light / so closer to the\nlight / fewer cell layers for light to pass\nthrough / to absorb light / eq (1)\nOR\n7. close to spongy mesophyll / close to air\nspaces / eq (1)\n8. so cells can obtain carbon dioxide / eq\n(1)\nOR"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "",
+          "content": [
+            {
+              "text": "9. close to xylem / close to phloem / close\nto vascular tissue / eq (1)\n10.to obtain water (from xylem) / to\ntransport sucrose (in phloem) / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Correct answer\ngains all marks",
+          "marks": "2",
+          "content": [
+            {
+              "text": "52% (2)\none mark only for 51.9…..\nOR\none mark only for 77-37 or 40 or ÷ 77"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "time (for discs to rise) / rate of\nphotosynthesis (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept high(est)\ntime at 10 °C /\nlow(est) time at 30\n°C / eq\nAccept CO2 for all\nmps\nAccept faster\n(photosynthesis)\nwith more sodium\nhydrogen carbonate\nat 30 °C / faster\n(photosynthesis)\nwith more sodium",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that makes reference to five of the\nfollowing points:\n1. increasing temperature decreases time /\nincreasing temperature increases rate (of\nphotosynthesis) / eq (1)\n2. increasing temperature between 20 °C and\n30 °C at 0.5% has little effect / eq (1)\n3. as more kinetic energy / faster enzyme\naction / more collisions / more enzyme\nactivity / eq (1)\n4. increasing sodium hydrogen carbonate has\nno effect at 10 (°C) / eq (1)\n5. increasing concentration of sodium\nhydrogen carbonate at 30 (°C), decreases\ntime / increasing concentration of sodium\nhydrogen carbonate at 20 (°C) decreases\ntime / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "hydrogen carbonate\nat 30 °C\nAccept repeats\nwere done (so data\nquality is good)",
+          "marks": "",
+          "content": [
+            {
+              "text": "6. oxygen (production) causes discs to rise /\neq (1)\n7. temperature is (main) limiting factor at 10\n°C / temperature is (main) limiting factor\nat 20 °C / eq (1)\n8. carbon dioxide is limiting between 20 °C\nand 30 °C / after 20 °C / at 30 °C / eq (1)\n9. data is reliable (as repeats are similar) /\nsome data may be anomalous / more\nconcentrations should be used / smaller\ntemp intervals / eq (1)\n10. light (intensity) is controlled / same sized\ndiscs used / no mention of species of plant\n/ eq (1)"
+            }
+          ]
+        }
+      ],
+      "6": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nA (anther)\nB is not the answer as the filament does not make pollen\nC is not the answer as the stigma does not make pollen\nD is not the answer as the style does not make pollen"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nC (ovule)\nA is not the answer as the anther makes pollen\nB is not the answer as the ovary forms the fruit\nD is not the answer as the petal does not form seeds"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that makes reference to two of the\nfollowing points:\n• breed plants with compact flowers / breed\nplants with (desirable) characteristics / eq\n(1)\n• select and breed offspring (with compact\nflowers) / repeat (breeding) over several\ngenerations / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "i",
+          "notes": "Accept\nrestrictive\nAccept DNA /\nplasmid\nAccept vector\nAccept join\nDNA / join\ngene",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to three of\nthe following points:\n• restriction enzymes cut out the gene /\neq (1)\n• use of plasmid (1)\n• use ligase to join gene (into plasmid) (1)\n• insert (recombinant plasmid / DNA) into\nplant cells (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "ii",
+          "notes": "Accept crops\nfor maize\nAccept GM\nmaize has\nincreased for\nmp1 or mp2 if\nnot present\notherwise\nAccept Both\ntypes of gm\nmaize increase\n= mp1 and mp2\nAccept named\nspecies, e.g.\nbees\nAccept less risk\nof development\nof insecticide /\npesticide\nresistance",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that makes reference to five of the\nfollowing points:\n1. more pesticide producing maize grown /\nmore insecticide producing maize grown / eq\n(1)\n2. more herbicide resistant maize grown / eq\n(1)\n3. less pesticide used / less insecticide used /\neq (1)\n4. (due to less pesticides) fewer (non-target)\ninsects killed / fewer pollinators killed /\nfewer animals killed / eq (1)\n5. (reduced pesticides cause) less\nbioaccumulation / less food chain damage /\nless ecosystem damage / eq (1)\n6. more herbicide used / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "ii",
+          "notes": "Accept\nweedkiller\nAccept\ndecreases and\nthen increases",
+          "marks": "",
+          "content": [
+            {
+              "text": "7. herbicides could spread to other areas /\nherbicides kill wild plants / kill other plants /\neq (1)\n8. (herbicides) may damage food chains / food\nwebs / cause loss of food sources / may\nharm ecosystems / eq (1)\n9. use of herbicides could cause resistance to\ndevelop in other plants / eq (1)\n10. (trans)genes may spread into wild plants /\nGM plants may breed with wild plants / GM\nplants could outcompete wild plants / eq (1)"
+            }
+          ]
+        }
+      ],
+      "7": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "Correct\nanswer gains\nall marks",
+          "marks": "3",
+          "content": [
+            {
+              "text": "1652 OR 1653 = 3 marks (3)\n1651.797 up to 1652.6348… (2) = 2 marks\nOne mark only for any one of:\n0.36 up to 0.37 (1 mark) (ignore dps)\n×150 (1 mark)\n×30 (1 mark)\n×4500 (1 mark)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Accept one cell\nthick\nAccept thin\nmembrane\nIgnore thin cell\nmembrane\nReject cell wall\nAccept\nabsorption of\nfat-soluble\nvitamins\nIgnore large\nsurface area\nunqualified",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that makes reference to four of\nthe following points:\n(mark two pairs only)\n• one cell thick wall / thin wall / eq (1)\n• short distance for diffusion / short\ndistance for active transport / eq (1)\nOR\n• capillaries / blood supply / blood vessels\n/ eq (1)\n• (maintain concentration / diffusion)\ngradient / eq (1)\nOR\n• lacteal (1)\n• absorbs / transports (digested) lipids /\n(digested) fats / fatty acids / glycerol /\neq (1)\nOR\n• microvilli / folded membrane / elongated\nshape of villus / eq (1)\n• large surface area / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Accept axes\neither way\nround\nReject if\nextrapolated\nMinimum label:\nheight in cm age\nin yr\nMax 4 for bar\nchart (mp1,\nmp3, mp4, mp5\n(key for bars)\nIf one set of\nplots, accept\nmp1 (if scale is\nlarge enough),\nmp2, mp3",
+          "marks": "5",
+          "content": [
+            {
+              "text": "• both linear scales that use at least\n2.5 grid squares vertically and 3\ngrid squares horizontally (both\nlines combined) (1)\n• straight line joining points (1)\n• axes labelled with units (1)\n• plots correct +/- one square (1)\n• key for lines (1)"
+            },
+            {
+              "crop": {
+                "page": 20,
+                "rect": [
+                  127.15,
+                  352.742,
+                  386.839,
+                  488.542
+                ],
+                "kind": "image"
+              }
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Accept named\ncorrect\nnutrients, e.g.\nminerals,\nglucose,",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to three\nof the following points:\nmax two from\n• reduced surface area (1)\n• so less diffusion / active transport (1)\n• so fewer nutrients absorbed / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "vitamins, amino\nacids\nIgnore protein\n/ starch\nabsorbed\ne.g. vitamin C\nfor skin / gums\n/ avoid scurvy\ne.g. calcium for\nbones / prevent\nrickets",
+          "marks": "",
+          "content": [
+            {
+              "text": "and max two from:\n• less glucose / fat for respiration / energy\n/ eq (1)\n• fewer amino acids for protein synthesis /\neq (1)\n• less named vitamin for linked function\n(1)\n• less named mineral for linked function\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept gender",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that makes reference to one of the\nfollowing points:\n• diet / eq (1)\n• activity / exercise levels / eq (1)\n• other health conditions / health / eq (1)\n• genetics / eq (1)\n• sex (1)"
+            }
+          ]
+        }
+      ],
+      "8": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "Aa (and Aa) (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Accept mp1\nand mp2 from\nPunnet square\nAccept ECF for\nwrong\ngenotypes in\n(a)(i) for mp1\nand mp2 only\nAccept ¾ /\n0.75 / 75%\nprobability of\nunbanded snail\nAccept 3:1\nratio\nAccept 30\n(with no\nworking) for\nmp3 and mp4",
+          "marks": "4",
+          "content": [
+            {
+              "text": "• gametes as A and a and A and a (1)\n• correct offspring genotypes (1) AA, Aa,\nAa, aa\n• correct probability of ¼ or 25% or 0.25\nfor banded snails (1)\n• correct calculation of ¼ × 120 = 30 (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Reject\nquadrant once",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to three of\nthe following points:\n• use quadrat / grid area (1)\n• random (placement) (1)\n• count (number of) snails (in quadrat)\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Accept\nquadrats for\nmp1 and mp2\n(2 marks)",
+          "marks": "",
+          "content": [
+            {
+              "text": "• repeat / eq (1)\n• scale up by multiplying area by\ndensity (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Max 3 if no\nreference to\nbanded /\nunbanded OR\nbanded /\nunbanded are\nwrong way\nround\nAccept\nconverse for\nbanded\nAccept\nconverse for\nbanded\nAccept\nconverse for\nbanded",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that makes reference to four of\nthe following points:\n• more unbanded snails (in woodland) /\nfewer banded snails (in woodland) / eq\n(1)\n• mutation (generated variation) (1)\n• (unbanded) camouflaged / (unbanded)\nnot seen by birds / birds eat more\n(banded) snails / (unbanded) snails\nsurvive / eq (1)\n• (unbanded) snails reproduce (more)\n/produce offspring / eq (1)\n• (unbanded) allele / gene is passed on /\neq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept (only)\ntwo alleles\nAccept is\nmonogenic\nAccept\n(controlled by)\na gene\nAccept many\nalleles /\nmultiple alleles\nAccept named\nenvironment\nfactor e.g. diet\n/ sunlight",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to three\nof the following points:\n• banding pattern is (controlled by) one\ngene / one pair of alleles / eq (1)\n• (banding pattern) has discontinuous\nvariation / discrete variation / (shell\ncolour) has continuous variation (1)\n• colour is polygenic (1)\n• (colour) so has multiple genes / many\ngenes (1)\n• (colour) may have environmental effect\n/ eq (1)"
+            }
+          ]
+        }
+      ],
+      "9": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "6",
+          "content": [
+            {
+              "text": "• receptors / sensory nerve endings (1)\n• impulses (1)\n• sensory (1)\n• motor (1)\n• neurotransmitters (1)\n• contract (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Reject ciliary",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to two of\nthe following points:\n• so pupil constricts / pupil gets narrower\n/ eq (1)\n• circular muscles (in iris) have contracted\n/ radial muscles (in iris) relaxed (1)\n• to reduce light entering eye / so less\nlight enters eye / prevents damage to\nthe eye / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Accept pupil\nstays dilated /\npupil does not\nrespond\nAccept affects\ndiffusion across\nsynapse",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to two of the\nfollowing points:\n• pupil does not reduce in size / pupil\ndoes not change / iris does not increase\nin size / eq (1)\n• circular muscle does not contract /\nradial muscle stays contracted / eq (1)\n• (atropine interferes with)\nneurotransmitter /(atropine interferes\nwith) chemical messengers / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept (light)\nwould cause\nthe pupil reflex\n/ would cause\npupil to\nconstrict /\ncause iris to\ncontract",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to the\nfollowing points:\n• keeps pupil large / wide / dilated /\nprevents pupil constricting / prevents\niris contracting / eq (1)\n• when shining light into eye / in bright\nlight / eq (1)"
+            }
+          ]
+        }
+      ],
+      "10": [
+        {
+          "part": "",
+          "roman": "",
+          "notes": "Accept same\nmayfly\nAccept\nmultiple\nmayflies /\ngroups / eq\nAccept\nmeasure how\nlong it takes to\ndo set number\nof movements /\nmove set\ndistance = 2\nmarks\nAccept area /\nvolume of tank\nfor size\nIgnore\nfreshwater\nIgnore\namount of\nwater",
+          "marks": "6",
+          "content": [
+            {
+              "text": "An answer that makes reference to six of the\nfollowing points:\n• C: use different temperatures / hot and\ncold / eq (1)\n• O: same species / type / age / mass /\nsex / of mayfly / eq (1)\n• R: repeats / eq (1)\n• M1: count movements of gills / measure\ndistance gill moves / eq (1)\n• M2: in stated time / eq (1)\n• S1 & S2: same pH / water volume / light\n/ food / salinity / substrate / same\noxygen / same tank size / same space /\nsame carbon dioxide / same number per\ntank / eq (2)"
+            }
+          ]
+        }
+      ]
+    },
+    "totals": {
+      "1": 7,
+      "2": 10,
+      "3": 10,
+      "4": 9,
+      "5": 13,
+      "6": 12,
+      "7": 16,
+      "8": 15,
+      "9": 12,
+      "10": 6
+    }
+  },
+  "IGCSE_BIOLOGY_2026_MayJune_P1_MS_1789837983647.pdf": {
+    "sha256": "9c809a2e046e8b389cbf5e9f225a65298f965d87cec7216846902ebc1ed20b07",
+    "questions": {
+      "1": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "allow one for\neither correct\nmeasurement 60-\n62mm 6.0-6.2cm\nor x 1000 or 10000\n=1 mark\n÷ 15 000 =1 mark\nallow 4.0-4.13",
+          "marks": "3",
+          "content": [
+            {
+              "text": "calculation steps not marking points\nlength of line = 61 (mm)\n= 61 × 1000 = 61 000 (µm)\nactual length = 61 000 ÷ 15 000\n= 4.1 allow 4.0-4.13 (3 recurring) (3)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "A (M)\nB is not correct as N is the cell wall\nC is not correct as Q is a flagellum\nD is not correct as R is ribosomes"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "A (N)\nB is not correct as O is the cell membrane\nC is not correct as P is the cytoplasm\nD is not correct as Q is a flagellum"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "D (S)\nA is not correct as N is the cell wall\nB is not correct as O is the cell membrane\nC is not correct as P is the cytoplasm"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iv",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• to move / to swim / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "i",
+          "notes": "allow Endoplasmic\nreticulum / Golgi /\nlysosomes\nnot ribosomes",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• nucleus / mitochondria / organelles\n/eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• cell wall / cell membrane / cytoplasm / ribosomes (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "",
+          "notes": "List rule mark first\ntwo statements\nallow converse\nreject bacteria have\norganelles",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that includes two of\n• virus much smaller / eq (1)\n• bacteria have cell wall / eq (1)\n• virus has capsid / protein coat / eq (1)\n• viruses have DNA or RNA / eq (1)\n• bacteria have ribosomes / eq (1)\n• bacteria have nucleoid (1)\n• bacteria have cytoplasm (1)\n• bacteria have cell membrane (1)\n• bacteria have plasmids (1)\n• bacteria have flagella (1)\n• bacteria have a slime layer / capsule (1)"
+            }
+          ]
+        }
+      ],
+      "2": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "allow one for\n24-14 or\n÷ 14\nallow 71.4 71.43 71.429\n71.4286 71.42857 etc",
+          "marks": "2",
+          "content": [
+            {
+              "text": "calculation steps not marking\npoints\n24 -14 = 10\n(10 ÷ 14) × 100\n= 71% (2)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "each mp needs change and\nexplanation\nallow converse\nignore energy required for\ngrowth",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An answer that includes four of the\nfollowing:\n1. energy increases as body mass\nincreases / less in children due\nto smaller (body mass) / eq\n(1)\n2. energy less increase over 50\nas (maybe) less active/ eq (1)\n3. protein increases with age for\ngrowth /eq (1)\n4. protein constant / levels off\n/no increase beyond 25-50 as\nless growth / no growth /eq\n(1)\n5. calcium increases with age /\nup to age 7-10 for bone /\nteeth / eq (1)\n6. Iron increases (from 10) as\nblood lost in menstruation /eq\n(1)\n7. Iron falls (after 50) due to\nmenopause /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "allow for baby\n/embryo",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An answer that includes three of the following:\n1. more energy required for foetus (and\nmother) / body mass increases /eq (1)\n2. protein more for growth of foetus / baby\n/eq (1)\n3. calcium the same / eq (1)\n4. Iron increases as more haemoglobin\nrequired for foetus (blood) / blood cells\nrequired to transport oxygen to foetus /\nbaby /eq (1)"
+            }
+          ]
+        }
+      ],
+      "3": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "six",
+          "marks": "1",
+          "content": [
+            {
+              "text": "6"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "allow correct formulae\neven if unbalanced",
+          "marks": "1",
+          "content": [
+            {
+              "text": "carbon dioxide + water → glucose + oxygen"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "allow truncated if correct\nignore plot for green\nallow red blue etc\nallow average\nmax 4 for line graph",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that refers to the following:\n• scale linear on y (1)\n• and plot half grid on x and y (1)\n• bars correctly plotted within one\nsmall square (1)\n• colours or key (1)\n• Y axis labelled mean bubbles per\nminute /\nmean bubbles min ⁻¹ (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "",
+          "notes": "yellow few bubbles",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An answer that includes four of the\nfollowing:\n1. white most bubbles / highest rate (of\nphotosynthesis) / most\nphotosynthesis / eq (1)\n2. green fewest bubbles / lowest rate (of\nphotosynthesis) / least\nphotosynthesis / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "",
+          "notes": "Eg high rate with low\ntransmittance/ high\nabsorption or vice versa",
+          "marks": "",
+          "content": [
+            {
+              "text": "3. white lowest transmittance / most\nwhite light absorbed / least passes\nthrough / eq (1)\n4. green highest transmittance / least\ngreen light absorbed / most passes\nthrough / eq (1)\n5. no data for yellow / eq (1)\n6. correct relationship between rate of\nphotosynthesis and absorption /\ntransmittance / eq (1)\n7. no mention of temp control / CO₂\ncontrol / light intensity / eq (1)"
+            }
+          ]
+        }
+      ],
+      "4": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "ignore substance\nnot just movement\nalone\nallow water\nallow down a\nconcentration\ngradient\nallow high pressure\nto low pressure\nignore membrane",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that includes the following:\n• movement of particles / atoms/ molecules\n/ gas / liquid / eq (1)\n• from a high concentration to a lower\nconcentration / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "surface area of cube side 3 cm\n= 54 cm² (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "volume of cube 3 cm\n= 27 cm³ (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "allow ECF for value\nfrom b(i) and b(ii)\nfor 2 marks\nECF one mark for\ncorrect ratio not\ngive as X:1 eg 54:27",
+          "marks": "2",
+          "content": [
+            {
+              "text": "surface area to volume ratio of cube side 3.0\ncm = 2:1 (2)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iv",
+          "notes": "allow converse for 1,\n2, 3 and 6\nnot quicker diffusion\nif state that small\ncubes and unicellular\n/ small organisms\nhave high SA/ Vol\nratio scores mp1 and\nmp 3",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An answer that includes four of the\nfollowing:\n1. 1cm / smallest cube (most)\nsimilar to unicellular / eq (1)\n2. 1cm / smallest cube most\npenetrated / eq (1)\n3. 1cm/ small cube / small organism\nhas high(est) SA : vol ratio / eq\n(1)\n4. small / unicellular organisms have\nshort (diffusion) distance /\nsubstances can reach all of\norganism / eq (1)\n5. dye moves same distance /\ndiffusion at same rate into each\ncube /eq (1)\n6. larger organisms need transport\nsystems /circulation /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "v",
+          "notes": "mark in pairs\nignore amount\ndensity / concentration\nof agar (1)\nincreased density /\nconcentration slows\nmovement of particles/\ndiffusion (1)",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that includes two of the\nfollowing:\n• temperature (1)\n• increases / decreases (kinetic) energy /\nmovement of molecules / eq (1)\n• concentration of dye / eq (1)\n• increases gradient / rate of diffusion / eq\n(1)"
+            }
+          ]
+        }
+      ],
+      "5": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "prevents adhesion\n/collapse (1)\nelastin / elastic\nfibres (within\nalveoli) (1)",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the\nfollowing:\n• many alveoli / folding that increases\nsurface area / eq (1)\n• thin (walled) / walls one cell thick so\nshort distance eq (1)\n• close to capillary / surrounded by\ncapillaries / eq (1)\n• moist to allow gases to dissolve / eq (1)\n• capillary / blood flow maintains high\nconcentration gradient / eq (1)\n• for rapid diffusion /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "ignore gas exchange",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the\nfollowing:\n• fewer air sacs / alveoli (1)\n• larger air sac / space / eq (1)\n• less surface area / eq (1)\n• less diffusion / slower diffusion / less\noxygen enters blood /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "‘mucus covers cilia’\n‘cilia can’t remove\nmucus’ score mp 2\nand mp 3",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the\nfollowing:\n• inflamed /thicker walls / narrow / smaller\nlumen / air space /eq (1)\n• cilia damaged / covered / cannot function\n/eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "",
+          "marks": "",
+          "content": [
+            {
+              "text": "• mucus accumulates / bacteria not\nremoved / eq (1)\n• less air / oxygen enters lungs / eq (1)\n• shortage of breath / breathless / tired /\nharder to breathe / less energy / less\nrespiration / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "mark one\nconsequence and\nmatched explanation\nexplanation alone\nscores one eg\ncoronary heart\ndisease and\nlung cancer scores 1\nignore ref to cilia\nbronchitis etc as\ncovered in (b)",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the\nfollowing:\n• damage to arteries / blood vessel walls /\nhigh blood pressure / atherosclerosis /\natheroma/ increase blood clotting /eq (1)\n• coronary heart disease / heart attacks /\nstrokes / eq (1)\n• CO binds with haemoglobin / eq (1)\n• less oxygen transported around body /\nless respiration / eq (1)\n• contains carcinogens / tar / mutagens /\neq (1)\n• causes (lung/ mouth /throat) cancer / eq\n(1)"
+            }
+          ]
+        }
+      ],
+      "6": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "D (X)\nA is not correct as T is the bladder\nB is not correct as U is the sperm duct\nC is not correct as V is the testis"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "C (W)\nA is not correct as T is the bladder\nB is not correct as V is the testis\nD is not correct as X is the urethra"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "C (V)\nA is not correct as T is the bladder\nB is not correct as U is the sperm duct\nD is not correct as W is the penis"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iv",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "C (V)\nA is not correct as T is the bladder\nB is not correct as U is the sperm duct\nD is not correct as W is the penis"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "v",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that includes the following:\n• sperm production / sperm development / eq (1)\n• secondary sexual characteristics / muscle development / body\nhair / beard/ voice breaking / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "no effect mark\nwithout correct\nnamed hormone\nignore egg\nproduction\nallow increases LH /\ninhibits FSH(1)\nallow reduction in\nprogesterone\ntriggers\nmenstruation\n/inhibits FSH / LH\n(1)",
+          "marks": "4",
+          "content": [
+            {
+              "text": "A description that includes the following:\n• oestrogen (1)\n• repairs uterine lining / builds uterine\nlining / causes ovulation / release of egg\n/ eq (1)\n• progesterone (1)\n• maintains uterine lining / prevents\nmenstruation / eq (1)"
+            }
+          ]
+        }
+      ],
+      "7": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "allow jejunum",
+          "marks": "1",
+          "content": [
+            {
+              "text": "duodenum (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that includes the following:\n• increases / provides large surface area / eq (1)\n• for diffusion / absorption / active transport / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "ignore sugar",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the\nfollowing:\n• carbohydrates broken down / digested\nby enzymes / amylase / maltase / eq\n(1)\n• protein / broken down / digested by\nproteases / enzymes /eq (1)\n• diffuses into capillaries / eq (1)\n• glucose goes into / increases (in vein)/\neq (1)\n• amino acids go into / increases (in\nvein) / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that includes two of the following:\n• lacteal to absorb / transport / eq (1)\n• digested lipid / digested fat / fatty acids / glycerol / eq (1)\n• into the lymphatic system / lymph vessel / eq (1)"
+            }
+          ]
+        }
+      ],
+      "8": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A description that includes two of the following:\n• seed coat splits / testa splits / seed splits / sprouts / eq (1)\n• root grows / appears / radicle grows / appears / eq (1)\n• shoot grows / appears / plumule grows / appears / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "only B\ngerminates allow D\ngerminates slowly\nallow 4oC too cold\nfor enzymes",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes the following:\n• B germinates , A C D not / eq (1)\n• water for hydrolysis / digestion / break\ndown / enzyme activation / eq (1)\n• warm / optimum temperature for\nenzyme action / eq (1)\n• oxygen for respiration / eq (1)"
+            }
+          ]
+        }
+      ],
+      "9": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that includes the following:\n• (select) breed / mate animals with desired characteristics / eq\n(1)\n• mate offspring / next generation with highest / most desired\nfeature / eq (1)\n• repeat for many generations / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "4",
+          "content": [
+            {
+              "text": "A description that includes four of the following:\n• mean of all farms (generally) increases / eq (1)\n• farm X values fluctuate more / goes up and down / eq (1)\n• farm X falls 3 times / 2 drops (2004 to 2006) / all farms drop\nonce (in 2009)/ eq (1)\n• farm X (only) higher % increase than all farms in 2004 / eq (1)\n• farm X go below 0 or negative value (in 2008) / eq (1)\n• farm X has wider / bigger range / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes the following:\n• more wool / greater yield / more money / more profit /eq (1)"
+            }
+          ]
+        }
+      ],
+      "10": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• combustion / burning (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• A (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "",
+          "marks": "4",
+          "content": [
+            {
+              "text": "A description that includes four of the following:\n• as CO₂ is a greenhouse gas / increased greenhouse effect\n/eq (1)\n• global warming / increase in atmosphere temperature / eq\n(1)\n• flooding / sea levels rise / eq (1)\n• habitat destruction / ice caps melting / extinction of species /\nmigration / reduces biodiversity / change of ranges of\nspecies / pests move to new areas / eq (1)\n• more extreme weather / more storms / eq (1)\n• droughts / desertification/ forest fires / eq (1)\n• ocean acidification / coral reef damage / coral bleaching / eq\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "ignore algal bloom",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the\nfollowing:\n• more plant growth / eq (1)\n• eutrophication / as more nitrates /\nphosphates / minerals / nutrients / eq\n(1)\n• less photosynthesis / eq (1)\n• as less light / eq (1)\n• plants die / cannot respire / eq (1)\n• as less / no oxygen / eq (1)"
+            }
+          ]
+        }
+      ],
+      "11": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "gene is a section of DNA / length of DNA that codes for a specific\npolypeptide / protein and an allele is an alternative form of a\ngene / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "GG and Gg / homozygous dominant and heterozygous (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "allow other symbols\nnot X and Y but allow\nGY x gg\nallow full marks from\nPunnet square\ngametes must be\nclearly shown\nseparated or in circles\nor in Punnet square\nallow ecf for wrong\nparent genotypes\ngametes and offspring\nmark for\n2 max",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An answer that makes reference to the\nfollowing points:\n• parent genotypes Gg x gg (1)\n• correct gametes for parents G or g\nand g (1)\n• offspring genotypes Gg and gg (1)\n• offspring phenotypes gold and\ncream shown (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "ignore Gg\nallow mp 2 if crossed\nwith Gg\nif crossed with\ncream / gg allow all\noffspring are gold\nthe hamster is GG as\nalternative to mp 2",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes the\nfollowing:\n• cross with cream / gg / eq (1)\n• if any cream in offspring gold is\nheterozygous / Gg / eq /( 1)"
+            }
+          ]
+        }
+      ],
+      "12": [
+        {
+          "part": "",
+          "roman": "",
+          "notes": "not amount\nnot mass\nallow even if in oven\nallow even if in oven\nsame flour / same\nbatch of dough",
+          "marks": "6",
+          "content": [
+            {
+              "text": "An answer that makes reference to six of the\nfollowing points\n• C with salt and without or different\nsalt mass added / eq (1)\n• O use same yeast / species / type /\nstrain / volume / mass / eq (1)\n• R repeat (for each salt mass) / eq (1)\n• M1 measure height / size / volume of\nrise / dough (bread) / eq (1)\n• M2 after stated time period (one\nminute plus) / eq (1)\n• S1 same temperature (1)\n• S2 same mass flour / mass starch /\nsame dough / same mass of dough /\nvolume of water / eq (1)"
+            }
+          ]
+        }
+      ]
+    },
+    "totals": {
+      "1": 11,
+      "2": 9,
+      "3": 11,
+      "4": 12,
+      "5": 10,
+      "6": 10,
+      "7": 9,
+      "8": 6,
+      "9": 8,
+      "10": 10,
+      "11": 8,
+      "12": 6
+    }
+  },
+  "IGCSE_BIOLOGY_2026_MayJune_P2R_MS_1789837989049.pdf": {
+    "sha256": "96cbf4f262de1f187442f0afffd9e8cb83167c43174ee95673ded56ceb44194e",
+    "questions": {
+      "1": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• production of chlorophyll / chloroplasts / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "allow\nconverse\nnitrates can\nreact\nN₂ not in\nsolution /\n(relatively)\ninsoluble\nN₂ cannot be\nabsorbed /\ntaken in",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the following:\n• nitrogen gas is unreactive / inert / eq (1)\n• nitrates are in solution / dissolve / eq (1)\n• nitrates can be absorbed / taken in /\nassimilated /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the following:\n• enzymes are affected by pH / denatured / have optimum pH/\neq (1)\n• changes shape of active site / eq (1)\n• enzyme can no longer bind with substrate /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "",
+          "notes": "",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that includes three of the following:\n1. use same size / species / type / age of plant / eq (1)\n2. one complete solution without iron and one with complete\nsolution / eq (1)\n3. same / control light / carbon dioxide / time / temperature / eq\n(1)\n4. (stated measurement) height / number of leaves / leaf size /\nleaf colour / mass /eq (1)\n5. repeat /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "e",
+          "roman": "",
+          "notes": "allow converse\nfor hydroponic",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that includes three of the\nfollowing:\n• (more oxygen so) more respiration / eq (1)\n• (more) active transport / eq (1)\n• (more absorption of) nitrates / eq (1)\n• used for amino acids / eq (1)\n• proteins / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "f",
+          "roman": "i",
+          "notes": "allow one for\n100-30 or 70 or\n0.7 or 70/100 or\n0.3 x 14.2 or\n30/100 x 14.2",
+          "marks": "2",
+          "content": [
+            {
+              "text": "calculation steps not marking points\n30% less than hydroponics\n(14.2÷ 100) × 70\n= 9.9 or 9.94 (2)"
+            }
+          ]
+        },
+        {
+          "part": "f",
+          "roman": "ii",
+          "notes": "allow converse\nfor hydroponic",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that includes three of the\nfollowing:\n• less water in mist than in solution / plants\nsurrounded by mist / eq (1)\n• more water vapour / humidity in air /eq (1)\n• lower concentration gradient / lower water\npotential gradient / eq (1)\n• less diffusion / transpiration / evaporation\n(from plant) eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "g",
+          "roman": "",
+          "notes": "allow other crops\ndon’t sell for\nenough\nnot just system\nis expensive to\nset up",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• only certain crops make a profit / for high\nvalue crops / high demand crops / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "h",
+          "roman": "",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• can grow more in same space / many plants in same space /\nuses less space / small(er) area / less land / easier to harvest\n/ eq (1)"
+            }
+          ]
+        }
+      ],
+      "2": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "credit only\ntwo\nadvantages\nOnly award\nexplanation if\nadvantage is\npresent\nallow converse\nfor white bread\nignore become\nfat\nless (risk of)\nhigh blood\nglucose",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the following:\nwholemeal bread contains:\n1. less energy / fewer kJ / eq (1)\n2. less weight gain / less obesity / less energy\nstored as fat/ eq (1)\n3. more protein / eq (1)\n4. growth and repair / eq (1)\n5. more fat / eq (1)\n6. stored energy / insulation / eq (1)\n7. less starch / less carbohydrates / eq (1)\n8. less weight gain / less obesity / less risk of\ndiabetes /eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "one mark for 5.7\nand 10.184\nallow for 2\nmarks 78.7 /\n76.67 etc and\n78.6 recurring",
+          "marks": "2",
+          "content": [
+            {
+              "text": "calculation steps not marking points\nfibre in 6 slices of white bread = 6 × (38÷100) ×\n2.5\n= 5.7\nfibre in 4 slices of wholemeal bread = 4 ×\n(38÷100) × 6.7\n= 10.184\n% change ((10.184-5.7) ÷ 5.7) × 100\n= 79 (2)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "ignore\ndigestion",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• aids peristalsis/ egestion / prevents\nconstipation / reduces risk of bowel cancer\n/ eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "i",
+          "notes": "one mark for\n×50 or ×11",
+          "marks": "2",
+          "content": [
+            {
+              "text": "calculation steps not marking points\n50 × 4.2 ×11 =\n2310 J (2)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "ii",
+          "notes": "allow TE from 2ci\nallow 2 marks\nfor answer from\n2ci\n÷ 20\nallow 2 marks\nfor 100 or 120 or\n116 (sig figs are\n1)\nallow 1 mark for\nx 50 or ÷1000\nor x 0.05\nor ÷ 20",
+          "marks": "2",
+          "content": [
+            {
+              "text": "calculation steps not marking points\n2310J = 2.31kJ for 2 g\nfor 1g = 2.31 x 0.5 = 1.155 kJ\n100g contains 1.155 x 100=\n115.5kJ (2)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "iii",
+          "notes": "",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that includes three of the following:\n1. not completely burned / not in oxygen / some energy left in\nbread / eq (1)\n2. energy / heat lost to / absorbed by surroundings / air / during\ntransfer /eq (1)\n3. energy lost as light / eq (1)\n4. energy lost as bread goes out / during relighting / eq (1)\n5. energy / heat lost from boiling tube / heat lost from boiling\ntube as no lid / heat lost as tube not insulated / used to heat\nboiling tube (glass) / eq (1)"
+            }
+          ]
+        }
+      ],
+      "3": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "D (T)\nA is not correct as P is a nucleus\nB is not correct as Q are chloroplasts\nC is not correct as R is a vacuole"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "C (R)\nA is not correct as P is a nucleus\nB is not correct as Q are chloroplasts\nD is not correct as T is a cell wall"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "A (Q)\nB is not correct as R is the vacuole\nC is not correct as S is the cytoplasm\nD is not correct as T is the cell wall"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the following:\nbright sunlight\n• open / wider / eq (1)\n• guard cells turgid /eq (1)\n• to allow carbon dioxide in / for photosynthesis /eq (1)\ndarkness\n• closed / narrower / eq (1)\n• guard cells flaccid /eq (1)\n• prevent water loss / no need to absorb carbon dioxide / no\nphotosynthesis / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "not just\nchange light\nintensity must\nstate how",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that includes three of the following:\n• use same size / species / type of plant /\nleaves of same plant / eq (1)\n• one with bright light and one with low light /\nrange of light intensities / light and dark / eq\n(1)\n• use hydrogen-carbonate indicator / eq (1)\n• orange / yellow with high carbon dioxide /\nmore released / eq (1)\n• purple / red / magenta with low carbon\ndioxide / more absorbed / eq (1)"
+            }
+          ]
+        }
+      ],
+      "4": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "only credit two\nconditions\none mark for\ncondition\none for\nexplanation\n/reason\nno credit for\nexplanation\nwithout\ncondition",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the following:\n• moisture / water / eq (1)\n• hydrolysis / digest / break down / mobilise\nenzymes / activate enzymes /chemical\nreactions/ eq (1)\n• oxygen / eq (1)\n• respiration /eq (1)\n• warmth / suitable /optimum temperature /\neq (1)\n• for increased enzyme action / is enzymes\n(optimum)/ eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "ignore glucose",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the following:\n• stored food / stored carbohydrates / fats /\n/energy store /eq (1)\n• digested by enzymes / eq (1)\n• used in respiration / release energy /eq (1)\n• allow grows upwards / negatively gravitropic\n/ eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "ignore cuttings\nmicropropagation\netc\ncorms / bulbs /\nrhizomes / tubers",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that includes three of the\nfollowing:\n• mitosis (1)\n• runners / eq (1)\n• break off / form new plant / separate\norganism / eq (1)\n• clone / genetically identical / identical\nDNA /eq (1)"
+            }
+          ]
+        }
+      ],
+      "5": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "comment on mass\ngrown and reason\n/ explanation for\neach mark\nif no reason allow\nmax one mark\nfor any correct\nstatement about\nmore or less\nfarmed\nallow converse\nallow freshwater\ncrustacea all\nfarmed as…",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that includes five of the following:\n1. algae grown more in farming as easy to\ncultivate / grow / farm / eq (1)\n2. algae grown more in farming as used for\nfood source / producer / carry out\nphotosynthesis / start of food chain /eq\n(1)\n3. molluscs /oysters / mussels / clams more\ngrown in farming as easy to control or\ngrow / filter feed/ clean water/ less\npredation / eq (1)\n4. molluscs /oysters / mussels / clams more\ngrown in farming as easy to harvest /\nmove little / grow on rock / grow on rope\n/ eq (1)\n5. crustacea / crabs / prawns / shrimp\nmainly farmed as easy to harvest / fast\ngrowing / can live in high density / eq (1)\n6. saltwater finfish / mackerel / tuna/ cod\nmost fished as (still) easy to catch /\nabundant / high population /eq (1)\n7. saltwater finfish mackerel / tuna / cod few\nfarmed / farming not worked / as live in\nthe sea / travel about more / need more\nspace / hard to keep in non-flowing water\n/ waste builds up / eq (1)\n8. freshwater finfish / Tilapia / perch / trout\nmost farmed / as can live in ponds / live"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "",
+          "content": [
+            {
+              "text": "in rivers / keep in ponds / still water /\nshallow water / nets / eq (1)\n9. data for one year only / not repeated / eq\n(1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "only credit two\nmethods\none for method\none for matching\nexplanation\nno credit for\nexplanation alone",
+          "marks": "4",
+          "content": [
+            {
+              "text": "An explanation that includes four of the\nfollowing:\n1. pesticide / fungicide / vaccinate /\nantibiotics /eq (1)\n2. kills pathogen / prevents disease /eq (1)\n3. separate / remove diseased fish /eq (1)\n4. prevents disease / infection spread / eq\n(1)\n5. selectively breeding fish / use Genetic\nModification /GM / use Genetic\nengineering / eq (1)\n6. bred for high growth rate / disease\nresistance / lack of aggression / eq (1)\n7. reduce stock density / separate species /\nsizes / use nets / eq (1)\n8. prevent inter and intra specific predation /\ncompetition / eq (1)\n9. feed small amounts of (high protein) food\nregularly / eq (1)\n10. prevent algal growth / eutrophication /\nprevent decomposition / bacteria / oxygen\ndepletion / eq (1)\n11.remove excess food / waste / faeces /\neq(1)\n12.prevent algal growth / eutrophication\n/prevent decomposition / bacteria /\noxygen depletion / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that includes:\n• more profits / less risk to life / reduction\nin wild fish / harder to catch wild fish /\noverfishing (of wild fish) / increased\ndemand / increased human population /\neq (1)"
+            }
+          ]
+        }
+      ],
+      "6": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "nitrogen cycle / N cycle (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "A = denitrification / denitrifying / eq (1)\nB = nitrification / nitrifying / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that includes two of the following:\n• reduces oxygen (1)\n• less carbon dioxide removed / increases carbon dioxide / eq\n(1)\n• as fewer trees / eq (1)\n• less photosynthesis / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "4",
+          "content": [
+            {
+              "text": "A description that includes four of the following:\n1. less transpiration (1)\n2. less water in the atmosphere / eq (1)\n3. less clouds / less rainfall / eq (1)\n4. soil erosion / soil washed away / eq (1)\n5. soil becomes infertile / lacks minerals / leaching of minerals /\neq (1)\n6. flooding / eq (1)"
+            }
+          ]
+        }
+      ]
+    },
+    "totals": {
+      "1": 18,
+      "2": 14,
+      "3": 10,
+      "4": 9,
+      "5": 10,
+      "6": 9
+    }
+  },
+  "IGCSE_BIOLOGY_2026_MayJune_P2_MS_1789837987379.pdf": {
+    "sha256": "2cc06ed6d0f2ac060e16492d5f37e7baa0b316594d4957c3690aa7ca095eacc7",
+    "questions": {
+      "1": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nD (restriction)\nA is not correct as ligase does not cut DNA\nB is not correct as lipase does not cut DNA\nC is not correct as maltase does not cut DNA"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Do not\naccept\nnumbers\nunqualified\nexcept 450",
+          "marks": "2",
+          "content": [
+            {
+              "text": "• 300 (2)\nOne mark for any of:\n20(%) G\nOR\n20(%) C\nOR\n60(%) A and T\nOR\n40(%) G and C\nOR\n450 (in working)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "Reject mRNA\nanticodon\nbinds with\ntRNA codon\nIgnore\npolypeptide\nIgnore\nprotein",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to three of\nthe following points:\n1. (translation occurs at/ mRNA binds to)\nribosome / eq (1)\n2. tRNA brings amino acids / eq (1)\n3. (tRNA) anticodon binds with (mRNA)\ncodon / eq (1)\n4. amino acids are joined together / chain\nof amino acids forms / peptide bonds\nformed / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "Ignore bind\nto wrong\narea\nunqualified",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that makes reference to the\nfollowing point:\n• other areas (of genome/ DNA) may have\nsimilar (sequences) / other areas may\nhave same (sequences) / eq (1)\n• guide RNA is complementary to other\nareas / DNA / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "i",
+          "notes": "Reject both\ngenes are\nexpressed\nAccept both\nversions of a\ngene\nexpressed",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• both (alleles) affect the phenotype /\nboth (alleles) are expressed / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "ii",
+          "notes": "Accept low\nS.A\nAccept low\nS.A.: Vol ratio\nAccept less\noxygen\ntransport\nAccept more\nanaerobic\nrespiration\nAccept fewer\nlymphocytes\ncan reach\ntissues /\nfewer\nphagocytes\ncan reach\ntissues",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to three\nof the following points:\n1. as red blood cells have lower surface area /\neq (1)\n2. less oxygen (can reach tissues) / eq (1)\n3. less respiration / eq (1)\n4. fewer white blood cells can reach tissues /\nfewer antibodies can reach tissues / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "iii",
+          "notes": "Accept\nconverse for\nmp2, mp3,\nmp4\nAccept\ncarriers\nsurvive\nNote pass\non allele to\noffspring =\nmp3 and\nmp4\nAccept\npass on gene\nAccept pass",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to three\nof the following points:\n1. (genetic) variation (existed in\npopulation) / eq (1)\n2. heterozygotes survive / people with\n(mild) sickle cell allele survive (malaria)\n/ eq (1)\n3. reproduce / have offspring / eq (1)\n4. pass on allele / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "d",
+          "roman": "iii",
+          "notes": "on mutation",
+          "marks": "",
+          "content": [
+            {
+              "text": "5. high chance of two heterozygotes\nhaving child with two sickle cell alleles /\neq (1)"
+            }
+          ]
+        },
+        {
+          "part": "e",
+          "roman": "",
+          "notes": "Accept\nconverse for\nbody cells\nAccept stem,\ncells are not\ndifferentiated\n/ are not\nspecialised\nAccept\nreplicate\nReject\nmeiosis",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to the\nfollowing points:\n• stem cells are undifferentiated / stem\ncells can differentiate / stem cells can\nspecialise / stem cells are unspecialised\n/ eq (1)\n• can multiply / can divide / can undergo\nmitosis / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "f",
+          "roman": "",
+          "notes": "Accept not\nmoral\nAccept it is a\nform of\neugenics\nIgnore\ninhumane\nAccept\nchanges\ninherited /\npassed on\nAccept\nfuture",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that makes reference to one of\nthe following points:\n1. ethical issues / may be against religion\n/ eq (1)\n2. could have side effects / unknown\neffects / may cause mutations / eq (1)\n3. would change whole organisms / would\nchange future generations /eq (1)\n4. issues of not being able to give consent\n/ against human rights / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "f",
+          "roman": "",
+          "notes": "generations\ncannot\nconsent",
+          "marks": "",
+          "content": []
+        }
+      ],
+      "2": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "Accept fewer\n/ no trees to\nabsorb\nminerals\nAccept\nnutrients for\nminerals\nAccept roots\nhold soil\ntogether\nAccept less\nabsorption of\nwater by\ntrees / roots\nAccept\nless\ninfiltration /\nless\ninterception\n(of rain)\nIgnore runoff",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to two\nof the following points:\n1. fewer minerals absorbed (by tree roots)\n/ eq (1)\n2. soil erosion / roots do not hold soil / soil\nerodes into water bodies / soil enters\nwater / eq (1)\n3. less transpiration / less evaporation\nfrom leaves / less water taken up by\ntrees / eq (1)\n4. less drainage through soil / reduced\n(soil) permeability / less absorption by\nsoil / ground / eq (1)\n5. more decomposition (of dead trees) /\nmore decay / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Accept\nhabitat /\necosystem /\nregion for\narea\nAccept every\norganism for\nall organisms\nAccept all\nthe\npopulations in",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• all (the) organisms (of all species) in an\narea / all (the) organisms in an area /\nall species in an area / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "an area\nAccept all\nthe biotic\n(elements) of\nan area\nReject all the\nbiotic and\nabiotic\n(elements) of\nan area",
+          "marks": "",
+          "content": []
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Reject\nquadrant\nonce\nNote\nquadrats = 2\nmarks",
+          "marks": "4",
+          "content": [
+            {
+              "text": "A description that makes reference to four of\nthe following points:\n1. use deforested area and forested area / eq\n(1)\n2. quadrat (1)\n3. use random (locations) / eq (1)\n4. multiple quadrats / coordinates / repeat /\neq (1)\n5. count number of (different) species / how\nmany different species / count number of\neach species / eq (1)\n6. same time of year / same day / same\nweather / same time / seasons / eq (1)"
+            }
+          ]
+        }
+      ],
+      "3": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "Reject\nprevent\nevaporation\nfrom plant",
+          "marks": "1",
+          "content": [
+            {
+              "text": "An answer that makes reference to one of the\nfollowing points:\n• prevent evaporation / prevent water loss /\neq (1)\n• so water loss is from plant (only) / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Ignore heat\nIgnore light\n/ distance of\nlamp\nIgnore\ncarbon\ndioxide",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to two of the\nfollowing points:\n• wind (speed) / air movements / eq (1)\n• humidity / moisture / eq (1)\n• temperature / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "Ignore\nnegative\nsymbol\nAccept 112 -\n120",
+          "marks": "3",
+          "content": [
+            {
+              "text": "0.033 (3)\nAllow\nTwo marks for 0.03333…… OR 0.03\nOne mark only for:\n÷240\nOR\n120-112 in working\nOR\n8 (g) in working"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "Accept mass\ndecreases\nfaster in high\nlight / mass\ndecreases\nslower in low\nlight\nAccept\nevaporation /\nwater loss for\ntranspiration",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to\nthree of the following points:\n1. mass decreases more with high(er)\nlight intensity / less fall in mass with (mass)/((1))\nlow(er) light intensity / eq (1)\n2. transpiration is high(er) in high light\nintensity / transpiration is low(er) in\nlow light intensity / eq (1)\n3. stomata are open in high light /\nstomata are closed in low light / eq (1)\n4. guard cells (open stomata) / guard\ncells (close stomata) / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept change\nin mass is less\nthan change in\nvolume\nAccept\ndecrease in\nmass is less\nthan decrease\nin volume\nAccept 27\n(lost) and 30\n(taken up)\nAccept 3\n(cm³) remains\nin plants\nAccept plant",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to two\nof the following points:\n1. more water taken up than lost / not all\nwater is lost / (some) water stays in\nplant / (some) water not transpired /\neq (1)\n2. (water) maintains turgidity / prevents"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "shoot may\nhave been\ndehydrated",
+          "marks": "",
+          "content": [
+            {
+              "text": "wilting / supports plant / (water) in\nxylem / absorbed into cells / as turgor\n/ eq (1)\n3. (as some water) used in\nphotosynthesis / metabolic processes /\nused in chemical reactions / eq (1)"
+            }
+          ]
+        }
+      ],
+      "4": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nB (they have nuclei in their cells)\nA is not the answer as some eukaryotes are single celled\nC is not the answer as some eukaryotes do not have\nchloroplasts\nD is not the answer as eukaryotes do not have a protein\ncoat"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nA (carbon dioxide)\nB is not the answer as nitrate is not excreted by plants\nC is not the answer as oxygen is not excreted by animals\nD is not the answer as urea is not excreted by plants"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nD (proximal convoluted tubule)\nA is not the answer as glucose is not absorbed in the\nBowman’s capsule\nB is not the answer as glucose is not absorbed in the\ncollecting duct\nC is not the answer as glucose is not absorbed in the loop\nof Henle"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "The only correct answer is\nD (oxygen and urea)\nA is not the answer as carbon dioxide is higher in the renal\nvein\nB is not the answer as carbon dioxide is higher in the renal\nvein\nC is not the answer as urea also has a higher concentration\nin the renal artery"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept ADH\nmakes collecting\nduct more\npermeable\nAccept ADH\ncauses more\nwater to be\nreabsorbed /\nmore water to be\nabsorbed into the\nblood\nAccept with ADH\nthere would be a\nlow(er) urine\nvolume\nAccept urine\nmore dilute",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An explanation that makes reference to\nthree of the following points:\n1. collecting duct less permeable / eq (1)\n2. less water reabsorbed / less water\nabsorbed into blood / eq (1)\n3. by osmosis (1)\n4. so high volume of urine / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "c",
+          "roman": "",
+          "notes": "Accept salt for\nsodium chloride\nAccept not all\nsodium chloride\nremoved as some\npresent in fluid /\nsame as in\nhealthy blood\nAccept glucose is\nneeded for\nenergy\nAccept all urea",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that makes reference to five of\nthe following points:\n1. (sodium chloride / urea / glucose move\nby) diffusion / eq (1)\n2. (excess) sodium chloride is removed as\nthere is a (concentration) gradient /\nmore in blood than fluid / eq (1)\n3. glucose is not removed as more\nglucose in fluid than blood / some\nglucose passes into patient as more\nglucose in fluid than blood / eq (1)\n4. glucose is needed for respiration / eq\n(1)\n5. (most) urea removed as there is none\nin fluid / (most) urea removed as there\nis a gradient / more in blood than fluid\n/ eq (1)\n6. urea is a toxin / urea is excreted / urea\nis not needed in body / eq (1)\n7. glucose reduces water potential / eq\n(1)\n8. (excess) water will leave by osmosis\n(1)\n9. protein is too large to pass through\nmembrane / eq (1)\n10. membrane has large surface area / eq\n(1)\n11. fluid refreshed to maintain gradient /\neq (1)"
+            }
+          ]
+        }
+      ],
+      "5": [
+        {
+          "part": "a",
+          "roman": "",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "• P: sensory (neurone)\n• Q: relay / inter / bipolar / multipolar\n/ association / coordinator\n(neurone)\n• R: motor (neurone) (2)\nTwo marks if all three correct\nAllow one mark for any one correct\nneurone"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "i",
+          "notes": "",
+          "marks": "2",
+          "content": [
+            {
+              "text": "• 16 / 15.7 / 15.75 / 15.8 (1)\n• 15 (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "ii",
+          "notes": "",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• 0.12 (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept converse\nIgnore sight is\nfaster unqualified\nIgnore faster\ntime\nIgnore faster\nreflex (arc)\nAccept converse\nfor touch",
+          "marks": "3",
+          "content": [
+            {
+              "text": "An answer that makes reference to three\nof the following points:\n1. sight takes less time / ruler falls less\ndistance with sight / ruler is caught\nmore quickly with sight / sight is a\nfaster reaction / sight is a faster\nresponse / eq (1)\n2. distance (of pathway / impulse travels)\nfor sight is short(er) / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iii",
+          "notes": "Accept converse\nAccept impulses\n(may) travel at\nsame speeds /\nsight impulse may\nnot be faster / eq\nReject impulse\nspeed is quicker\nfor sight\ne.g. 875 cm/s for\nsight\nAccept number of\nneurones may\ndiffer",
+          "marks": "",
+          "content": [
+            {
+              "text": "3. (overall) impulse is faster for touch /\nimpulse speed was not calculated /\nneed to calculate impulse speed / no\ninformation given on actual impulse\nspeed / eq (1)\n4. credit attempt at calculation of impulse\nspeed (1)\n5. idea that synapse numbers may differ\n/ (number of) synapses may affect\nspeed / eq (1)\n6. neurotransmitters (diffuse) across\nsynapses / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "iv",
+          "notes": "Accept few\noutliers / few\nanomalies",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An answer that makes reference to two of\nthe following points:\n1. (reliable because) data has been\nrepeated / done eight times / eq (1)\n2. (reliable because) there are no\noutliers / no anomalies / all values\nare similar / eq (1)\n3. (not reliable as) only one person\nwas used / need to use more people\n/ eq (1)"
+            }
+          ]
+        }
+      ],
+      "6": [
+        {
+          "part": "a",
+          "roman": "i",
+          "notes": "Reject\nsecond(ary)\nconsumer\nReject 2°\nReject secondary\nIgnore herbivore",
+          "marks": "1",
+          "content": [
+            {
+              "text": "• primary consumer / 1° consumer /\nsecond (trophic level) / 2 / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "ii",
+          "notes": "Accept ammonia\nthroughout\nAccept decay /\ndecomposition\nproduces\nammonium\nAccept\nammonium into\nnitrate for one\nmark if no mp2 or\n3\nReject\ndenitrifying /\nnitrogen fixing",
+          "marks": "3",
+          "content": [
+            {
+              "text": "A description that makes reference to\nthree of the following points:\n1. decomposer (bacteria) produce\nammonium (from waste) /\nammonification occurs / eq (1)\n2. ammonium is converted into nitrite\n(1)\n3. nitrite is converted to nitrate (1)\n4. nitrifying bacteria / nitrification (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iii",
+          "notes": "Accept\nchlorophyll\nAccept\nchlorophyll for\nphotosynthesis",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to\nthe following points:\n• (to make) amino acids (1)\n• (amino acids to make) proteins /\nenzymes (1)"
+            }
+          ]
+        },
+        {
+          "part": "a",
+          "roman": "iv",
+          "notes": "Ignore carbon\ndioxide\nIgnore\nphotosynthesis\nAccept oxygen\nand carbon\ndioxide for\nrespiration and\nphotosynthesis\nfor two marks\nBUT\noxygen and\ncarbon dioxide\nfor\nphotosynthesis\nand respiration is\nonly one mark",
+          "marks": "2",
+          "content": [
+            {
+              "text": "An explanation that makes reference to\ntwo of the following points:\n• provides oxygen / eq (1)\n• for respiration / eq (1)\n• (releasing) energy for active\ntransport (of minerals) (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "Accept converse\nfor conventional\nfor all mps\nAccept old food\nis removed /\nwaste is recycled\nIgnore\npesticides cause\neutrophication\nIgnore",
+          "marks": "5",
+          "content": [
+            {
+              "text": "An answer that makes reference to five of\nthe following points:\n1. less waste / less faeces / waste is\nconverted into fertiliser / eq (1)\n2. less eutrophication / fewer nutrients /\nfewer minerals / fewer nitrates (in\nwater) / eq (1)\n3. fewer algal blooms / eq (1)\n4. less decomposition / decay / eq (1)\n5. more oxygen (in water) / eq (1)\n6. less respiration by bacteria / fish can\nrespire / fish do not suffocate / eq (1)"
+            }
+          ]
+        },
+        {
+          "part": "b",
+          "roman": "",
+          "notes": "organisms die\nless\nAccept fewer\nwild fish killed for\nfood\nAccept wild fish\npopulations\nincrease\nAccept fewer\norganisms\nharmed by\npesticides\nIgnore bacterial\nresistance\nIgnore pesticide\nrelease\nunqualified\nAccept idea of\nfewer organisms\ndamaged by nets\n/ eq",
+          "marks": "",
+          "content": [
+            {
+              "text": "7. fish do not escape / eq (1)\n8. plant based food is more sustainable /\nwild fish stocks remain higher / fewer\n(wild) fish harvested / plant food\nremoves carbon (from atmosphere) /\nless overfishing / eq (1)\n9. less bioaccumulation of pesticides /\nfewer wild species killed by pesticides /\nless chance of pests becoming\nresistant / eq (1)\n10. less disease (spread) / eq (1)\n11. wild fish not damaged by nets / nets\ndo not damage habitats / eq (1)\n12. food webs / food chains not damaged\n/ eq (1)"
+            }
+          ]
+        }
+      ]
+    },
+    "totals": {
+      "1": 17,
+      "2": 7,
+      "3": 11,
+      "4": 12,
+      "5": 10,
+      "6": 13
+    }
+  }
+}

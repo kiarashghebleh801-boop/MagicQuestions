@@ -3,7 +3,7 @@
 import JSZip from "jszip";
 import type { Question } from "./questions";
 import { supabase } from "./supabase";
-import { FORMATTED_BUCKET, getFormattedSource } from "./sourceDocs";
+import { FORMATTED_BUCKET, getFormattedSourceBucket, getFormattedSource } from "./sourceDocs";
 
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml";
@@ -55,10 +55,11 @@ function getBody(doc: XMLDocument): Element {
   return body;
 }
 
-async function loadSource(filename: string): Promise<LoadedDoc> {
-  if (!sourceCache.has(filename)) {
-    sourceCache.set(filename, (async () => {
-      const { data, error } = await supabase.storage.from(FORMATTED_BUCKET).download(filename);
+async function loadSource(filename: string, bucket = FORMATTED_BUCKET): Promise<LoadedDoc> {
+  const cacheKey = `${bucket}:${filename}`;
+  if (!sourceCache.has(cacheKey)) {
+    sourceCache.set(cacheKey, (async () => {
+      const { data, error } = await supabase.storage.from(bucket).download(filename);
       if (error || !data) throw new Error(`Could not download ${filename}: ${error?.message || "unknown error"}`);
       const zip = await JSZip.loadAsync(await data.arrayBuffer());
       const documentFile = zip.file("word/document.xml");
@@ -71,7 +72,7 @@ async function loadSource(filename: string): Promise<LoadedDoc> {
       return { filename, zip, documentXmlText, documentXml: parseXml(documentXmlText), relsXmlText, relsXml: parseXml(relsXmlText), contentTypesText, contentTypesXml: parseXml(contentTypesText) };
     })());
   }
-  return sourceCache.get(filename)!;
+  return sourceCache.get(cacheKey)!;
 }
 
 function bodyBounds(xml: string) {
@@ -569,11 +570,11 @@ function improveChemistryPageLayout(xml: string): string {
 function selectQuestionParts(xml: string, selectedParts: string[] | undefined, marks: number): string {
   if (!selectedParts?.length) return xml;
   const boundaries = partStarts(xml, selectedParts);
-  if (!boundaries.length) throw new Error("Could not locate Chemistry sub-question labels in the formatted Word source.");
+  if (!boundaries.length) throw new Error("Could not locate science sub-question labels in the formatted Word source.");
   const wanted = new Set(selectedParts.map(p => p.toLowerCase()));
   const available = new Set(boundaries.map(b => b.part));
   const missing = selectedParts.filter(p => !available.has(p.toLowerCase()));
-  if (missing.length) throw new Error(`Could not isolate Chemistry part(s) ${missing.map(p => `(${p})`).join(", ")}. This source appears to store those parts as an unsupported image layout.`);
+  if (missing.length) throw new Error(`Could not isolate science part(s) ${missing.map(p => `(${p})`).join(", ")}. This source appears to store those parts as an unsupported image layout.`);
 
   const preamble = xml.slice(0, boundaries[0].start);
   const chunks: string[] = [];
@@ -891,7 +892,7 @@ export async function exportPaperToWord(questions: Question[], options: ExportOp
   const subject = /^Edexcel IGCSE\b/i.test(rawSubject) ? rawSubject : `Edexcel IGCSE ${rawSubject}`;
   const filenames = exportQuestions.map(q => getFormattedSource(q)!);
   const uniqueFilenames = Array.from(new Set(filenames));
-  if (uniqueFilenames.length === 1) { await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0]), cover, subject); return; }
-  const sources = await Promise.all(filenames.map(loadSource));
+  if (uniqueFilenames.length === 1) { await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0], getFormattedSourceBucket(exportQuestions[0])), cover, subject); return; }
+  const sources = await Promise.all(filenames.map((filename, index) => loadSource(filename, getFormattedSourceBucket(exportQuestions[index]))));
   await exportAcrossSources(exportQuestions, sources, cover, subject);
 }

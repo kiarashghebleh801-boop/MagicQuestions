@@ -3,6 +3,7 @@ import { biologyQuestions } from "./biologyQuestions";
 
 export const FORMATTED_BUCKET = "examwizard-papers";
 export const PHYSICS_BUCKET = "physics-papers";
+export const BIOLOGY_BUCKET = "bio papers";
 
 const sourceByPaper: Record<string, string> = {
   "2012|January|3H": "January_2012_Maths_Paper_3H_ExamWizard_Style.docx",
@@ -71,6 +72,7 @@ export function getFormattedSource(q: Question): string | null {
 }
 
 export function getFormattedSourceBucket(q: Question): string {
+  if (/^[12]BR?$/.test(q.paper)) return BIOLOGY_BUCKET;
   return /P(?:R)?$/i.test(q.paper) && !/C(?:R)?$/i.test(q.paper) ? PHYSICS_BUCKET : FORMATTED_BUCKET;
 }
 

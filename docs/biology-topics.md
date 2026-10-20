@@ -5,13 +5,13 @@ parts, reorder/remove/swap, Word export, mark scheme export, paper review/histor
 and an account-scoped device-local tracker. Only the 19 main topic titles are
 shown. `biologySpec.ts` retains the lesson names for classifying imports.
 
-Question papers have not yet been uploaded to the site's formatted paper storage.
-The bank deliberately starts empty, while the tracker works immediately. No
-question records or available exports are inferred from mark scheme files alone.
+The four June 2026 papers are indexed: 1B, 1BR, 2B and 2BR, with 34 questions
+and 360 marks. Formatted sources are in `bio papers` and matching PDFs are in
+`bio markschemes`. All question and main-part marks match the marking tables.
 
 When importing:
 
-1. Upload the formatted DOCX to the existing `examwizard-papers` bucket. Preserve
+1. Upload the formatted DOCX to the existing `bio papers` bucket. Preserve
    the established separate `Q1.` markers, figures, answer lines and mark totals.
 2. Add verified question records to `biologyQuestions.ts`; `sourceFile` must match
    the exact uploaded filename. Source preview and Word export resolve this field.

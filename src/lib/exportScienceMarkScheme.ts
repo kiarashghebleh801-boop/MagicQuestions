@@ -172,7 +172,8 @@ export async function createScienceMarkSchemeDocument<Q extends MarkSchemeQuesti
         ?? samePart.reduce((sum, row) => sum + row.marks.split(/\s+/).reduce((n, value) => n + Number(value || 0), 0), 0);
       // The 2022 source repeats a stray 1 beside Q5(a)(i); its printed total is 11.
       const corrected = config.subject === "Chemistry" && question.year === 2022 && question.paper === "1C" && question.questionNumber === 5 && entry.part === "a" ? 6 : marks;
-      rows.push(new TableRow({ children: [cell(paragraphs(entry.displayPart), 10), cell(answer, 52), cell(paragraphs(entry.notes), 28), cell(paragraphs(seen.has(entry.part) ? "" : String(corrected)), 10)] }));
+      const partLabel = config.subject === "Biology" && entry.roman ? `${entry.displayPart} (${entry.roman})` : entry.displayPart;
+      rows.push(new TableRow({ children: [cell(paragraphs(partLabel), 10), cell(answer, 52), cell(paragraphs(entry.notes), 28), cell(paragraphs(seen.has(entry.part) ? "" : String(corrected)), 10)] }));
       seen.add(entry.part);
     }
     children.push(new Table({ width: { size: 10000, type: WidthType.DXA }, columnWidths: [1000, 5200, 2800, 1000], layout: TableLayoutType.FIXED, rows }));
