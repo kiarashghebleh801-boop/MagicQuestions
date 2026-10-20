@@ -66,9 +66,7 @@ export default function ChemistryPage() {
   }, [router]);
 
   useEffect(() => {
-    const missingMarkSchemes = Array.from(new Set(paper.filter(q => !getChemistryMarkSchemeSource(q)).map(q => `${q.session} ${q.year} Paper ${q.paper}`)));
-
-  if (!ready) return;
+    if (!ready) return;
     window.localStorage.setItem(trackerKey, JSON.stringify(completedTopics));
   }, [completedTopics, ready, trackerKey]);
 
