@@ -114,7 +114,8 @@ export const chemistryPartRulesArchive = {
     { part:"b", marks:3, specTags:["4c"] },
     { part:"c", marks:2, specTags:["4c"] },
     { part:"d", marks:2, specTags:["4c","4d"] },
-    { part:"e", marks:6, specTags:["4a","4c","4d"] },
+    { part:"e", marks:3, specTags:["4a","4c","4d"] },
+    { part:"f", marks:3, specTags:["1e"] },
   ],
   "chem-2023-nov-1C-6": [
     { part:"a", marks:1, specTags:["2h"] },

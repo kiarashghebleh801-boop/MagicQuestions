@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { chemistrySections } from "@/lib/chemistrySpec";
 import { chemistryQuestions, type ChemistryQuestion } from "@/lib/chemistryQuestions";
 import { specialiseChemistryQuestion, type ChemistryQuestionSelection } from "@/lib/chemistryParts";
+import { getChemistryMarkSchemeSource } from "@/lib/chemistryMarkSchemeSources";
 import { exportPaperToWord } from "@/lib/exportWord";
 import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
@@ -43,6 +44,7 @@ export default function ChemistryPage() {
   const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
   const [query, setQuery] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [exportingMarkScheme, setExportingMarkScheme] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [swapIndex, setSwapIndex] = useState<number | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
@@ -64,7 +66,9 @@ export default function ChemistryPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!ready) return;
+    const missingMarkSchemes = Array.from(new Set(paper.filter(q => !getChemistryMarkSchemeSource(q)).map(q => `${q.session} ${q.year} Paper ${q.paper}`)));
+
+  if (!ready) return;
     window.localStorage.setItem(trackerKey, JSON.stringify(completedTopics));
   }, [completedTopics, ready, trackerKey]);
 
@@ -73,6 +77,8 @@ export default function ChemistryPage() {
   const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
   const topicSpecificQuestions = useMemo(() => chemistryQuestions.map(q => specialiseChemistryQuestion(q, selectedTopics)).filter((q): q is ChemistryQuestionSelection => q !== null), [selectedTopics]);
   const filteredBank = useMemo(() => { const needle = query.trim().toLowerCase(); return topicSpecificQuestions.filter(q => !needle || `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`.toLowerCase().includes(needle)); }, [query, topicSpecificQuestions]);
+
+  const missingMarkSchemes = Array.from(new Set(paper.filter(q => !getChemistryMarkSchemeSource(q)).map(q => `${q.session} ${q.year} Paper ${q.paper}`)));
 
   if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions Chemistry</div></main>;
 
@@ -86,6 +92,17 @@ export default function ChemistryPage() {
     setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
   async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry" }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper."); } finally { setExporting(false); } }
+
+  async function downloadMarkScheme() {
+    if (!paper.length || exportingMarkScheme) return;
+    setExportingMarkScheme(true);
+    try {
+      const { exportChemistryMarkSchemeToWord } = await import("@/lib/exportChemistryMarkScheme");
+      await exportChemistryMarkSchemeToWord(paper);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not create the Chemistry mark scheme.");
+    } finally { setExportingMarkScheme(false); }
+  }
 
   return <main>
     <header className="nav">
@@ -109,7 +126,7 @@ export default function ChemistryPage() {
 
       <div className="panel preview">
         <div className="previewHead"><div><p>YOUR CHEMISTRY PAPER</p><h2>{paper.length?`${paper.length} questions · ${totalMarks} marks`:"Ready when you are"}</h2></div><span>4CH1</span></div>
-        {!paper.length?<div className="empty"><div>⚗</div><h3>Your Chemistry paper will appear here</h3><p>Pick specification topics, choose the number of questions, then generate.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Topic-specific extraction is on</b><small>Unrelated subparts are removed. If original parts (c) and (d) are kept, they export as (a) and (b).</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}{q.selectedParts?.length?` · Parts ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div><ChemistryPartPicker question={q} onChange={updated=>setPaper(current=>current.map((item,i)=>i===index?updated:item))}/><button type="button" onClick={()=>setExpandedQuestionId(current=>current===q.id?null:q.id)} aria-expanded={expandedQuestionId===q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId===q.id?"Hide full question ↑":"View full question ↓"}</button>{expandedQuestionId===q.id&&<><div className="qMeta" style={{marginTop:8}}>Original source question{q.selectedParts?.length?` · Your export keeps only ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><ScienceQuestionDetails question={asExportQuestion(q)}/></>}<div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>setSwapIndex(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting?"Building Word…":"Download Word"}</button><button onClick={()=>setReviewOpen(true)}>✓ Review paper</button></div>{reviewOpen&&<PaperReview paper={paper.map(asExportQuestion)} title="Chemistry paper review" onClose={()=>setReviewOpen(false)}/>}</>}
+        {!paper.length?<div className="empty"><div>⚗</div><h3>Your Chemistry paper will appear here</h3><p>Pick specification topics, choose the number of questions, then generate.</p></div>:<><div className="editorHint"><span>✦</span><div><b>Topic-specific extraction is on</b><small>Unrelated subparts are removed. If original parts (c) and (d) are kept, they export as (a) and (b).</small></div></div><div className="questionList">{paper.map((q,index)=><article className="question" key={`${q.id}-${index}`}><div className="qNumber">{index+1}</div><div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber}{q.selectedParts?.length?` · Parts ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><h3>{q.summary}</h3><div className="tags">{q.specTags.map(tag=><span key={tag}>Spec {tag[0]}({tag.slice(1)})</span>)}</div><ChemistryPartPicker question={q} onChange={updated=>setPaper(current=>current.map((item,i)=>i===index?updated:item))}/><button type="button" onClick={()=>setExpandedQuestionId(current=>current===q.id?null:q.id)} aria-expanded={expandedQuestionId===q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId===q.id?"Hide full question ↑":"View full question ↓"}</button>{expandedQuestionId===q.id&&<><div className="qMeta" style={{marginTop:8}}>Original source question{q.selectedParts?.length?` · Your export keeps only ${q.selectedParts.map(p=>`(${p})`).join(", ")}`:""}</div><ScienceQuestionDetails question={asExportQuestion(q)}/></>}<div className="questionTools"><button onClick={()=>moveQuestion(index,-1)} disabled={index===0}>↑ Up</button><button onClick={()=>moveQuestion(index,1)} disabled={index===paper.length-1}>↓ Down</button><button onClick={()=>setSwapIndex(index)}>↻ Swap</button><button onClick={()=>removeQuestion(q.id)}>Remove</button></div></div><div className="marks">{q.marks}<small>marks</small></div></article>)}</div><div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={downloadWord} disabled={exporting}>{exporting?"Building Word…":"Download Word"}</button><button className="word" onClick={()=>void downloadMarkScheme()} disabled={exportingMarkScheme || missingMarkSchemes.length > 0}>{exportingMarkScheme?"Creating mark scheme…":"↓ Download mark scheme"}</button><button onClick={()=>setReviewOpen(true)}>✓ Review paper</button></div>{missingMarkSchemes.length > 0 && <p className="qMeta" role="status">Mark scheme not yet available for {missingMarkSchemes.join("; ")}. Remove or swap these questions to download a matching mark scheme.</p>}{reviewOpen&&<PaperReview paper={paper.map(asExportQuestion)} title="Chemistry paper review" onClose={()=>setReviewOpen(false)}/>}</>}
         {swapIndex!==null&&paper[swapIndex]&&<ScienceSwapModal subject="Chemistry" current={asExportQuestion(paper[swapIndex])} paper={paper.map(asExportQuestion)} questions={topicSpecificQuestions.map(asExportQuestion)} topicLabel={tag=>`Spec ${tag[0]}(${tag.slice(1)})`} onClose={()=>setSwapIndex(null)} onChoose={q=>{const chosen=topicSpecificQuestions.find(candidate=>candidate.id===q.id);if(chosen)replaceQuestion(swapIndex,chosen);setSwapIndex(null);}}/>}
       </div>
     </section> : mode==="bank" ? <section className="bank panel">
