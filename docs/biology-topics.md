@@ -5,9 +5,14 @@ parts, reorder/remove/swap, Word export, mark scheme export, paper review/histor
 and an account-scoped device-local tracker. Only the 19 main topic titles are
 shown. `biologySpec.ts` retains the lesson names for classifying imports.
 
-The four June 2026 papers are indexed: 1B, 1BR, 2B and 2BR, with 34 questions
-and 360 marks. Formatted sources are in `bio papers` and matching PDFs are in
-`bio markschemes`. All question and main-part marks match the marking tables.
+Eight papers are indexed: June 2026 1B, 1BR, 2B and 2BR, plus May/June and
+November 2025 1B and 2B, with 67 questions and 720 marks. Formatted sources are
+in `bio papers` and matching PDFs are in `bio markschemes`.
+
+The original Summer 2025 QP (P78874A, page 13) allocates three marks to
+Q4(b)(ii), while its supplied MS prints four. The indexed export caps that part
+at three marks and includes a note explaining the discrepancy. Original files
+remain unchanged. All other question and part totals agree with their schemes.
 
 When importing:
 

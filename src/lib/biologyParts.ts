@@ -696,6 +696,729 @@ export const partRules: Record<string, PartRule[]> = {
         "4B"
       ]
     }
+  ],
+  "bio-2025-mj-1B-1": [
+    {
+      "part": "a",
+      "marks": 4,
+      "specTags": [
+        "1A",
+        "1B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 1,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 1,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 3,
+      "specTags": [
+        "1A"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-2": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "2B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 4,
+      "specTags": [
+        "2B",
+        "1A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 2,
+      "specTags": [
+        "2B"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-3": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 4,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 4,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 3,
+      "specTags": [
+        "1A",
+        "3A"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-4": [
+    {
+      "part": "a",
+      "marks": 5,
+      "specTags": [
+        "3B",
+        "4B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 8,
+      "specTags": [
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-5": [
+    {
+      "part": "a",
+      "marks": 3,
+      "specTags": [
+        "5A",
+        "5B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 6,
+      "specTags": [
+        "5B"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 3,
+      "specTags": [
+        "5B"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-6": [
+    {
+      "part": "a",
+      "marks": 5,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 11,
+      "specTags": [
+        "1A",
+        "3A"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-7": [
+    {
+      "part": "a",
+      "marks": 4,
+      "specTags": [
+        "2C"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 4,
+      "specTags": [
+        "2C"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 8,
+      "specTags": [
+        "2C"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-8": [
+    {
+      "part": "a",
+      "marks": 3,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 8,
+      "specTags": [
+        "4A"
+      ]
+    }
+  ],
+  "bio-2025-mj-1B-9": [
+    {
+      "part": "a",
+      "marks": 4,
+      "specTags": [
+        "6B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 2,
+      "specTags": [
+        "5C",
+        "6B"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-1": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "2E"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 1,
+      "specTags": [
+        "4B"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 5,
+      "specTags": [
+        "1B",
+        "4B"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 2,
+      "specTags": [
+        "2F"
+      ]
+    },
+    {
+      "part": "e",
+      "marks": 5,
+      "specTags": [
+        "1A",
+        "2B",
+        "5C"
+      ]
+    },
+    {
+      "part": "f",
+      "marks": 4,
+      "specTags": [
+        "3B",
+        "4A",
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-2": [
+    {
+      "part": "a",
+      "marks": 4,
+      "specTags": [
+        "2A",
+        "2E"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "2D",
+        "2E"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-3": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "2D"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 10,
+      "specTags": [
+        "2D"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-4": [
+    {
+      "part": "a",
+      "marks": 5,
+      "specTags": [
+        "5C"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 5,
+      "specTags": [
+        "5A",
+        "5C"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-5": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "3B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 6,
+      "specTags": [
+        "3B"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 4,
+      "specTags": [
+        "3B",
+        "3C"
+      ]
+    }
+  ],
+  "bio-2025-mj-2B-6": [
+    {
+      "part": "a",
+      "marks": 7,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 6,
+      "specTags": [
+        "5A",
+        "6B"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-1": [
+    {
+      "part": "a",
+      "marks": 5,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "1B"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-2": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 12,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 3,
+      "specTags": [
+        "1A"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-3": [
+    {
+      "part": "a",
+      "marks": 6,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "3A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 3,
+      "specTags": [
+        "3A"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-4": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "1A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 8,
+      "specTags": [
+        "1A"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-5": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "1B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "6A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 5,
+      "specTags": [
+        "6A"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-6": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 2,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 2,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 4,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "e",
+      "marks": 2,
+      "specTags": [
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-7": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "2D"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 1,
+      "specTags": [
+        "2E"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 5,
+      "specTags": [
+        "2D"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 2,
+      "specTags": [
+        "2C",
+        "2D"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-8": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "3C"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 2,
+      "specTags": [
+        "3C"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 7,
+      "specTags": [
+        "3C"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-9": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "5B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 5,
+      "specTags": [
+        "5B"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 2,
+      "specTags": [
+        "5B"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 3,
+      "specTags": [
+        "2F"
+      ]
+    }
+  ],
+  "bio-2025-nov-1B-10": [
+    {
+      "part": "a",
+      "marks": 3,
+      "specTags": [
+        "4B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-1": [
+    {
+      "part": "a",
+      "marks": 2,
+      "specTags": [
+        "4A"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 3,
+      "specTags": [
+        "1B",
+        "2C",
+        "2D"
+      ]
+    },
+    {
+      "part": "c",
+      "marks": 2,
+      "specTags": [
+        "2B"
+      ]
+    },
+    {
+      "part": "d",
+      "marks": 4,
+      "specTags": [
+        "5C"
+      ]
+    },
+    {
+      "part": "e",
+      "marks": 2,
+      "specTags": [
+        "2F"
+      ]
+    },
+    {
+      "part": "f",
+      "marks": 1,
+      "specTags": [
+        "2F"
+      ]
+    },
+    {
+      "part": "g",
+      "marks": 2,
+      "specTags": [
+        "2A"
+      ]
+    },
+    {
+      "part": "h",
+      "marks": 2,
+      "specTags": [
+        "6B"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-2": [
+    {
+      "part": "a",
+      "marks": 6,
+      "specTags": [
+        "3B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 4,
+      "specTags": [
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-3": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "2E"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 8,
+      "specTags": [
+        "2E"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-4": [
+    {
+      "part": "a",
+      "marks": 1,
+      "specTags": [
+        "2B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 7,
+      "specTags": [
+        "1A"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-5": [
+    {
+      "part": "a",
+      "marks": 7,
+      "specTags": [
+        "4A",
+        "4B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 6,
+      "specTags": [
+        "3A",
+        "4B"
+      ]
+    }
+  ],
+  "bio-2025-nov-2B-6": [
+    {
+      "part": "a",
+      "marks": 4,
+      "specTags": [
+        "5A",
+        "6B"
+      ]
+    },
+    {
+      "part": "b",
+      "marks": 8,
+      "specTags": [
+        "2C",
+        "6B"
+      ]
+    }
   ]
 };
 function allSelected(tags: string[], selected: Set<string>) { return tags.length > 0 && tags.every(tag => selected.has(tag)); }

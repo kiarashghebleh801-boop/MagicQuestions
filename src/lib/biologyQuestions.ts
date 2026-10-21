@@ -3,7 +3,7 @@ export type BiologyQuestion = {
   year: number; session: string; paper: "1B" | "1BR" | "2B" | "2BR";
   questionNumber: number; sourceFile: string;
 };
-// Verified against the uploaded June 2026 formatted papers and matching mark schemes.
+// Question and part totals verified against formatted papers and paired mark schemes.
 export const biologyQuestions: BiologyQuestion[] = [
   {
     "id": "bio-2026-mj-1B-1",
@@ -476,5 +476,475 @@ export const biologyQuestions: BiologyQuestion[] = [
     "paper": "2BR",
     "questionNumber": 6,
     "sourceFile": "May_June_2026_Biology_Paper_2BR_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-1",
+    "specTags": [
+      "1A",
+      "1B"
+    ],
+    "summary": "Euglena classification, cell organelles and structures involved in movement.",
+    "marks": 9,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 1,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-2",
+    "specTags": [
+      "1A",
+      "2B"
+    ],
+    "summary": "Benedict’s test for glucose, investigation controls, dietary energy and low-sugar drinks.",
+    "marks": 8,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 2,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-3",
+    "specTags": [
+      "1A",
+      "3A"
+    ],
+    "summary": "Photosynthesis, starch testing, mineral ions and active uptake in waterlogged soil.",
+    "marks": 13,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 3,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-4",
+    "specTags": [
+      "3B",
+      "4B"
+    ],
+    "summary": "Phloem transport, crop yield, insecticides and biological pest control.",
+    "marks": 13,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 4,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-5",
+    "specTags": [
+      "5A",
+      "5B"
+    ],
+    "summary": "Genomes, genes, alleles, monohybrid inheritance and test crosses in horses.",
+    "marks": 12,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 5,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-6",
+    "specTags": [
+      "1A",
+      "3A"
+    ],
+    "summary": "Temperature and maize seedling growth, graph plotting, enzyme activity and leaf area.",
+    "marks": 16,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 6,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-7",
+    "specTags": [
+      "2C"
+    ],
+    "summary": "Blood components, immunity, blood-cell counts and the effects of a blood condition.",
+    "marks": 16,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 7,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-8",
+    "specTags": [
+      "4A"
+    ],
+    "summary": "Ecosystems, communities, populations and energy transfer through food chains.",
+    "marks": 11,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 8,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-9",
+    "specTags": [
+      "5C",
+      "6B"
+    ],
+    "summary": "Enzymes in genetic modification and comparison with selective breeding.",
+    "marks": 6,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 9,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-1B-10",
+    "specTags": [
+      "3D"
+    ],
+    "summary": "Designing an investigation into the effect of light on seed germination.",
+    "marks": 6,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "1B",
+    "questionNumber": 10,
+    "sourceFile": "May_June_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-1",
+    "specTags": [
+      "1A",
+      "1B",
+      "2B",
+      "2E",
+      "2F",
+      "3B",
+      "4A",
+      "4B",
+      "5C"
+    ],
+    "summary": "River pollution, homeostasis, biodiversity, fertility, antibiotic resistance and forests.",
+    "marks": 18,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 1,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-2",
+    "specTags": [
+      "2A",
+      "2D",
+      "2E"
+    ],
+    "summary": "Excretion by the lungs, ventilation and glucose in the urine of people with diabetes.",
+    "marks": 7,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 2,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-3",
+    "specTags": [
+      "2D"
+    ],
+    "summary": "Eye structure, pupil reflexes and investigating light intensity and pupil diameter.",
+    "marks": 11,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 3,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-4",
+    "specTags": [
+      "5A",
+      "5C"
+    ],
+    "summary": "Animal cloning, success rates and genetic and environmental variation in cloned pets.",
+    "marks": 10,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 4,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-5",
+    "specTags": [
+      "3B",
+      "3C"
+    ],
+    "summary": "Leaf xylem, potometers, transpiration, wind speed and ABA-related water loss.",
+    "marks": 11,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 5,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-mj-2B-6",
+    "specTags": [
+      "1A",
+      "5A",
+      "6B"
+    ],
+    "summary": "Apple enzymes, pH, DNA and mRNA, and genetic modification that prevents browning.",
+    "marks": 13,
+    "year": 2025,
+    "session": "May/June",
+    "paper": "2B",
+    "questionNumber": 6,
+    "sourceFile": "May_June_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-1",
+    "specTags": [
+      "1A",
+      "1B"
+    ],
+    "summary": "Amoeba cell structures, magnification and differences between protoctists and viruses.",
+    "marks": 8,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 1,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-2",
+    "specTags": [
+      "1A"
+    ],
+    "summary": "Diffusion of ammonia: concentration, temperature, rates and experimental reliability.",
+    "marks": 16,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 2,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-3",
+    "specTags": [
+      "3A"
+    ],
+    "summary": "Requirements for photosynthesis, starch testing, mineral ions and leaf adaptations.",
+    "marks": 12,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 3,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-4",
+    "specTags": [
+      "1A"
+    ],
+    "summary": "Anaerobic respiration in plants and measuring carbon dioxide from respiring seeds.",
+    "marks": 10,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 4,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-5",
+    "specTags": [
+      "1B",
+      "6A"
+    ],
+    "summary": "Yeast cell structures, bread production and temperature and pH in yoghurt production.",
+    "marks": 10,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 5,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-6",
+    "specTags": [
+      "4A",
+      "4B"
+    ],
+    "summary": "Marine food chains, ecological pyramids, seasonal populations and climate change.",
+    "marks": 11,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 6,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-7",
+    "specTags": [
+      "2C",
+      "2D",
+      "2E"
+    ],
+    "summary": "Human response systems, homeostasis, eye accommodation and protective eye secretions.",
+    "marks": 10,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 7,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-8",
+    "specTags": [
+      "3C"
+    ],
+    "summary": "Plant tropisms, auxin and experiments investigating responses to light and gravity.",
+    "marks": 10,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 8,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-9",
+    "specTags": [
+      "2F",
+      "5B"
+    ],
+    "summary": "Human chromosomes, sex determination, probability, birth ratios and mitosis.",
+    "marks": 11,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 9,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-10",
+    "specTags": [
+      "4B"
+    ],
+    "summary": "Sulfur dioxide pollution and environmental effects of electric vehicles.",
+    "marks": 6,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 10,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-1B-11",
+    "specTags": [
+      "3D"
+    ],
+    "summary": "Designing an investigation into wind speed and pollen release in wind-pollinated plants.",
+    "marks": 6,
+    "year": 2025,
+    "session": "November",
+    "paper": "1B",
+    "questionNumber": 11,
+    "sourceFile": "November_2025_Biology_1B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-1",
+    "specTags": [
+      "1B",
+      "2A",
+      "2B",
+      "2C",
+      "2D",
+      "2F",
+      "4A",
+      "5C",
+      "6B"
+    ],
+    "summary": "Medicinal plants, hormones, digestion, natural selection, fertility and genetic engineering.",
+    "marks": 18,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 1,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-2",
+    "specTags": [
+      "3B",
+      "4B"
+    ],
+    "summary": "Phloem transport, investigating aphids and transpiration, and pesticide effectiveness.",
+    "marks": 10,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 2,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-3",
+    "specTags": [
+      "2E"
+    ],
+    "summary": "Urinary-system structures, nephron reabsorption, urea concentration and dehydration.",
+    "marks": 9,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 3,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-4",
+    "specTags": [
+      "1A",
+      "2B"
+    ],
+    "summary": "Enzymes as proteins and investigating the effect of pH on potato browning.",
+    "marks": 8,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 4,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-5",
+    "specTags": [
+      "3A",
+      "4A",
+      "4B"
+    ],
+    "summary": "Deforestation, insect biodiversity, quadrat sampling and a model of plant gas exchange.",
+    "marks": 13,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 5,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
+  },
+  {
+    "id": "bio-2025-nov-2B-6",
+    "specTags": [
+      "2C",
+      "5A",
+      "6B"
+    ],
+    "summary": "Protein synthesis in genetically modified potatoes and evaluating edible vaccines.",
+    "marks": 12,
+    "year": 2025,
+    "session": "November",
+    "paper": "2B",
+    "questionNumber": 6,
+    "sourceFile": "November_2025_Biology_2B_ExamWizard_Style.docx"
   }
 ];

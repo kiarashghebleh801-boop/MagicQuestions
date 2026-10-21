@@ -6,6 +6,10 @@ export const biologyMarkSchemeFiles: Record<string,string> = {
   "2026|May/June|1BR": "IGCSE_BIOLOGY_2026_MayJune_P1R_MS_1789837985665.pdf",
   "2026|May/June|2B": "IGCSE_BIOLOGY_2026_MayJune_P2_MS_1789837987379.pdf",
   "2026|May/June|2BR": "IGCSE_BIOLOGY_2026_MayJune_P2R_MS_1789837989049.pdf",
+  "2025|May/June|1B": "P1_MS_1777477104488.pdf",
+  "2025|May/June|2B": "P2_MS_1777477108983.pdf",
+  "2025|November|1B": "IGCSE_BIOLOGY_2025_Nov_P1_MS.pdf",
+  "2025|November|2B": "IGCSE_BIOLOGY_2025_Nov_P2_MS.pdf",
 };
 export function getBiologyMarkSchemeSource(q: Pick<BiologyQuestion,"year"|"session"|"paper">): string | null {
   const source = biologyMarkSchemeFiles[`${q.year}|${q.session}|${q.paper}`];

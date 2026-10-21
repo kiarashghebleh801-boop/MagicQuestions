@@ -14,8 +14,9 @@ const {selectMarkSchemeEntries,createScienceMarkSchemeDocument}=require('../src/
 const index=require('../src/lib/biologyMarkSchemeIndex.json');
 const {Packer}=require('docx'),JSZip=require('jszip');
 const directory=process.argv[2];
+const sourceYear=process.argv[3] ? Number(process.argv[3]) : null;
 (async()=>{
- assert.equal(questions.length,34);assert.equal(questions.reduce((n,q)=>n+q.marks,0),360);assert.equal(Object.keys(index).length,4);
+ assert.equal(questions.length,67);assert.equal(questions.reduce((n,q)=>n+q.marks,0),720);assert.equal(Object.keys(index).length,8);
  let checked=0,visuals=0;const sourceXml=new Map();
  for(const q of questions){
   assert.equal(getFormattedSource(q),q.sourceFile);assert.equal(getFormattedSourceBucket(q),'bio papers');
@@ -26,7 +27,7 @@ const directory=process.argv[2];
    if(b.crop){visuals++;assert(b.crop.rect.length===4 && b.crop.rect[3]>b.crop.rect[1]);}
    else assert(!/[\ue000-\uf8ff\ufffd]/.test(b.text),q.id+' unsupported glyph');
   }
-  if(!directory)continue;
+  if(!directory || (sourceYear && q.year!==sourceYear))continue;
   if(!sourceXml.has(q.sourceFile)){const z=await JSZip.loadAsync(fs.readFileSync(path.join(directory,q.sourceFile)));sourceXml.set(q.sourceFile,await z.file('word/document.xml').async('text'));}
   const xml=sourceXml.get(q.sourceFile);const paragraphs=[...xml.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/g)];
   const labels=paragraphs.map(p=>({offset:p.index,text:[...p[0].matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(m=>m[1]).join('')})).filter(p=>/^Q\d+\.$/.test(p.text));
@@ -45,10 +46,13 @@ const directory=process.argv[2];
    const matched=specialiseBiologyQuestion(q,option.specTags);assert(matched?.specTags.every(tag=>option.specTags.includes(tag)),q.id+' unrelated topics');checked++;
   }
  }
- if(directory)for(const [name,s]of Object.entries(index))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(directory,name))).digest('hex'),s.sha256,name);
+ if(directory)for(const [name,s]of Object.entries(index)){
+  if(sourceYear && !questions.some(q=>q.year===sourceYear && getBiologyMarkSchemeSource(q)===name))continue;
+  assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(directory,name))).digest('hex'),s.sha256,name);
+ }
  assert.equal(visuals,1,'Only the actual table should remain an image');
  const plain=questions.filter(q=>!index[getBiologyMarkSchemeSource(q)].questions[q.questionNumber].some(r=>r.content.some(b=>b.crop)));
  const doc=await createScienceMarkSchemeDocument(plain,{subject:'Biology',bucket:'bio markschemes',getIndex:async()=>index,getSource:getBiologyMarkSchemeSource,partOptions:biologyPartOptions});
  if(directory){fs.mkdirSync('tmp/bioimport',{recursive:true});fs.writeFileSync('tmp/bioimport/markscheme-qa.docx',await Packer.toBuffer(doc));}
- console.log(`PASS: 4 papers, 34 questions, 360 marks, ${checked} selected-part exports, all answer totals and source fingerprints; ${visuals} genuine table image. Text-only mark schemes built without PDF downloads.`);
+ console.log(`PASS: 8 papers, 67 questions, 720 marks, ${checked} selected-part exports, all answer totals and source fingerprints; ${visuals} genuine table image. Text-only mark schemes built without PDF downloads.`);
 })().catch(e=>{console.error(e);process.exit(1)});
