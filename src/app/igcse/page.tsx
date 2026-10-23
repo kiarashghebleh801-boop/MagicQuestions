@@ -72,10 +72,11 @@ export default function IgcsePage() {
 
     <section style={{maxWidth:1180,margin:"0 auto 64px",padding:"0 20px",display:"grid",gap:16}}>
       <details className="home-subjects" open>
-        <summary><span><FolderIcon/> Subjects</span><span className="home-dropdown-chevron" aria-hidden="true">⌄</span></summary>
+        <summary><span className="home-dropdown-label"><span className="home-dropdown-icon"><FolderIcon/></span><span><small>YOUR QUESTION BANKS</small><strong>Subjects</strong><em>Pick your next challenge</em></span></span><span className="home-dropdown-right"><span className="home-subject-count">04 subjects</span><span className="home-dropdown-chevron" aria-hidden="true">⌄</span></span></summary>
         <div className="home-subject-list">
       {subjects.map(subject => <button
         key={subject.title}
+        className="home-subject-card"
         onClick={()=>router.push(subject.route)}
         style={{
           width:"100%",
