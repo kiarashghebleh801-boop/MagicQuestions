@@ -106,11 +106,11 @@ export default function StudyProvider({ children }: { children: React.ReactNode 
   const finish = () => { pause(); persist({ ...cache.current, active: null }); void sync(); };
   const elapsed = state.active ? state.active.elapsedMs + (state.active.runningSince === null ? 0 : Math.max(0, now - state.active.runningSince)) : 0;
   const subject = STUDY_SUBJECTS.find(s => s.id === state.active?.subject);
-  const showMini = state.active && pathname !== "/igcse" && !["/login", "/banned"].includes(pathname);
+  const showMini = state.active && pathname !== "/study" && !["/login", "/banned"].includes(pathname);
   return <Context.Provider value={{ active: state.active, records: state.records, elapsed, loaded, syncError, start, pause, resume, finish, retry: sync }}>
     {children}
     {showMini && <aside className="study-mini" aria-label="Active study timer" style={{ borderColor: subject?.color }}>
-      <Link href="/igcse" className="study-mini-info"><span style={{ color: subject?.color }}>{subject?.name} · {state.active?.runningSince === null ? "Paused" : "Studying"}</span><strong>{clock(elapsed)}</strong></Link>
+      <Link href="/study" className="study-mini-info"><span style={{ color: subject?.color }}>{subject?.name} · {state.active?.runningSince === null ? "Paused" : "Studying"}</span><strong>{clock(elapsed)}</strong></Link>
       <button onClick={state.active?.runningSince === null ? resume : pause}>{state.active?.runningSince === null ? "Resume" : "Pause"}</button><button className="study-primary" onClick={finish}>Finish</button>
     </aside>}
   </Context.Provider>;

@@ -1,35 +1,125 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { STUDY_SUBJECTS } from "@/lib/studyTime";
-import StudyDashboard from "@/components/StudyDashboard";
+
+const GOLD = "#d4af37";
+const GOLD_SOFT = "#e6ce78";
+const BG = "#070707";
+const PANEL = "#101010";
+
+const subjects = [
+  { title: "Biology", subtitle: "Edexcel International GCSE Biology 4BI1", route: "/biology" },
+  {
+    title: "Mathematics",
+    subtitle: "Edexcel International GCSE Mathematics A 4MA1",
+    route: "/mathematics",
+  },
+  {
+    title: "Chemistry",
+    subtitle: "Edexcel International GCSE Chemistry 4CH1",
+    route: "/chemistry",
+  },
+  {
+    title: "Physics",
+    subtitle: "Edexcel International GCSE Physics 4PH1",
+    route: "/physics",
+  },
+];
+
+function FolderIcon() {
+  return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M3.5 6.75c0-1.1.9-2 2-2h4.15c.53 0 1.04.21 1.41.59l1.1 1.1c.28.28.66.44 1.06.44h5.28c1.1 0 2 .9 2 2v8.37c0 1.1-.9 2-2 2h-13c-1.1 0-2-.9-2-2V6.75Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+  </svg>;
+}
+
+function ChevronIcon() {
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="m9 18 6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+}
 
 export default function IgcsePage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState("");
+
   useEffect(() => {
-    let alive = true;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
+      setEmail(data.session.user.email || "Account");
       const { data: profile } = await supabase.from("profiles").select("banned").eq("id", data.session.user.id).maybeSingle();
-      if (!alive) return;
       if (profile?.banned) { router.replace("/banned"); return; }
-      setEmail(data.session.user.email || "Account"); setReady(true);
+      setReady(true);
     });
-    return () => { alive = false; };
   }, [router]);
-  if (!ready) return <main className="study-loading"><div className="authLogo"><span>✦</span> MagicQuestions</div></main>;
-  return <main className="study-home">
-    <header className="study-nav"><Link className="study-brand" href="/igcse"><span>✦</span> MagicQuestions</Link><span className="study-account">{email}</span></header>
-    <div className="study-home-content">
-      <section className="study-welcome"><div><p className="study-eyebrow">YOUR INTERNATIONAL GCSE WORKSPACE</p><h1>A little focus.<br/><span>A lot of progress.</span></h1><p>Build a paper, practise a topic, or settle into a study session.</p></div>
-        <details className="study-subject-menu"><summary>Subjects <span aria-hidden="true">⌄</span></summary><nav aria-label="Subjects">{STUDY_SUBJECTS.map(s => <Link key={s.id} href={s.route}><i style={{ background: s.color }}/><span>{s.name}<small>Generator · Question bank · Tracker</small></span><b aria-hidden="true">↗</b></Link>)}</nav></details>
-      </section>
-      <StudyDashboard/>
-      <section className="study-quick" aria-label="Open a subject"><p className="study-eyebrow">READY TO PRACTISE?</p><div>{STUDY_SUBJECTS.map(s => <Link key={s.id} href={s.route}><i style={{ background: s.color }}/>{s.name}<span aria-hidden="true">↗</span></Link>)}</div></section>
-    </div>
+
+  if (!ready) return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",background:BG,color:"#f5ecd1"}}><div className="authLogo" style={{margin:0,color:"inherit"}}><span style={{color:GOLD}}>✦</span> MagicQuestions</div></main>;
+
+  return <main style={{minHeight:"100vh",background:BG,color:"#f7f1df"}}>
+    <header style={{height:72,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 max(5vw,28px)",background:"#090909",borderBottom:"1px solid rgba(212,175,55,.22)",position:"sticky",top:0,zIndex:10}}>
+      <div style={{fontSize:21,fontWeight:850,letterSpacing:"-.5px"}}><span style={{color:GOLD,marginRight:7}}>✦</span> MagicQuestions</div>
+      <div style={{fontSize:12,fontWeight:750,color:"#cdbf91",background:"rgba(212,175,55,.08)",border:"1px solid rgba(212,175,55,.20)",padding:"8px 12px",borderRadius:999}}>{email}</div>
+    </header>
+
+    <section style={{textAlign:"center",padding:"58px 20px 34px"}}>
+      <p style={{fontSize:12,fontWeight:850,letterSpacing:2,color:GOLD,margin:"0 0 14px"}}>INTERNATIONAL GCSE</p>
+      <h1 style={{fontSize:"clamp(38px,5vw,64px)",lineHeight:1.02,letterSpacing:"-3px",margin:"0 0 18px",color:"#fffaf0"}}>Choose your<br/><span style={{color:GOLD}}>subject.</span></h1>
+      <p style={{maxWidth:700,margin:"0 auto",color:"#aaa28c",fontSize:17,lineHeight:1.6}}>Pick a subject to open its question generator and question bank.</p>
+    </section>
+
+    <section style={{maxWidth:1180,margin:"0 auto 64px",padding:"0 20px",display:"grid",gap:16}}>
+      <details className="home-subjects" open>
+        <summary><span><FolderIcon/> Subjects</span><span className="home-dropdown-chevron" aria-hidden="true">⌄</span></summary>
+        <div className="home-subject-list">
+      {subjects.map(subject => <button
+        key={subject.title}
+        onClick={()=>router.push(subject.route)}
+        style={{
+          width:"100%",
+          minHeight:96,
+          padding:"18px 22px",
+          display:"grid",
+          gridTemplateColumns:"56px 1fr auto",
+          alignItems:"center",
+          gap:18,
+          textAlign:"left",
+          cursor:"pointer",
+          color:"#fffaf0",
+          background:PANEL,
+          border:"1px solid rgba(212,175,55,.24)",
+          borderRadius:18,
+          boxShadow:"0 8px 24px rgba(0,0,0,.24)",
+          transition:"transform .16s ease, border-color .16s ease, background .16s ease",
+        }}
+        onMouseEnter={e=>{
+          e.currentTarget.style.transform="translateY(-1px)";
+          e.currentTarget.style.borderColor="rgba(212,175,55,.68)";
+          e.currentTarget.style.background="#15130d";
+        }}
+        onMouseLeave={e=>{
+          e.currentTarget.style.transform="translateY(0)";
+          e.currentTarget.style.borderColor="rgba(212,175,55,.24)";
+          e.currentTarget.style.background=PANEL;
+        }}
+      >
+        <div style={{width:46,height:46,borderRadius:13,display:"grid",placeItems:"center",background:"rgba(212,175,55,.10)",color:GOLD,border:"1px solid rgba(212,175,55,.13)"}}><FolderIcon/></div>
+        <div>
+          <h2 style={{margin:0,fontSize:"clamp(21px,2vw,27px)",fontWeight:800,letterSpacing:"-.02em",color:"#fffaf0"}}>{subject.title}</h2>
+          <div style={{marginTop:5,fontSize:11,fontWeight:700,color:"#a89f88"}}>{subject.subtitle}</div>
+        </div>
+        <div style={{color:GOLD_SOFT,opacity:.78,display:"grid",placeItems:"center"}}><ChevronIcon/></div>
+      </button>)}
+
+        </div>
+      </details>
+      <Link href="/study" className="home-timer-link">
+        <span className="home-timer-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" stroke="currentColor" strokeWidth="1.7"/><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg></span>
+        <span><strong>Study timer</strong><small>Time your revision and past papers, and view your study history.</small></span>
+        <ChevronIcon/>
+      </Link>
+    </section>
   </main>;
 }
