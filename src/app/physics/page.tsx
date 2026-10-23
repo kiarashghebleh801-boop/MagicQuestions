@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import SubjectWorkspace, { type SubjectWorkspaceMode } from "@/components/SubjectWorkspace";
 import { physicsSections, physicsTopicTitle } from "@/lib/physicsSpec";
 import { physicsQuestions } from "@/lib/physicsQuestions";
 import type { Question } from "@/lib/questions";
@@ -22,7 +23,7 @@ export default function PhysicsPage() {
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [count, setCount] = useState(5);
   const [paper, setPaper] = useState<Question[]>([]);
-  const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
+  const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -130,17 +131,7 @@ export default function PhysicsPage() {
 
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
-  return <main>
-    <header className="nav">
-      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">Physics</span></div>
-      <nav className="tabs">
-        <button className={mode === "generate" ? "active" : ""} onClick={() => setMode("generate")}>Generate</button>
-        <button className={mode === "bank" ? "active" : ""} onClick={() => setMode("bank")}>Question bank</button>
-        <button className={mode === "tracker" ? "active" : ""} onClick={() => setMode("tracker")}>Tracker</button>
-        <button onClick={() => router.push("/igcse")}>Subjects</button>
-      </nav>
-      <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
-    </header>
+  return <SubjectWorkspace subject="Physics" email={email} mode={mode} onModeChange={setMode} questionCount={physicsQuestions.length} accountActions={<button className="accountButton" onClick={signOut}>Log out</button>}>
 
     <section className="hero">
       <p className="eyebrow">EDEXCEL INTERNATIONAL GCSE PHYSICS 4PH1</p>
@@ -204,5 +195,5 @@ export default function PhysicsPage() {
         </div>;
       })}</div>
     </section>}
-  </main>;
+  </SubjectWorkspace>;
 }

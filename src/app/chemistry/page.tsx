@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import SubjectWorkspace, { type SubjectWorkspaceMode } from "@/components/SubjectWorkspace";
 import { chemistrySections } from "@/lib/chemistrySpec";
 import { chemistryQuestions, type ChemistryQuestion } from "@/lib/chemistryQuestions";
 import { specialiseChemistryQuestion, type ChemistryQuestionSelection } from "@/lib/chemistryParts";
@@ -41,7 +42,7 @@ export default function ChemistryPage() {
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [count, setCount] = useState(5);
   const [paper, setPaper] = useState<ChemistryQuestionSelection[]>([]);
-  const [mode, setMode] = useState<"generate" | "bank" | "tracker">("generate");
+  const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
   const [exporting, setExporting] = useState(false);
   const [exportingMarkScheme, setExportingMarkScheme] = useState(false);
@@ -102,16 +103,10 @@ export default function ChemistryPage() {
     } finally { setExportingMarkScheme(false); }
   }
 
-  return <main>
-    <header className="nav">
-      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">Chemistry</span></div>
-      <nav className="tabs"><button onClick={()=>router.push("/")}>Maths</button><button className="active">Chemistry</button></nav>
-      <div style={{display:"flex",alignItems:"center",gap:8}}><div className="badge">{email}</div><button className="accountButton" onClick={()=>router.push("/")}>Back</button></div>
-    </header>
+  return <SubjectWorkspace subject="Chemistry" email={email} mode={mode} onModeChange={setMode} questionCount={chemistryQuestions.length}>
 
     <section className="hero"><p className="eyebrow">EDEXCEL INTERNATIONAL GCSE CHEMISTRY 4CH1</p><h1>Your topics. Your Chemistry paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exact specification sections. MagicQuestions now keeps only the parts of each question that test the topic(s) you selected, removes unrelated parts, and renumbers the remaining parts from (a).</p></section>
 
-    <div style={{display:"flex",justifyContent:"center",margin:"-8px 0 24px"}}><nav className="tabs"><button className={mode==="generate"?"active":""} onClick={()=>setMode("generate")}>Generate</button><button className={mode==="bank"?"active":""} onClick={()=>setMode("bank")}>Question bank</button><button className={mode==="tracker"?"active":""} onClick={()=>setMode("tracker")}>Tracker</button></nav></div>
 
     {mode==="generate" ? <section className="builder">
       <div className="panel controls">
@@ -139,5 +134,5 @@ export default function ChemistryPage() {
       <ChemistryReviewTracker/>
       <div style={{display:"flex",flexDirection:"column",gap:18}}>{chemistrySections.map(section => { const sectionTags = section.subtopics.map(sub => `${section.number}${sub.code}`); const sectionDone = sectionTags.filter(tag => completedTopics.includes(tag)).length; const sectionPercent = Math.round((sectionDone / sectionTags.length) * 100); return <div key={section.number} style={{border:"1px solid var(--border, rgba(127,127,127,.2))",borderRadius:16,padding:18}}><div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",marginBottom:12}}><div><div className="qMeta">SECTION {section.number}</div><h3 style={{margin:"2px 0"}}>{section.title}</h3></div><b>{sectionPercent}%</b></div><div style={{height:8,borderRadius:999,background:"rgba(127,127,127,.16)",overflow:"hidden",marginBottom:14}}><div style={{height:"100%",width:`${sectionPercent}%`,background:"var(--accent, #6c4cff)",borderRadius:999}}/></div><div style={{display:"grid",gap:9}}>{section.subtopics.map(sub => { const tag = `${section.number}${sub.code}`; const done = completedTopics.includes(tag); return <label key={tag} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,cursor:"pointer",background:done?"rgba(108,76,255,.10)":"rgba(127,127,127,.06)"}}><input type="checkbox" checked={done} onChange={()=>toggleCompleted(tag)} style={{width:18,height:18}}/><span style={{textDecoration:done?"line-through":"none",opacity:done?.7:1}}><b>{section.number}({sub.code})</b> {sub.title}</span></label> })}</div></div> })}</div>
     </section>}
-  </main>;
+  </SubjectWorkspace>;
 }

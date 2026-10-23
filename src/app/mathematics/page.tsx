@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import SubjectWorkspace, { type SubjectWorkspaceMode } from "@/components/SubjectWorkspace";
 import { Difficulty, generateQuestions, Question, questions, searchQuestions, topics } from "@/lib/questionBank";
 import { exportMathsPaperToWord } from "@/lib/exportMathsWord";
 import { exportMarkSchemeToWord } from "@/lib/exportMarkScheme";
@@ -22,7 +23,7 @@ export default function MathematicsPage() {
   const [difficulty, setDifficulty] = useState<Difficulty | "Mixed">("Mixed");
   const [paper, setPaper] = useState<MathsPaperQuestion[]>([]);
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<"generate" | "bank">("generate");
+  const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
 
   useEffect(() => {
     let active = true;
@@ -114,12 +115,7 @@ export default function MathematicsPage() {
   }
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
-  return <main>
-    <header className="nav">
-      <div className="brand"><span className="spark">✦</span> MagicQuestions <span className="ownerTag">Edexcel IGCSE Mathematics</span></div>
-      <nav className="tabs"><button className={mode === "generate" ? "active" : ""} onClick={() => setMode("generate")}>Generate</button><button className={mode === "bank" ? "active" : ""} onClick={() => setMode("bank")}>Question bank</button><button onClick={() => router.push("/igcse")}>Subjects</button></nav>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>{isOwner && <button className="accountButton" onClick={() => router.push("/owner")}>Owner panel</button>}<div className="badge">{email}</div><button className="accountButton" onClick={signOut}>Log out</button></div>
-    </header>
+  return <SubjectWorkspace subject="Mathematics" email={email} mode={mode} onModeChange={setMode} questionCount={formattedQuestions.length} hasTracker={false} accountActions={<>{isOwner ? <button className="accountButton" onClick={() => router.push("/owner")}>Owner panel</button> : null}<button className="accountButton" onClick={signOut}>Log out</button></>}>
 
     <section className="hero"><p className="eyebrow">EDEXCEL IGCSE MATHEMATICS · PAST PAPERS, BUILT AROUND YOU</p><h1>Your topics. Your paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exactly what you want to practise. MagicQuestions selects matching Higher-tier Edexcel IGCSE Mathematics questions from the formatted Word question bank.</p></section>
 
@@ -137,7 +133,7 @@ export default function MathematicsPage() {
       <div className="topics compact">{topics.map(topic => <button key={topic} className={selected.includes(topic) ? "topic selected" : "topic"} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div>
       <div className="bankResults">{results.map(q => <article className="bankCard" key={q.id}><div><div className="qMeta">{q.session} {q.year} · {q.paper} · Q{q.questionNumber} · {q.difficulty}{hasMarkSchemeSource(q) ? " · Mark scheme ready" : " · Mark scheme unavailable"}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(t => <span key={t}>{t}</span>)}</div></div><div className="bankActions"><b>{q.marks} marks</b><button onClick={() => addQuestion(q)}>+ Add</button></div></article>)}</div>
     </section>}
-  </main>;
+  </SubjectWorkspace>;
 }
 
 type PaperPreviewProps = {
