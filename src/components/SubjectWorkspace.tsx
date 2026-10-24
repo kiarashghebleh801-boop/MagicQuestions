@@ -76,8 +76,6 @@ export default function SubjectWorkspace({ subject, email, mode, onModeChange, h
         <nav aria-label="Course resources">
           {toolButton("resources", "Course resources", "resources")}
           {hasTracker ? toolButton("tracker", "Tracker", "progress") : null}
-          <p className="subject-nav-heading">Revision</p>
-          {toolButton("notes", "Revision notes", "notes", true)}
           <p className="subject-nav-heading">Exam practice</p>
           {toolButton("bank", "Question bank", "questions")}
           {toolButton("generate", "Paper generator", "target")}
