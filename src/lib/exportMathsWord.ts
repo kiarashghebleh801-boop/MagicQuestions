@@ -323,6 +323,46 @@ function improveMathsQuestionLayout(xml: string, marks: number, isFirstQuestion:
   return out;
 }
 
+function finalMathsAnswerParagraphs(xml: string) {
+  const paragraphs = rawParagraphs(xml);
+  const total = paragraphs.find(p => /total\s+for\s+question/i.test(p.text));
+  const end = total?.start ?? xml.length;
+  const isAnswer = (p: typeof paragraphs[number]) =>
+    !/<(?:w:(?:drawing|pict|object|tbl)|m:oMath)\b/i.test(p.xml)
+    && (/\.{10,}/.test(p.text) || /<w:tab\b[^>]*w:leader=["']dot["']/i.test(p.xml));
+  let last = -1;
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    if (paragraphs[i].start < end && isAnswer(paragraphs[i])) { last = i; break; }
+  }
+  if (last < 0) return [];
+
+  // Several values can finish one question (e.g. a = ... and d = ...).
+  // Treat consecutive final responses as one block, stopping at any prompt,
+  // part marker, diagram or other content so separate subparts stay separate.
+  const answers = [paragraphs[last]];
+  for (let i = last - 1; i >= 0; i--) {
+    const p = paragraphs[i];
+    if (/<(?:w:(?:drawing|pict|object|tbl)|m:oMath)\b/i.test(p.xml)) break;
+    if (!p.text) continue;
+    if (!isAnswer(p)) break;
+    answers.unshift(p);
+  }
+  return answers;
+}
+
+function keepMathsFinalAnswersTogether(xml: string): string {
+  const answers = finalMathsAnswerParagraphs(xml);
+  // Do not chain a whole page of dotted written-response lines together.
+  if (answers.length < 2 || answers.length > 6) return xml;
+  const first = answers[0];
+  const last = answers[answers.length - 1];
+  const block = xml.slice(first.start, last.end).replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    paragraph = setParagraphProperty(paragraph, "keepNext", "<w:keepNext/>");
+    return setParagraphProperty(paragraph, "keepLines", "<w:keepLines/>");
+  });
+  return xml.slice(0, first.start) + block + xml.slice(last.end);
+}
+
 function ensureMathsWorkingSpace(xml: string, marks: number): string {
   if (marks !== 5 && marks !== 6) return xml;
   const paragraphs = rawParagraphs(xml);
@@ -332,8 +372,7 @@ function ensureMathsWorkingSpace(xml: string, marks: number): string {
 
   const total = paragraphs.find(p => /total\s+for\s+question/i.test(p.text));
   const end = total?.start ?? xml.length;
-  const answer = [...paragraphs].reverse().find(p => p.start < end
-    && (/\.{10,}/.test(p.text) || /<w:tab\b[^>]*w:leader=["']dot["']/i.test(p.xml)));
+  const answer = finalMathsAnswerParagraphs(xml)[0];
   const insertion = answer?.start ?? end;
   // Two 22-point working rows per mark: 5 marks gets 10 rows, 6 gets 12.
   // Count existing space first, including unusually tall source paragraphs.
@@ -646,6 +685,7 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
     chunk = renumberQuestion(chunk, i + 1);
     chunk = normalizeMathsAnswerLines(chunk);
     chunk = ensureMathsWorkingSpace(chunk, questions[i].marks);
+    chunk = keepMathsFinalAnswersTogether(chunk);
     chunk = improveMathsQuestionLayout(chunk, questions[i].marks, i === 0);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
     chunk = renumberDrawingIds(chunk, drawingCounter);
