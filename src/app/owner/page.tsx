@@ -83,6 +83,33 @@ export default function OwnerPage() {
     }
   }
 
+  async function sendPasswordReset(row: Profile) {
+    if (!row.email) {
+      setMessage("This account has no email address.");
+      return;
+    }
+
+    setMessage(`Sending password reset to ${row.email}…`);
+    const { data, error } = await supabase.functions.invoke("owner-password-reset", {
+      body: {
+        email: row.email,
+        redirectTo: `${window.location.origin}/reset-password`,
+      },
+    });
+
+    if (error) {
+      setMessage(error.message || "Could not send password reset.");
+      return;
+    }
+
+    if (data?.error) {
+      setMessage(data.error);
+      return;
+    }
+
+    setMessage(`Password reset email sent to ${row.email}.`);
+  }
+
   if (!ready) return <main className="authPage"><div className="authLogo"><span>✦</span> MagicQuestions</div></main>;
 
   if (!owner) return <main className="ownerPage"><div className="ownerDenied panel"><h1>Owner access only</h1><p>This account is not the MagicQuestions owner.</p><button onClick={() => router.push("/")}>Back to app</button></div></main>;
@@ -98,7 +125,7 @@ export default function OwnerPage() {
         <div>
           <p className="eyebrow">OWNER CONTROL PANEL</p>
           <h1>User management</h1>
-          <p>See registered users, who is active right now, and ban or unban accounts.</p>
+          <p>See registered users, who is active right now, manage access, and securely send password-reset links.</p>
         </div>
         <div className="ownerStats">
           <div><b>{rows.length}</b><span>accounts</span></div>
@@ -124,7 +151,7 @@ export default function OwnerPage() {
                   <td>{new Date(row.created_at).toLocaleDateString()}</td>
                   <td><span className={`statusPill ${activity.kind === "online" ? "active" : ""}`}>{activity.label}</span></td>
                   <td><span className={row.banned ? "statusPill banned" : "statusPill active"}>{row.banned ? "Banned" : "Allowed"}</span></td>
-                  <td><div className="ownerActions"><button className={row.banned ? "unban" : "ban"} onClick={() => void toggleBan(row)} disabled={row.role === "owner"}>{row.banned ? "Unban" : "Ban"}</button></div></td>
+                  <td><div className="ownerActions"><button onClick={() => void sendPasswordReset(row)} disabled={!row.email}>Reset password</button><button className={row.banned ? "unban" : "ban"} onClick={() => void toggleBan(row)} disabled={row.role === "owner"}>{row.banned ? "Unban" : "Ban"}</button></div></td>
                 </tr>;
               })}
             </tbody>
