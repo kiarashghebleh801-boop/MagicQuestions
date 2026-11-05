@@ -22,6 +22,8 @@ export default function PhysicsPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>(["1b"]);
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [count, setCount] = useState(5);
+  const [coverMode, setCoverMode] = useState<"" | "worksheet" | "mock">("");
+  const [generatedDate, setGeneratedDate] = useState("");
   const [paper, setPaper] = useState<Question[]>([]);
   const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
@@ -79,6 +81,8 @@ export default function PhysicsPage() {
   }
 
   function generate() {
+    if (!coverMode) { window.alert("Choose Worksheet or Mock / Assessment before generating."); return; }
+    setGeneratedDate(new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date()));
     const shuffled = [...matchingQuestions].sort(() => Math.random() - .5);
     setPaper(shuffled.slice(0, Math.min(count, shuffled.length)));
   }
@@ -109,7 +113,7 @@ export default function PhysicsPage() {
     if (!paper.length || exporting) return;
     setExporting(true);
     try {
-      await exportPhysicsPaperToWord(paper);
+      await exportPhysicsPaperToWord(paper, { coverMode: coverMode || "worksheet", generatedDate });
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Could not create the Physics Word paper.");
     } finally {
@@ -151,7 +155,8 @@ export default function PhysicsPage() {
         <div className="divider"/>
         <div className="step"><span>2</span><div><b>Paper settings</b><small>Choose how many questions</small></div></div>
         <div className="settingRow"><div className="counter"><button onClick={() => setCount(Math.max(1, count - 1))}>−</button><strong>{count}</strong><button onClick={() => setCount(Math.min(20, count + 1))}>+</button></div></div>
-        <button className="generate" onClick={generate}>✦ Generate Physics paper</button>
+        <div style={{marginTop:14}}><div className="qMeta" style={{marginBottom:7}}>Front cover · choose one</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button type="button" onClick={()=>setCoverMode("worksheet")} style={{border:`1px solid ${coverMode==="worksheet"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="worksheet"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="worksheet"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Worksheet</button><button type="button" onClick={()=>setCoverMode("mock")} style={{border:`1px solid ${coverMode==="mock"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="mock"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="mock"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Mock / Assessment</button></div><small style={{display:"block",marginTop:7,color:"#888"}}>{coverMode==="mock"?"Mock cover · Physics · Unit 4PH1 · 2 hours":coverMode==="worksheet"?"Original worksheet cover":"Select a cover type before generating"}</small></div>
+        <button className="generate" onClick={generate} disabled={!coverMode}>✦ Generate Physics paper</button>
       </div>
 
       <div className="panel preview">
