@@ -21,6 +21,8 @@ type LoadedDoc = {
   contentTypesXml: XMLDocument;
 };
 
+export type PhysicsCoverMode = "worksheet" | "mock";
+type PhysicsExportOptions = { coverMode?: PhysicsCoverMode; generatedDate?: string };
 type RelState = { xml: string; used: Set<string>; counter: number; mediaCounter: number };
 type ContentTypesState = { xml: string };
 
@@ -605,6 +607,79 @@ function buildCover(cover: LoadedDoc, totalMarks: number): string {
   return xml;
 }
 
+
+function physicsMockParagraph(text: string, options: { bold?: boolean; size?: number; before?: number; after?: number; left?: number; center?: boolean } = {}): string {
+  const size = options.size ?? 22;
+  const escaped = escapeXml(text);
+  const pPr = [
+    '<w:spacing w:before="' + (options.before ?? 0) + '" w:after="' + (options.after ?? 0) + '" w:line="240" w:lineRule="auto"/>',
+    options.left ? '<w:ind w:left="' + options.left + '"/>' : '',
+    options.center ? '<w:jc w:val="center"/>' : '',
+  ].join("");
+  const rPr = '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>' + (options.bold ? '<w:b/><w:bCs/>' : '') + '<w:sz w:val="' + size + '"/><w:szCs w:val="' + size + '"/>';
+  return '<w:p><w:pPr>' + pPr + '</w:pPr><w:r><w:rPr>' + rPr + '</w:rPr><w:t xml:space="preserve">' + escaped + '</w:t></w:r></w:p>';
+}
+
+function physicsMockBullet(text: string): string {
+  return physicsMockParagraph('•  ' + text, { left: 360 });
+}
+
+function buildPhysicsMockCover(totalMarks: number, generatedDate: string): string {
+  const dateText = generatedDate || new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
+
+  const topTable = [
+    '<w:tbl><w:tblPr><w:tblW w:w="9350" w:type="dxa"/><w:tblBorders>',
+    '<w:top w:val="single" w:sz="8" w:color="000000"/><w:left w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:bottom w:val="single" w:sz="8" w:color="000000"/><w:right w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:insideH w:val="single" w:sz="8" w:color="000000"/><w:insideV w:val="single" w:sz="8" w:color="000000"/>',
+    '</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="900"/><w:gridCol w:w="5900"/><w:gridCol w:w="1150"/><w:gridCol w:w="1400"/></w:tblGrid>',
+    '<w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="900" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + physicsMockParagraph("Name", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="5900" w:type="dxa"/></w:tcPr>' + physicsMockParagraph("") + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1150" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + physicsMockParagraph("Subject", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1400" w:type="dxa"/></w:tcPr>' + physicsMockParagraph("Physics") + '</w:tc>',
+    '</w:tr>',
+    '<w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="6800" w:type="dxa"/><w:gridSpan w:val="2"/></w:tcPr>' + physicsMockParagraph('Date: ' + dateText + ' (Time 2 hours)', { bold: true, center: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1150" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + physicsMockParagraph("Unit", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1400" w:type="dxa"/></w:tcPr>' + physicsMockParagraph("4PH1", { bold: true }) + '</w:tc>',
+    '</w:tr></w:tbl>'
+  ].join("");
+
+  const marksTable = [
+    '<w:tbl><w:tblPr><w:tblW w:w="3900" w:type="dxa"/><w:jc w:val="right"/><w:tblBorders>',
+    '<w:top w:val="single" w:sz="8" w:color="000000"/><w:left w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:bottom w:val="single" w:sz="8" w:color="000000"/><w:right w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:insideV w:val="single" w:sz="8" w:color="000000"/></w:tblBorders></w:tblPr>',
+    '<w:tblGrid><w:gridCol w:w="1850"/><w:gridCol w:w="2050"/></w:tblGrid><w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="1850" w:type="dxa"/></w:tcPr>' + physicsMockParagraph("You must have: Calculator, ruler") + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="2050" w:type="dxa"/></w:tcPr>' + physicsMockParagraph("Total marks", { center: true }) + physicsMockParagraph(" ", { after: 520 }) + '</w:tc>',
+    '</w:tr></w:tbl>'
+  ].join("");
+
+  return [
+    topTable,
+    physicsMockParagraph("", { after: 160 }),
+    marksTable,
+    physicsMockParagraph("Physics Mock / Assessment", { bold: true, size: 28, before: 120, after: 120 }),
+    physicsMockParagraph("Instructions", { bold: true, size: 24, before: 80, after: 60 }),
+    physicsMockBullet("Use black ink or ball-point pen."),
+    physicsMockBullet("Answer all questions."),
+    physicsMockBullet("Answer the questions in the spaces provided - there may be more space than you need."),
+    physicsMockBullet("Show all the steps in any calculations and state the units."),
+    physicsMockBullet("Some questions must be answered with a cross in a box. If you change your mind, cross out the box and mark your new answer."),
+    physicsMockParagraph("Information", { bold: true, size: 24, before: 80, after: 40 }),
+    physicsMockBullet("The total mark for this paper is " + totalMarks + "."),
+    physicsMockBullet("The marks for each question are shown in brackets - use this as a guide as to how much time to spend on each question."),
+    physicsMockParagraph("Advice", { bold: true, size: 24, before: 80, after: 40 }),
+    physicsMockBullet("Read each question carefully before you start to answer it."),
+    physicsMockBullet("Write your answers neatly and in good English."),
+    physicsMockBullet("Try to answer every question."),
+    physicsMockBullet("Check your answers if you have time at the end."),
+    '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'
+  ].join("");
+}
+
 function mergeNamespaces(templateXml: string, sources: LoadedDoc[]): string {
   const start = templateXml.indexOf("<w:document");
   const end = templateXml.indexOf(">", start);
@@ -645,7 +720,7 @@ function download(bytes: Uint8Array) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-export async function exportPhysicsPaperToWord(questions: Question[]) {
+export async function exportPhysicsPaperToWord(questions: Question[], options: PhysicsExportOptions = {}) {
   if (!questions.length) return;
   const filenames = questions.map(q => getFormattedSource(q));
   const missing = questions.filter((q, i) => !filenames[i]);
@@ -667,7 +742,10 @@ export async function exportPhysicsPaperToWord(questions: Question[]) {
   const contentState: ContentTypesState = { xml: template.contentTypesText };
   const drawingCounter = { value: 1 };
 
-  let coverChunk = buildCover(cover, questions.reduce((sum, q) => sum + q.marks, 0));
+  const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+  let coverChunk = options.coverMode === "mock"
+    ? buildPhysicsMockCover(totalMarks, options.generatedDate || "")
+    : buildCover(cover, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
 
