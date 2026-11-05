@@ -1,3 +1,4 @@
+import { chemistryQuestions2020 } from "./chemistryQuestions2020";
 import { chemistryQuestions2024 } from "./chemistryQuestions2024";
 import { chemistryQuestionsArchive } from "./chemistryQuestionsArchive";
 import { chemistryQuestions2026 } from "./chemistryQuestions2026";
@@ -57,6 +58,7 @@ const addedChemistryPapers: ChemistryQuestion[] = [
 
 export const chemistryQuestions: ChemistryQuestion[] = [
   ...chemistryQuestions2026,
+  ...chemistryQuestions2020,
   ...chemistryQuestionsArchive,
   ...chemistryQuestions2024,
   ...addedChemistryPapers,

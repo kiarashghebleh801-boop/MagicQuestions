@@ -99,7 +99,7 @@ def index_pdf(path):
                 tail = text_in(words, fitz.Rect(w[0] - 1, w[1] - 2, page.rect.width, w[3] + 3))
                 if tail == 'Total' and w[0] > notes_x:
                     tail = text_in(words, fitz.Rect(w[0]-1, w[1]-2, page.rect.width, w[3]+18))
-                if not re.match(r'^total(?:\s+for\s+question|\s*=|\s+\d+)', tail, re.I):
+                if not re.match(r'^total(?:\s+(?:for\s+)?(?:question|q\d)|\s*=|\s+\d+)', tail, re.I):
                     continue
                 values = re.findall(r'\d+', tail)
                 if not values or ('question' in tail.lower() and len(values) < 2):
