@@ -200,7 +200,7 @@ function SwapQuestionModal({current,paper,questions,onClose,onChoose}:{current:M
   const [search,setSearch] = useState("");
   const [expandedId,setExpandedId] = useState<string|null>(null);
   const usedIds = useMemo(() => new Set(paper.map(q => q.id)), [paper]);
-  const availableTopics = current.topics;
+  const availableTopics = useMemo(() => Array.from(new Set(questions.flatMap(q => q.topics))).sort(), [questions]);
   const candidates = useMemo(() => questions
     .filter(q => !usedIds.has(q.id) && q.topics.includes(topic))
     .filter(q => !search.trim() || `${q.summary} ${q.session} ${q.year} ${q.paper} Q${q.questionNumber} ${q.topics.join(" ")}`.toLowerCase().includes(search.toLowerCase()))
