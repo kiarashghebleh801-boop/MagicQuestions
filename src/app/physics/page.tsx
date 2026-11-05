@@ -166,7 +166,7 @@ export default function PhysicsPage() {
           <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button className="word" onClick={() => void downloadMarkScheme()} disabled={exportingMarkScheme}>{exportingMarkScheme ? "Creating mark scheme…" : "↓ Download mark scheme"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
           {reviewOpen && <PaperReview paper={paper} title="Physics paper review" onClose={() => setReviewOpen(false)}/>} 
         </>}
-        {swapIndex !== null && paper[swapIndex] && <ScienceSwapModal subject="Physics" current={paper[swapIndex]} paper={paper} questions={matchingQuestions} topicLabel={tag => `Spec ${tag[0]}(${tag.slice(1)}) · ${physicsTopicTitle.get(tag) || tag}`} onClose={() => setSwapIndex(null)} onChoose={q => {replaceQuestion(swapIndex, q);setSwapIndex(null);}}/>}
+        {swapIndex !== null && paper[swapIndex] && <ScienceSwapModal subject="Physics" current={paper[swapIndex]} paper={paper} questions={physicsQuestions} topicLabel={tag => `Spec ${tag[0]}(${tag.slice(1)}) · ${physicsTopicTitle.get(tag) || tag}`} onClose={() => setSwapIndex(null)} onChoose={q => {replaceQuestion(swapIndex, q);setSwapIndex(null);}}/>}
       </div>
     </section> : mode === "bank" ? <section className="bank panel">
       <div className="bankTop"><div><p className="eyebrow">PHYSICS QUESTION BANK</p><h2>Browse {bankResults.length} matching questions</h2></div><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Physics questions…"/></div>
