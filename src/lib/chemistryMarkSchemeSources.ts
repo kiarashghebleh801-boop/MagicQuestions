@@ -9,6 +9,8 @@ const sourceByPaper: Record<string, string> = {
   "2023|November|2C": "IGCSE_CHEMISTRY_2023_Nov_P2_MS.pdf",
   "2024|May/June|1C": "IGCSE_CHEMISTRY_2024_MayJune_P1_MS.pdf",
   "2024|May/June|2C": "IGCSE_CHEMISTRY_2024_MayJune_P2_MS.pdf",
+  "2024|November|1C": "IGCSE_CHEMISTRY_2024_Nov_P1_MS.pdf",
+  "2024|November|2C": "IGCSE_CHEMISTRY_2024_Nov_P2_MS_1777793506071.pdf",
   "2025|May/June|1CR": "IGCSE_CHEMISTRY_2025_MayJune_P1R_MS (1).pdf",
   "2025|May/June|1C": "IGCSE_CHEMISTRY_2025_MayJune_P1_MS (1).pdf",
   "2025|May/June|2CR": "IGCSE_CHEMISTRY_2025_MayJune_P2R_MS (1).pdf",
