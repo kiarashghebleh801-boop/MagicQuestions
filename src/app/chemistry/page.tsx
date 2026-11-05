@@ -43,6 +43,7 @@ export default function ChemistryPage() {
   const [count, setCount] = useState(5);
   const [coverMode, setCoverMode] = useState<"" | "worksheet" | "mock">("");
   const [generatedDate, setGeneratedDate] = useState("");
+  const [examName, setExamName] = useState("");
   const [paper, setPaper] = useState<ChemistryQuestionSelection[]>([]);
   const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
@@ -92,7 +93,7 @@ export default function ChemistryPage() {
   function toggleTopic(tag: string) { setSelectedTopics(current => current.includes(tag) ? current.filter(x=>x!==tag) : [...current, tag]); }
   function toggleCompleted(tag: string) { setCompletedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]); }
   function generate() {
-    if (!coverMode) { window.alert("Choose Worksheet or Mock / Assessment before generating."); return; }
+    if (!coverMode) { window.alert("Choose Worksheet or Mock / Assessment before generating."); return; } if (coverMode === "mock" && !examName.trim()) { window.alert("Enter the exam name before generating the mock / assessment."); return; }
     setGeneratedDate(new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date()));
     setPaper(current => {
       const targetCount = Math.min(count, topicSpecificQuestions.length);
@@ -121,7 +122,7 @@ export default function ChemistryPage() {
   function replaceQuestion(index: number, replacement: ChemistryQuestionSelection) {
     setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
-  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry", coverMode: coverMode || "worksheet", generatedDate }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper."); } finally { setExporting(false); } }
+  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry", coverMode: coverMode || "worksheet", generatedDate, examName }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper."); } finally { setExporting(false); } }
 
   async function downloadMarkScheme() {
     if (!paper.length || exportingMarkScheme) return;
@@ -146,7 +147,7 @@ export default function ChemistryPage() {
         <div className="divider"/><div className="step"><span>2</span><div><b>Paper settings</b><small>Choose how many questions</small></div></div>
         <div className="settingRow"><div className="counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={()=>setCount(Math.min(16,count+1))}>+</button></div></div>
         <div style={{marginTop:14}}><div className="qMeta" style={{marginBottom:7}}>Front cover · choose one</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button type="button" onClick={()=>setCoverMode("worksheet")} style={{border:`1px solid ${coverMode==="worksheet"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="worksheet"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="worksheet"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Worksheet</button><button type="button" onClick={()=>setCoverMode("mock")} style={{border:`1px solid ${coverMode==="mock"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="mock"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="mock"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Mock / Assessment</button></div><small style={{display:"block",marginTop:7,color:"#888"}}>{coverMode==="mock"?"Mock cover · Chemistry · Unit 4CH1 · 2 hours":coverMode==="worksheet"?"Original worksheet cover":"Select a cover type before generating"}</small></div>
-        <button className="generate" onClick={generate} disabled={!coverMode}>⚗ Generate Chemistry paper</button>
+        {coverMode==="mock"&&<input value={examName} onChange={e=>setExamName(e.target.value)} placeholder="Exam name (e.g. Year 10 Chemistry Mock)" style={{width:"100%",marginTop:10,boxSizing:"border-box",border:"1px solid rgba(201,162,39,.35)",background:"#111",color:"#eee",borderRadius:10,padding:"10px 12px",font:"inherit"}}/>}<button className="generate" onClick={generate} disabled={!coverMode || (coverMode==="mock"&&!examName.trim())}>⚗ Generate Chemistry paper</button>
       </div>
 
       <div className="panel preview">
