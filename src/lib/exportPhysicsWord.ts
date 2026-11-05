@@ -22,7 +22,7 @@ type LoadedDoc = {
 };
 
 export type PhysicsCoverMode = "worksheet" | "mock";
-type PhysicsExportOptions = { coverMode?: PhysicsCoverMode; generatedDate?: string };
+type PhysicsExportOptions = { coverMode?: PhysicsCoverMode; generatedDate?: string; examName?: string };
 type RelState = { xml: string; used: Set<string>; counter: number; mediaCounter: number };
 type ContentTypesState = { xml: string };
 
@@ -637,7 +637,7 @@ function physicsMockBullet(text: string): string {
   return physicsMockParagraph('•  ' + text, { left: 360 });
 }
 
-function buildPhysicsMockCover(totalMarks: number, generatedDate: string): string {
+function buildPhysicsMockCover(totalMarks: number, generatedDate: string, examName: string): string {
   const dateText = generatedDate || new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
 
   const topTable = [
@@ -674,7 +674,7 @@ function buildPhysicsMockCover(totalMarks: number, generatedDate: string): strin
     topTable,
     physicsMockParagraph("", { after: 160 }),
     marksTable,
-    physicsMockParagraph("Physics Mock / Assessment", { bold: true, size: 28, before: 120, after: 120 }),
+    physicsMockParagraph(examName.trim() || "Physics Mock / Assessment", { bold: true, size: 28, before: 120, after: 120 }),
     physicsMockParagraph("Instructions", { bold: true, size: 24, before: 80, after: 60 }),
     physicsMockBullet("Use black ink or ball-point pen."),
     physicsMockBullet("Answer all questions."),
@@ -757,7 +757,7 @@ export async function exportPhysicsPaperToWord(questions: Question[], options: P
 
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
   let coverChunk = options.coverMode === "mock"
-    ? buildPhysicsMockCover(totalMarks, options.generatedDate || "")
+    ? buildPhysicsMockCover(totalMarks, options.generatedDate || "", options.examName || "")
     : buildCover(cover, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
