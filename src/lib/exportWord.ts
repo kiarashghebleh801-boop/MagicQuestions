@@ -21,7 +21,7 @@ type LoadedDoc = {
 };
 
 export type ScienceCoverMode = "worksheet" | "mock";
-type ExportOptions = { subject?: string; coverMode?: ScienceCoverMode; generatedDate?: string };
+type ExportOptions = { subject?: string; coverMode?: ScienceCoverMode; generatedDate?: string; examName?: string };
 type RelState = { xml: string; used: Set<string>; counter: number; mediaCounter: number };
 type ContentTypesState = { xml: string };
 type ExportQuestion = Question & { selectedParts?: string[] };
@@ -840,7 +840,7 @@ function mockBullet(text: string): string {
   return mockParagraph('•  ' + text, { left: 360 });
 }
 
-function buildMockCoverChunk(subject: string, totalMarks: number, generatedDate: string): string {
+function buildMockCoverChunk(subject: string, totalMarks: number, generatedDate: string, examName: string): string {
   const simpleSubject = mockCoverSubject(subject);
   const unit = mockCoverUnit(subject);
   const dateText = generatedDate || new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
@@ -875,7 +875,7 @@ function buildMockCoverChunk(subject: string, totalMarks: number, generatedDate:
     '</w:tr></w:tbl>'
   ].join("");
 
-  const heading = mockParagraph(simpleSubject + " Mock / Assessment", { bold: true, size: 28, before: 120, after: 120 });
+  const heading = mockParagraph(examName.trim() || (simpleSubject + " Mock / Assessment"), { bold: true, size: 28, before: 120, after: 120 });
   const instructions = [
     mockParagraph("Instructions", { bold: true, size: 24, before: 80, after: 60 }),
     mockBullet("Use black ink or ball-point pen."),
@@ -937,7 +937,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const drawingCounter = { value: 1 };
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
   let coverChunk = options.coverMode === "mock"
-    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "")
+    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "", options.examName || "")
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
@@ -964,7 +964,7 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const drawingCounter = { value: 1 };
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
   let coverChunk = options.coverMode === "mock"
-    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "")
+    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "", options.examName || "")
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
