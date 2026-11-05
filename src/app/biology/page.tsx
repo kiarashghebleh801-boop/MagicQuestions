@@ -43,6 +43,7 @@ export default function BiologyPage() {
   const [count, setCount] = useState(5);
   const [coverMode, setCoverMode] = useState<"" | "worksheet" | "mock">("");
   const [generatedDate, setGeneratedDate] = useState("");
+  const [examName, setExamName] = useState("");
   const [paper, setPaper] = useState<BiologyQuestionSelection[]>([]);
   const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
@@ -91,14 +92,14 @@ export default function BiologyPage() {
 
   function toggleTopic(tag: string) { setSelectedTopics(current => current.includes(tag) ? current.filter(x=>x!==tag) : [...current, tag]); }
   function toggleCompleted(tag: string) { setCompletedTopics(current => current.includes(tag) ? current.filter(x => x !== tag) : [...current, tag]); }
-  function generate() { if (!coverMode) { window.alert("Choose Worksheet or Mock / Assessment before generating."); return; } setGeneratedDate(new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date())); const shuffled = [...topicSpecificQuestions].sort(() => Math.random() - .5); setPaper(shuffled.slice(0, Math.min(count, shuffled.length))); }
+  function generate() { if (!coverMode) { window.alert("Choose Worksheet or Mock / Assessment before generating."); return; } if (coverMode === "mock" && !examName.trim()) { window.alert("Enter the exam name before generating the mock / assessment."); return; } setGeneratedDate(new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date())); const shuffled = [...topicSpecificQuestions].sort(() => Math.random() - .5); setPaper(shuffled.slice(0, Math.min(count, shuffled.length))); }
   function addQuestion(q: BiologyQuestion) { const specialised = specialiseBiologyQuestion(q, selectedTopics); if (!specialised) { window.alert("That question contains material outside the selected specification topic(s)."); return; } setPaper(current => current.some(x=>x.id===specialised.id) ? current : [...current,specialised]); }
   function removeQuestion(id: string) { setPaper(current => current.filter(q=>q.id!==id)); }
   function moveQuestion(index:number,direction:number) { setPaper(current => { const next=index+direction; if(next<0||next>=current.length) return current; const copy=[...current]; [copy[index],copy[next]]=[copy[next],copy[index]]; return copy; }); }
   function replaceQuestion(index: number, replacement: BiologyQuestionSelection) {
     setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
-  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Biology", coverMode: coverMode || "worksheet", generatedDate }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Biology Word paper."); } finally { setExporting(false); } }
+  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Biology", coverMode: coverMode || "worksheet", generatedDate, examName }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Biology Word paper."); } finally { setExporting(false); } }
 
   async function downloadMarkScheme() {
     if (!paper.length || exportingMarkScheme) return;
@@ -124,7 +125,7 @@ export default function BiologyPage() {
         <div className="divider"/><div className="step"><span>2</span><div><b>Paper settings</b><small>Choose how many questions</small></div></div>
         <div className="settingRow"><div className="counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}</strong><button onClick={()=>setCount(Math.min(16,count+1))}>+</button></div></div>
         <div style={{marginTop:14}}><div className="qMeta" style={{marginBottom:7}}>Front cover · choose one</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button type="button" onClick={()=>setCoverMode("worksheet")} style={{border:`1px solid ${coverMode==="worksheet"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="worksheet"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="worksheet"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Worksheet</button><button type="button" onClick={()=>setCoverMode("mock")} style={{border:`1px solid ${coverMode==="mock"?"#c9a227":"rgba(255,255,255,.13)"}`,background:coverMode==="mock"?"rgba(201,162,39,.14)":"#151515",color:coverMode==="mock"?"#f0d36a":"#bbb",borderRadius:10,padding:"10px 12px",fontWeight:800,cursor:"pointer"}}>Mock / Assessment</button></div><small style={{display:"block",marginTop:7,color:"#888"}}>{coverMode==="mock"?"Mock cover · Biology · Unit 4BI1 · 2 hours":coverMode==="worksheet"?"Original worksheet cover":"Select a cover type before generating"}</small></div>
-        <button className="generate" onClick={generate} disabled={!topicSpecificQuestions.length || !coverMode}>✦ Generate Biology paper</button>
+        {coverMode==="mock"&&<input value={examName} onChange={e=>setExamName(e.target.value)} placeholder="Exam name (e.g. Year 10 Biology Mock)" style={{width:"100%",marginTop:10,boxSizing:"border-box",border:"1px solid rgba(201,162,39,.35)",background:"#111",color:"#eee",borderRadius:10,padding:"10px 12px",font:"inherit"}}/>}<button className="generate" onClick={generate} disabled={!topicSpecificQuestions.length || !coverMode || (coverMode==="mock"&&!examName.trim())}>✦ Generate Biology paper</button>
       </div>
 
       <div className="panel preview">
