@@ -19,6 +19,7 @@ export default function ScienceSwapModal({ subject, current, paper, questions, o
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const used = useMemo(() => new Set(paper.map(q => q.id)), [paper]);
+  const availableTopics = useMemo(() => Array.from(new Set(questions.flatMap(q => q.topics))).sort(), [questions]);
   const candidates = useMemo(() => questions
     .filter(q => !used.has(q.id) && q.topics.includes(topic))
     .filter(q => !search.trim() || `${q.summary} ${q.session} ${q.year} ${q.paper} Q${q.questionNumber} ${q.topics.join(" ")}`.toLowerCase().includes(search.trim().toLowerCase()))
@@ -45,7 +46,7 @@ export default function ScienceSwapModal({ subject, current, paper, questions, o
       </div>
       <div style={{padding:"14px 20px",borderBottom:"1px solid rgba(255,255,255,.07)"}}>
         <div style={{fontSize:11,color:"#8f8f8f",marginBottom:7}}>Choose topic</div>
-        <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:12}}>{current.topics.map(t => <button key={t} onClick={() => setTopic(t)} style={{border:`1px solid ${topic === t ? "#c9a227" : "rgba(255,255,255,.12)"}`,background:topic === t ? "rgba(201,162,39,.15)" : "#151515",color:topic === t ? "#f0d36a" : "#bbb",borderRadius:999,padding:"7px 10px",fontWeight:750,cursor:"pointer"}}>{topicLabel?.(t) || t}</button>)}</div>
+        <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:12,maxHeight:150,overflowY:"auto"}}>{availableTopics.map(t => <button key={t} onClick={() => setTopic(t)} style={{border:`1px solid ${topic === t ? "#c9a227" : "rgba(255,255,255,.12)"}`,background:topic === t ? "rgba(201,162,39,.15)" : "#151515",color:topic === t ? "#f0d36a" : "#bbb",borderRadius:999,padding:"7px 10px",fontWeight:750,cursor:"pointer"}}>{topicLabel?.(t) || t}</button>)}</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search year, paper, question or topic…" style={{width:"100%",boxSizing:"border-box",background:"#090909",border:"1px solid rgba(255,255,255,.13)",color:"#eee",borderRadius:10,padding:"11px 12px",outline:"none"}}/>
       </div>
       <div style={{padding:"10px 20px 18px",overflowY:"auto"}}>
