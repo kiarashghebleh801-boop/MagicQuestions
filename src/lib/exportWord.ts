@@ -20,7 +20,8 @@ type LoadedDoc = {
   contentTypesXml: XMLDocument;
 };
 
-type ExportOptions = { subject?: string };
+export type ScienceCoverMode = "worksheet" | "mock";
+type ExportOptions = { subject?: string; coverMode?: ScienceCoverMode; generatedDate?: string };
 type RelState = { xml: string; used: Set<string>; counter: number; mediaCounter: number };
 type ContentTypesState = { xml: string };
 type ExportQuestion = Question & { selectedParts?: string[] };
@@ -796,6 +797,101 @@ function buildCoverChunk(cover: LoadedDoc, subject: string, totalMarks: number):
   return xml;
 }
 
+
+function xmlText(value: string): string {
+  return escapeXml(value);
+}
+
+function mockCoverUnit(subject: string): string {
+  if (/Chemistry/i.test(subject)) return "4CH1";
+  if (/Physics/i.test(subject)) return "4PH1";
+  if (/Biology/i.test(subject)) return "4BI1";
+  return "";
+}
+
+function mockCoverSubject(subject: string): string {
+  if (/Chemistry/i.test(subject)) return "Chemistry";
+  if (/Physics/i.test(subject)) return "Physics";
+  if (/Biology/i.test(subject)) return "Biology";
+  return subject.replace(/^Edexcel IGCSE\s*/i, "");
+}
+
+function mockParagraph(text: string, options: { bold?: boolean; italic?: boolean; size?: number; before?: number; after?: number; left?: number; center?: boolean } = {}): string {
+  const size = options.size ?? 22;
+  const pPr = [
+    '<w:spacing w:before="' + (options.before ?? 0) + '" w:after="' + (options.after ?? 0) + '" w:line="240" w:lineRule="auto"/>',
+    options.left ? '<w:ind w:left="' + options.left + '"/>' : '',
+    options.center ? '<w:jc w:val="center"/>' : '',
+  ].join("");
+  const rPr = [
+    '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>',
+    options.bold ? '<w:b/><w:bCs/>' : '',
+    options.italic ? '<w:i/><w:iCs/>' : '',
+    '<w:sz w:val="' + size + '"/><w:szCs w:val="' + size + '"/>',
+  ].join("");
+  return '<w:p><w:pPr>' + pPr + '</w:pPr><w:r><w:rPr>' + rPr + '</w:rPr><w:t xml:space="preserve">' + xmlText(text) + '</w:t></w:r></w:p>';
+}
+
+function mockBullet(text: string): string {
+  return mockParagraph('•  ' + text, { left: 360 });
+}
+
+function buildMockCoverChunk(subject: string, totalMarks: number, generatedDate: string): string {
+  const simpleSubject = mockCoverSubject(subject);
+  const unit = mockCoverUnit(subject);
+  const dateText = generatedDate || new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
+
+  const topTable = [
+    '<w:tbl><w:tblPr><w:tblW w:w="9350" w:type="dxa"/><w:tblBorders>',
+    '<w:top w:val="single" w:sz="8" w:color="000000"/><w:left w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:bottom w:val="single" w:sz="8" w:color="000000"/><w:right w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:insideH w:val="single" w:sz="8" w:color="000000"/><w:insideV w:val="single" w:sz="8" w:color="000000"/>',
+    '</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="900"/><w:gridCol w:w="5900"/><w:gridCol w:w="1150"/><w:gridCol w:w="1400"/></w:tblGrid>',
+    '<w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="900" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + mockParagraph("Name", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="5900" w:type="dxa"/></w:tcPr>' + mockParagraph("") + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1150" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + mockParagraph("Subject", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1400" w:type="dxa"/></w:tcPr>' + mockParagraph(simpleSubject) + '</w:tc>',
+    '</w:tr>',
+    '<w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="6800" w:type="dxa"/><w:gridSpan w:val="2"/></w:tcPr>' + mockParagraph('Date: ' + dateText + ' (Time 2 hours)', { bold: true, center: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1150" w:type="dxa"/><w:shd w:fill="F2F2F2"/></w:tcPr>' + mockParagraph("Unit", { bold: true }) + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="1400" w:type="dxa"/></w:tcPr>' + mockParagraph(unit, { bold: true }) + '</w:tc>',
+    '</w:tr></w:tbl>'
+  ].join("");
+
+  const marksTable = [
+    '<w:tbl><w:tblPr><w:tblW w:w="3900" w:type="dxa"/><w:jc w:val="right"/><w:tblBorders>',
+    '<w:top w:val="single" w:sz="8" w:color="000000"/><w:left w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:bottom w:val="single" w:sz="8" w:color="000000"/><w:right w:val="single" w:sz="8" w:color="000000"/>',
+    '<w:insideV w:val="single" w:sz="8" w:color="000000"/></w:tblBorders></w:tblPr>',
+    '<w:tblGrid><w:gridCol w:w="1850"/><w:gridCol w:w="2050"/></w:tblGrid><w:tr>',
+    '<w:tc><w:tcPr><w:tcW w:w="1850" w:type="dxa"/></w:tcPr>' + mockParagraph("You must have:\nCalculator, ruler") + '</w:tc>',
+    '<w:tc><w:tcPr><w:tcW w:w="2050" w:type="dxa"/></w:tcPr>' + mockParagraph("Total marks", { center: true }) + mockParagraph(" ", { after: 520 }) + '</w:tc>',
+    '</w:tr></w:tbl>'
+  ].join("");
+
+  const heading = mockParagraph(simpleSubject + " Mock / Assessment", { bold: true, size: 28, before: 120, after: 120 });
+  const instructions = [
+    mockParagraph("Instructions", { bold: true, size: 24, before: 80, after: 60 }),
+    mockBullet("Use black ink or ball-point pen."),
+    mockBullet("Answer all questions."),
+    mockBullet("Answer the questions in the spaces provided - there may be more space than you need."),
+    mockBullet("Show all the steps in any calculations and state the units."),
+    mockBullet("Some questions must be answered with a cross in a box. If you change your mind, cross out the box and mark your new answer."),
+    mockParagraph("Information", { bold: true, size: 24, before: 80, after: 40 }),
+    mockBullet("The total mark for this paper is " + totalMarks + "."),
+    mockBullet("The marks for each question are shown in brackets - use this as a guide as to how much time to spend on each question."),
+    mockParagraph("Advice", { bold: true, size: 24, before: 80, after: 40 }),
+    mockBullet("Read each question carefully before you start to answer it."),
+    mockBullet("Write your answers neatly and in good English."),
+    mockBullet("Try to answer every question."),
+    mockBullet("Check your answers if you have time at the end."),
+  ].join("");
+
+  return topTable + mockParagraph("", { after: 160 }) + marksTable + heading + instructions + '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+}
+
 function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string): string {
   let chunk = extractRawQuestionXml(source, q.questionNumber);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
@@ -826,7 +922,7 @@ function normalizeChemistryMarkColors(xml: string): string {
   });
 }
 
-async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc, cover: LoadedDoc, subject: string) {
+async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc, cover: LoadedDoc, subject: string, options: ExportOptions) {
   const outputZip = await JSZip.loadAsync(await source.zip.generateAsync({ type: "uint8array" }));
   const templateXml = mergeRootNamespaces(source.documentXmlText, [source, cover]);
   const { openEnd, closeStart } = bodyBounds(templateXml);
@@ -835,7 +931,10 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const relState: RelState = { xml: source.relsXmlText, used: usedRelationshipIds(source.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: source.contentTypesText };
   const drawingCounter = { value: 1 };
-  let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
+  const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+  let coverChunk = options.coverMode === "mock"
+    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "")
+    : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
@@ -849,7 +948,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
 
-async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedDoc[], cover: LoadedDoc, subject: string) {
+async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedDoc[], cover: LoadedDoc, subject: string, options: ExportOptions) {
   const template = sources[0];
   const outputZip = await JSZip.loadAsync(await template.zip.generateAsync({ type: "uint8array" }));
   const templateXml = mergeRootNamespaces(template.documentXmlText, [...sources, cover]);
@@ -859,7 +958,10 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
   const relState: RelState = { xml: template.relsXmlText, used: usedRelationshipIds(template.relsXmlText), counter: 1, mediaCounter: 1 };
   const contentTypesState: ContentTypesState = { xml: template.contentTypesText };
   const drawingCounter = { value: 1 };
-  let coverChunk = buildCoverChunk(cover, subject, questions.reduce((sum, q) => sum + q.marks, 0));
+  const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+  let coverChunk = options.coverMode === "mock"
+    ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "")
+    : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
   const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
   const chunks: string[] = [];
@@ -892,7 +994,7 @@ export async function exportPaperToWord(questions: Question[], options: ExportOp
   const subject = /^Edexcel IGCSE\b/i.test(rawSubject) ? rawSubject : `Edexcel IGCSE ${rawSubject}`;
   const filenames = exportQuestions.map(q => getFormattedSource(q)!);
   const uniqueFilenames = Array.from(new Set(filenames));
-  if (uniqueFilenames.length === 1) { await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0], getFormattedSourceBucket(exportQuestions[0])), cover, subject); return; }
+  if (uniqueFilenames.length === 1) { await exportSingleSource(exportQuestions, await loadSource(uniqueFilenames[0], getFormattedSourceBucket(exportQuestions[0])), cover, subject, options); return; }
   const sources = await Promise.all(filenames.map((filename, index) => loadSource(filename, getFormattedSourceBucket(exportQuestions[index]))));
-  await exportAcrossSources(exportQuestions, sources, cover, subject);
+  await exportAcrossSources(exportQuestions, sources, cover, subject, options);
 }
