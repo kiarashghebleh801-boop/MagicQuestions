@@ -227,6 +227,19 @@ function boldOnlyPhysicsOptionLetter(paragraphXml: string, letter: string): stri
   return cleaned;
 }
 
+function forcePhysicsSingleSpacing(paragraph: string): string {
+  const spacing = '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>';
+  if (/<w:pPr\b/i.test(paragraph)) {
+    return paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
+      const cleaned = inner
+        .replace(/<w:spacing\b[^>]*\/>/gi, "")
+        .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
+      return '<w:pPr' + attrs + '>' + cleaned + spacing + '</w:pPr>';
+    });
+  }
+  return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, '<w:p$1><w:pPr>' + spacing + '</w:pPr>');
+}
+
 function boldPhysicsMultipleChoiceOptions(xml: string): string {
   const paragraphs: { start: number; end: number; xml: string; text: string; letter: string | null }[] = [];
   const re = /<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi;
@@ -259,7 +272,7 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!toBold.has(i)) continue;
     const p = paragraphs[i];
-    const updated = boldOnlyPhysicsOptionLetter(p.xml, p.letter!);
+    const updated = forcePhysicsSingleSpacing(boldOnlyPhysicsOptionLetter(p.xml, p.letter!));
     out = `${out.slice(0, p.start)}${updated}${out.slice(p.end)}`;
   }
   return out;
