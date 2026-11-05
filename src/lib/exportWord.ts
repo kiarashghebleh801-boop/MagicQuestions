@@ -432,10 +432,14 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
       .replace(/<w:ind\b[^>]*\/>/gi, "")
       .replace(/<w:numPr\b[^>]*>[\s\S]*?<\/w:numPr>/gi, "")
       .replace(/<w:numPr\b[^>]*\/>/gi, "");
+    updated = updated
+      .replace(/<w:spacing\b[^>]*\/>/gi, "")
+      .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
     updated = withParagraphProperties(updated,
       '<w:numPr><w:numId w:val="0"/></w:numPr>'
       + '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs>'
-      + '<w:ind w:left="1600" w:hanging="1000"/>');
+      + '<w:ind w:left="1600" w:hanging="1000"/>'
+      + '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>');
     let foundLetter = false;
     let foundAnswer = false;
     updated = updated.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
