@@ -3,6 +3,10 @@ import type { ChemistryQuestion } from "./chemistryQuestions";
 export const CHEMISTRY_MARKSCHEME_BUCKET = "chemistry markschemes";
 
 const sourceByPaper: Record<string, string> = {
+  "2020|May/June|1C": "IGCSE_CHEMISTRY_2020_MayJune_P1_MS.pdf",
+  "2020|May/June|1CR": "IGCSE_CHEMISTRY_2020_MayJune_P1R_MS.pdf",
+  "2020|May/June|2C": "IGCSE_CHEMISTRY_2020_MayJune_P2_MS.pdf",
+  "2020|May/June|2CR": "IGCSE_CHEMISTRY_2020_MayJune_P2R_MS.pdf",
   "2022|May/June|1C": "IGCSE_CHEMISTRY_2022_MayJune_P1_MS.pdf",
   "2022|May/June|2C": "IGCSE_CHEMISTRY_2022_MayJune_P2_MS.pdf",
   "2023|November|1C": "IGCSE_CHEMISTRY_2023_Nov_P1_MS.pdf",

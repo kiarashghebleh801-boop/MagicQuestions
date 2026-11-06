@@ -1,3 +1,4 @@
+import { chemistryPartRules2020 } from "./chemistryQuestions2020";
 import type { ChemistryQuestion } from "./chemistryQuestions";
 import { chemistryPartRules2024 } from "./chemistryParts2024";
 import { chemistryPartRulesArchive } from "./chemistryPartsArchive";
@@ -18,6 +19,7 @@ type PartRule = ChemistryPartOption;
 
 const partRules: Record<string, PartRule[]> = {
   ...chemistryPartRules2026,
+  ...chemistryPartRules2020,
   ...chemistryPartRulesArchive,
   ...chemistryPartRules2024,
   "chem-2025-1C-1": [

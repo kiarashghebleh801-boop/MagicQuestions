@@ -78,7 +78,7 @@ export default function ChemistryPage() {
   const trackerPercent = allSpecTopics.length ? Math.round((completedTopics.length / allSpecTopics.length) * 100) : 0;
   const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
   const topicSpecificQuestions = useMemo(() => chemistryQuestions.map(q => specialiseChemistryQuestion(q, selectedTopics)).filter((q): q is ChemistryQuestionSelection => q !== null), [selectedTopics]);
-  const filteredBank = useMemo(() => {
+  const filteredBank = useMemo<ChemistryQuestionSelection[]>(() => {
     const needle = query.trim().toLowerCase();
 
     // Searching should search the entire Chemistry bank, not only the

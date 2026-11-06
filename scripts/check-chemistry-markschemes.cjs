@@ -11,9 +11,9 @@ const { chemistryQuestions } = require('../src/lib/chemistryQuestions.ts');
 const { chemistryPartOptions } = require('../src/lib/chemistryParts.ts');
 const { getChemistryMarkSchemeSource } = require('../src/lib/chemistryMarkSchemeSources.ts');
 const index = require('../src/lib/chemistryMarkSchemeIndex.json');
-const covered = chemistryQuestions.filter(getChemistryMarkSchemeSource);
-assert.equal(Object.keys(index).length, 16);
-assert.equal(covered.length, 134);
+const covered = chemistryQuestions.filter(q => index[getChemistryMarkSchemeSource(q)]);
+assert.equal(Object.keys(index).length, 20);
+assert.equal(covered.length, 168);
 for (const q of covered) {
   const source = index[getChemistryMarkSchemeSource(q)];
   const rows = source.questions[q.questionNumber];
@@ -34,4 +34,4 @@ if (process.argv[2]) for (const [filename, source] of Object.entries(index)) {
   const bytes = fs.readFileSync(path.join(process.argv[2], filename));
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), source.sha256, filename);
 }
-console.log('PASS: 16 schemes, 134 questions, matching totals, selected-part coverage and valid visual regions.');
+console.log('PASS: 20 schemes, 168 questions, matching totals, selected-part coverage and valid visual regions.');

@@ -5,7 +5,7 @@ require.extensions['.ts'] = (m,f) => m._compile(ts.transpileModule(fs.readFileSy
 const ci=require('../src/lib/chemistryMarkSchemeIndex.json'), pi=require('../src/lib/physicsMarkSchemeIndex.json');
 const { physicsQuestions }=require('../src/lib/physicsQuestions.ts');
 const { getPhysicsMarkSchemeSource }=require('../src/lib/physicsMarkSchemeSources.ts');
-assert.equal(Object.keys(ci).length,16);assert.equal(Object.keys(pi).length,10);
+assert.equal(Object.keys(ci).length,20);assert.equal(Object.keys(pi).length,10);
 const covered=physicsQuestions.filter(getPhysicsMarkSchemeSource);
 for(const q of covered){const p=pi[getPhysicsMarkSchemeSource(q)];assert(p.questions[q.questionNumber]?.length,q.id);assert.equal(p.totals[q.questionNumber],q.marks,q.id+' marks');}
 assert.equal(covered.length,96);
@@ -37,4 +37,4 @@ for(const idx of [ci,pi])for(const [file,p] of Object.entries(idx)){
   }
  }
 }
-console.log(`PASS: 26 schemes, 230 questions, formula/graph/diagram/table rules, text completeness, source fingerprints; ${visuals} cropped visuals.`);
+console.log(`PASS: 30 schemes, 264 questions, formula/graph/diagram/table rules, text completeness, source fingerprints; ${visuals} cropped visuals.`);
