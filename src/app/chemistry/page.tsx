@@ -81,15 +81,22 @@ export default function ChemistryPage() {
   const filteredBank = useMemo<ChemistryQuestionSelection[]>(() => {
     const needle = query.trim().toLowerCase();
 
-    // Searching should search the entire Chemistry bank, not only the
-    // currently selected specification topics. Topic filtering still applies
-    // normally when the search box is empty.
+    // Searching always searches the entire Chemistry bank. Match by tokens
+    // rather than one exact continuous phrase so punctuation, word order and
+    // partial descriptions do not hide valid questions.
     if (needle) {
-      return chemistryQuestions.filter(q =>
-        `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`
+      const tokens = needle
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      return chemistryQuestions.filter(q => {
+        const haystack = `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`
           .toLowerCase()
-          .includes(needle)
-      );
+          .replace(/[^a-z0-9]+/g, " ");
+        return tokens.every(token => haystack.includes(token));
+      });
     }
 
     return topicSpecificQuestions;
