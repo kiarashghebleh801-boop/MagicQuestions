@@ -5,7 +5,7 @@ import { CHEMISTRY_MARKSCHEME_BUCKET, getChemistryMarkSchemeSource } from "./che
 import { createScienceMarkSchemeDocument, exportScienceMarkSchemeToWord, selectMarkSchemeEntries, type IndexedPaper } from "./exportScienceMarkScheme";
 const config = {
   subject: "Chemistry", bucket: CHEMISTRY_MARKSCHEME_BUCKET,
-  getIndex: async () => (await import("./chemistryMarkSchemeIndex.json")).default as Record<string, IndexedPaper>,
+  getIndex: async () => ({ ...(await import("./chemistryMarkSchemeIndex.json")).default, ...(await import("./chemistryMarkSchemeIndexNov2024.json")).default }) as Record<string, IndexedPaper>,
   getSource: getChemistryMarkSchemeSource, partOptions: chemistryPartOptions,
 };
 export const selectChemistryMarkSchemeEntries = selectMarkSchemeEntries;
