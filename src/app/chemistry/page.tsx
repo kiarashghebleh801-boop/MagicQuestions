@@ -78,7 +78,22 @@ export default function ChemistryPage() {
   const trackerPercent = allSpecTopics.length ? Math.round((completedTopics.length / allSpecTopics.length) * 100) : 0;
   const totalMarks = useMemo(() => paper.reduce((sum,q)=>sum+q.marks,0), [paper]);
   const topicSpecificQuestions = useMemo(() => chemistryQuestions.map(q => specialiseChemistryQuestion(q, selectedTopics)).filter((q): q is ChemistryQuestionSelection => q !== null), [selectedTopics]);
-  const filteredBank = useMemo(() => { const needle = query.trim().toLowerCase(); return topicSpecificQuestions.filter(q => !needle || `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`.toLowerCase().includes(needle)); }, [query, topicSpecificQuestions]);
+  const filteredBank = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+
+    // Searching should search the entire Chemistry bank, not only the
+    // currently selected specification topics. Topic filtering still applies
+    // normally when the search box is empty.
+    if (needle) {
+      return chemistryQuestions.filter(q =>
+        `${q.summary} ${q.session} ${q.year} ${q.paper} q${q.questionNumber} ${q.specTags.join(" ")}`
+          .toLowerCase()
+          .includes(needle)
+      );
+    }
+
+    return topicSpecificQuestions;
+  }, [query, topicSpecificQuestions]);
   const swapQuestions = useMemo(() => allSpecTopics.flatMap(({ tag }) =>
     chemistryQuestions
       .map(q => specialiseChemistryQuestion(q, [tag]))
