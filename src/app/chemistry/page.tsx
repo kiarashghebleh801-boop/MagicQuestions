@@ -101,12 +101,22 @@ export default function ChemistryPage() {
 
     return topicSpecificQuestions;
   }, [query, topicSpecificQuestions]);
-  const swapQuestions = useMemo(() => allSpecTopics.flatMap(({ tag }) =>
-    chemistryQuestions
-      .map(q => specialiseChemistryQuestion(q, [tag]))
-      .filter((q): q is ChemistryQuestionSelection => q !== null)
-      .map(asExportQuestion)
-  ), [allSpecTopics]);
+  const swapQuestions = useMemo(() => {
+    // Include every full Chemistry question so multi-topic questions remain
+    // discoverable in Swap under any topic they cover. Keep the topic-specific
+    // part variants as additional choices for questions that can be split.
+    const choices = [
+      ...chemistryQuestions.map(q => asExportQuestion(q)),
+      ...allSpecTopics.flatMap(({ tag }) =>
+        chemistryQuestions
+          .map(q => specialiseChemistryQuestion(q, [tag]))
+          .filter((q): q is ChemistryQuestionSelection => q !== null)
+          .map(asExportQuestion)
+      ),
+    ];
+
+    return Array.from(new Map(choices.map(q => [q.id, q])).values());
+  }, [allSpecTopics]);
 
   const missingMarkSchemes = Array.from(new Set(paper.filter(q => !getChemistryMarkSchemeSource(q)).map(q => `${q.session} ${q.year} Paper ${q.paper}`)));
 
