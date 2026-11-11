@@ -1,7 +1,9 @@
 "use client";
 
 import JSZip from "jszip";
+import { physicsPartLayout, selectPhysicsParts, type PhysicsSelection } from "./physicsParts";
 import type { Question } from "./questions";
+import { physicsQuestions } from "./physicsQuestions";
 import { supabase } from "./supabase";
 import { FORMATTED_BUCKET, PHYSICS_BUCKET, getFormattedSource } from "./sourceDocs";
 
@@ -82,7 +84,9 @@ async function loadSource(bucket: string, filename: string): Promise<LoadedDoc> 
       };
     })());
   }
-  return cache.get(key)!;
+  const request = cache.get(key)!;
+  request.catch(() => cache.delete(key));
+  return request;
 }
 
 function bodyBounds(xml: string) {
@@ -144,6 +148,17 @@ function extractQuestion(source: LoadedDoc, questionNumber: number): string {
   const end = index + 1 < markers.length ? rawParagraphStart(source.documentXmlText, markers[index + 1], start + 1) : rawSectPrStart(source.documentXmlText);
   return source.documentXmlText.slice(start, end);
 }
+
+export async function loadPhysicsPartOptions(question: PhysicsSelection) {
+  const filename = getFormattedSource(question);
+  if (!filename) throw new Error("No formatted source is available for this question.");
+  const source = await loadSource(PHYSICS_BUCKET, filename);
+  const parts = physicsPartLayout(extractQuestion(source, question.questionNumber)).parts;
+  if (!parts.length) return [];
+  if (parts.some(p => !p.marks) || parts.reduce((n,p)=>n+p.marks,0) !== physicsQuestionsMarks(question)) throw new Error("The source marks could not be matched safely to its parts.");
+  return parts;
+}
+function physicsQuestionsMarks(question: PhysicsSelection) { return physicsQuestions.find(q => q.id === question.id)?.marks ?? question.marks; }
 
 function renumberQuestion(xml: string, n: number): string {
   let changed = false;
@@ -733,7 +748,7 @@ function download(bytes: Uint8Array) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-export async function exportPhysicsPaperToWord(questions: Question[], options: PhysicsExportOptions = {}) {
+export async function exportPhysicsPaperToWord(questions: PhysicsSelection[], options: PhysicsExportOptions = {}) {
   if (!questions.length) return;
   const filenames = questions.map(q => getFormattedSource(q));
   const missing = questions.filter((q, i) => !filenames[i]);
@@ -777,6 +792,7 @@ export async function exportPhysicsPaperToWord(questions: Question[], options: P
       removeTrailingPageBreakParagraphs(removePhysicsPaperTotals(extractQuestion(sources[i], questions[i].questionNumber))),
       i + 1,
     );
+    chunk = selectPhysicsParts(chunk, questions[i].selectedParts, questions[i].marks);
     chunk = moveStandalonePageBreaksToFollowingContent(chunk);
     chunk = ensureQuestionStartsOnNewPage(chunk);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);

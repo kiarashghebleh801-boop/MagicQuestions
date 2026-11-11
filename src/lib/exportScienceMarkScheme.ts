@@ -113,12 +113,11 @@ function cell(children: Paragraph[], width: number, header = false) {
   return new TableCell({ children, width: { size: width * 100, type: WidthType.DXA }, borders, margins: { top: 80, bottom: 80, left: 90, right: 90 }, shading: header ? { fill: "E8EBF0" } : undefined });
 }
 
-export function selectMarkSchemeEntries(entries: Entry[], selectedParts?: string[]) {
+export function selectMarkSchemeEntries(entries: Entry[], selectedParts?: string[], preserveLabels = false) {
   const allParts = Array.from(new Set(entries.map(entry => entry.part).filter(Boolean)));
-  // The question-paper exporter keeps source order when renumbering parts.
-  const kept = selectedParts?.length ? allParts.filter(part => selectedParts.includes(part)) : allParts;
-  if (selectedParts?.some(part => !allParts.includes(part))) throw new Error("A selected question part is missing from its mark scheme.");
-  return entries.filter(entry => !entry.part || kept.includes(entry.part)).map(entry => ({ ...entry, displayPart: entry.part ? `(${selectedParts?.length ? String.fromCharCode(97 + kept.indexOf(entry.part)) : entry.part})` : "" }));
+  const kept = selectedParts?.length ? allParts.filter(part => selectedParts.some(key => key === part || key.startsWith(`${part}.`))) : allParts;
+  if (selectedParts?.some(key => !entries.some(entry => key === entry.part || key === `${entry.part}.${entry.roman}`))) throw new Error("A selected question part is missing from its mark scheme.");
+  return entries.filter(entry => !entry.part || (kept.includes(entry.part) && (!selectedParts?.length || selectedParts.includes(entry.part) || !entry.roman || selectedParts.includes(`${entry.part}.${entry.roman}`)))).map(entry => ({ ...entry, displayPart: entry.part ? `(${selectedParts?.length && !preserveLabels ? String.fromCharCode(97 + kept.indexOf(entry.part)) : entry.part})` : "" }));
 }
 
 export async function createScienceMarkSchemeDocument<Q extends MarkSchemeQuestion>(questions: Q[], config: MarkSchemeConfig<Q>) {
@@ -133,7 +132,7 @@ export async function createScienceMarkSchemeDocument<Q extends MarkSchemeQuesti
   // never download a PDF or load PDF.js; shared pages render just once.
   const visualJobs: Array<() => Promise<Crop>> = [];
   sources.forEach(({ filename, source }, i) => {
-    for (const entry of selectMarkSchemeEntries(source.questions[String(questions[i].questionNumber)], questions[i].selectedParts)) {
+    for (const entry of selectMarkSchemeEntries(source.questions[String(questions[i].questionNumber)], questions[i].selectedParts, config.subject === "Physics")) {
       for (const block of entry.content) if (block.crop) {
         const region = block.crop;
         visualJobs.push(() => renderCrop(config.bucket, filename, source.sha256, region));
@@ -151,7 +150,7 @@ export async function createScienceMarkSchemeDocument<Q extends MarkSchemeQuesti
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
     const { filename, source } = sources[i];
-    const entries = selectMarkSchemeEntries(source.questions[String(question.questionNumber)], question.selectedParts);
+    const entries = selectMarkSchemeEntries(source.questions[String(question.questionNumber)], question.selectedParts, config.subject === "Physics");
     const options = config.partOptions?.(question) || [];
     children.push(new Paragraph({ children: [new TextRun({ text: `Q${i + 1}.`, font: "Arial", bold: true, size: 28 })], pageBreakBefore: i > 0, keepNext: true, spacing: { before: 0, after: 90 } }));
     const seen = new Set<string>();
@@ -172,10 +171,10 @@ export async function createScienceMarkSchemeDocument<Q extends MarkSchemeQuesti
         ?? samePart.reduce((sum, row) => sum + row.marks.split(/\s+/).reduce((n, value) => n + Number(value || 0), 0), 0);
       // The 2022 source repeats a stray 1 beside Q5(a)(i); its printed total is 11.
       const corrected = config.subject === "Chemistry" && question.year === 2022 && question.paper === "1C" && question.questionNumber === 5 && entry.part === "a" ? 6 : marks;
-      const partLabel = (config.subject === "Biology" || config.subject === "Chemistry") && entry.roman
+      const partLabel = (config.subject === "Biology" || config.subject === "Chemistry" || config.subject === "Physics") && entry.roman
         ? `${entry.displayPart} (${entry.roman})`
         : entry.displayPart;
-      const displayedMarks = config.subject === "Chemistry" && entry.roman
+      const displayedMarks = (config.subject === "Chemistry" || config.subject === "Physics") && entry.roman
         ? entry.marks || ""
         : seen.has(entry.part) ? "" : String(corrected);
       rows.push(new TableRow({ children: [cell(paragraphs(partLabel), 10), cell(answer, 52), cell(paragraphs(entry.notes), 28), cell(paragraphs(displayedMarks), 10)] }));

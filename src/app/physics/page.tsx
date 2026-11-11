@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import SubjectWorkspace, { type SubjectWorkspaceMode } from "@/components/SubjectWorkspace";
 import { physicsSections, physicsTopicTitle } from "@/lib/physicsSpec";
 import { physicsQuestions } from "@/lib/physicsQuestions";
+import PhysicsPartPicker from "@/components/PhysicsPartPicker";
+import type { PhysicsSelection } from "@/lib/physicsParts";
 import type { Question } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 import { exportPhysicsPaperToWord } from "@/lib/exportPhysicsWord";
@@ -25,7 +27,7 @@ export default function PhysicsPage() {
   const [coverMode, setCoverMode] = useState<"" | "worksheet" | "mock">("");
   const [generatedDate, setGeneratedDate] = useState("");
   const [examName, setExamName] = useState("");
-  const [paper, setPaper] = useState<Question[]>([]);
+  const [paper, setPaper] = useState<PhysicsSelection[]>([]);
   const [mode, setMode] = useState<SubjectWorkspaceMode>("resources");
   const [query, setQuery] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -166,7 +168,7 @@ export default function PhysicsPage() {
           <div className="editorHint"><span>✦</span><div><b>November 2025 bank connected</b><small>Questions are organised using the official 4PH1 specification subtopics, with Units excluded.</small></div></div>
           <div className="questionList">{paper.map((q, index) => <article className="question" key={`${q.id}-${index}`}>
             <div className="qNumber">{index + 1}</div>
-            <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><button type="button" onClick={() => setExpandedQuestionId(current => current === q.id ? null : q.id)} aria-expanded={expandedQuestionId === q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId === q.id ? "Hide full question ↑" : "View full question ↓"}</button>{expandedQuestionId === q.id && <ScienceQuestionDetails question={q}/>}<div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => setSwapIndex(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
+            <div className="qBody"><div className="qMeta">{q.session} {q.year} · Paper {q.paper} · Original Q{q.questionNumber} · {q.difficulty}</div><h3>{q.summary}</h3><div className="tags">{q.topics.map(tag => <span key={tag}>Spec {tag[0]}({tag.slice(1)}) · {physicsTopicTitle.get(tag)}</span>)}</div><button type="button" onClick={() => setExpandedQuestionId(current => current === q.id ? null : q.id)} aria-expanded={expandedQuestionId === q.id} style={{marginTop:10,border:"1px solid rgba(201,162,39,.38)",background:"rgba(201,162,39,.08)",color:"#e4c65f",borderRadius:8,padding:"7px 10px",cursor:"pointer",fontWeight:700}}>{expandedQuestionId === q.id ? "Hide full question ↑" : "View full question ↓"}</button>{expandedQuestionId === q.id && <ScienceQuestionDetails question={q}/>}<PhysicsPartPicker question={q} onChange={updated => setPaper(current => current.map(item => item.id === q.id ? updated : item))}/><div className="questionTools"><button onClick={() => moveQuestion(index, -1)} disabled={index === 0}>↑ Up</button><button onClick={() => moveQuestion(index, 1)} disabled={index === paper.length - 1}>↓ Down</button><button onClick={() => setSwapIndex(index)}>↻ Swap</button><button onClick={() => removeQuestion(q.id)}>Remove</button></div></div>
             <div className="marks">{q.marks}<small>marks</small></div>
           </article>)}</div>
           <div className="paperActions"><button onClick={generate}>↻ Regenerate all</button><button className="word" onClick={() => void downloadWord()} disabled={exporting}>{exporting ? "Creating Word…" : "↓ Download Word"}</button><button className="word" onClick={() => void downloadMarkScheme()} disabled={exportingMarkScheme}>{exportingMarkScheme ? "Creating mark scheme…" : "↓ Download mark scheme"}</button><button onClick={() => setReviewOpen(true)}>✓ Review paper</button></div>
