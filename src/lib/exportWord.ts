@@ -253,6 +253,8 @@ const CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS = "420";
 const SHORT_CHEMISTRY_QUESTION_MARKS = 4;
 const CHEMISTRY_CHECKBOX_IMAGE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAABkAAAAbCAMAAAC+/9RaAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAGzUExURf///9LR0ZGPkIF/gISCg4WCg4KAgIyLjMTDxP7+/qWjpExJS2toaoB+gHx6fH17fH17fWxqbEdFR5KRk56cnWxqa7W1t9LT1dTU1tDQ08zNz87O0NHR09fX2NTV17e3uGhnaI6Mjv39/aCen318fcnKzPLy8/v8/PT09ePk5d7g4uHi5ODi5PT09vf4+Xp5epCOj5+en8jJy/z9/e/w8N7e4Nrb3dzd383Oz3d2d4+Oj3t5esjIyvLz9Pz8/PDv8N7f4dna3P38/crKzI+OkMXGx+Lj5uvs7f79/u7u8OPj5fz8/ezs7uLj5cfHyJCOkMXGyOHi5fj4+cfIycbGyNvc3urr6/r6+uvr7cfIyuDh4vb29uDh49/f4e/v8fDw8fT19fv7+8TFx+Tl5/Dw8Orr7err7MbHyfX29vX2993e4Ovr7MzNzn58fcvMzvf3+fLy9OLk5uPk5vHz8/v7/PDx883Nz3p6ep2bnGtoaa6usMrLzcfHycTExsXFx8rLzLCwsWZlZo2Ljaimp0ZERFpXWGxra2poaW1rbFtYWUM/QZqYmuDg4Ly7u7W0tLe2try6uhVQQywAAAAJcEhZcwAAFxEAABcRAcom8z8AAAFJSURBVChTYxiygJGJmYUVAVjY2DkgEpxc3Dy8fPwCEMDPxysoJMwJkRERFROXkJSSBgEpGVk5eQVFJYiMsoqqmrqGppa2jraWpi6nnrS+AVTGUN/ImIHTxNTM3MzUBChmYWkFk7G2sbVjULJ3cHSwV2JwsnW2dIGZZu3q5m7H4OHp5enB4O3j62fpD5cJCDQHSnkHeTPYuZtrByPJhPiGmoeFA9nhEeahvpEoMuZmUdFAdnSMmTmaTGhsHIinFBeLpkfbIZ6TQT0hkYEz3kEbWSYpOYWTwS7VIc2OgTMlOR0ho2+TAZRwNw81jwBKZRrBZQz1LTgZvN2zQs1Ds7KNGdRz4GGgnJuXz1BQqO3r66tdVFxSWlYO01NRWVXtXFNbBwJJAen1DY1NEBmG5pbWtnYE6Ojs6oZIMPT09vUjg74JPVAZbICBAQCCzFvtwRkxcAAAAABJRU5ErkJggg==";
 const CHEMISTRY_CHECKBOX_MEDIA_TARGET = "media/mq_chemistry_checkbox.png";
+const CHEMISTRY_REFERENCE_CHECKBOX_BASE64 = "/9j/4AAQSkZJRgABAQEAYABgAAD//gA8Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gMTAwCv/bAEMAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/bAEMBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/AABEIABAAEAMBEQACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/AP6OP2e/2dNF/aS8O/HXxv4r+O/7Y8vxST9sj9vHQbbSdC/bw/bR+G/hCHwX8Ov20/j78O/BHhrwr4L+Hvx+8LeC/DWk+GfBnhbQPD2l2GgaFpOnWNpplpFJZKJZL96VlZtaPrd73f8AX4+RbbTSSj8Mfsxe8U3q1fcP2iv2fPDv7Nui/AjxZ4I+Ov7ZD/FKL9sf9hDQtWtte/bx/bT+Ivgubwh8SP20fgD8PfGvhTxL4I+Inx98U+DPE2k+JfBninXfD+oaX4h0DU7S+07Vr2Sa0iDWEiFrptKy0tvff+v06gm22mo/DL7MVtFtapX3JP2fv2idB/Zt8M/HDwV4p+Bn7ZCfFaX9sf8Ab012PUtD/YN/bS+I3hBvBvxD/bV+PnxE8DeJ/Cfjb4e/AHxX4J8U6L4p8E+KvD3iHStR0DXtUsb231GB5rkxw/ZGE07JvRdNddX/AF6bdQabaacfhj9qK2ik9G77kP7Rf7Qnh/8AaR0f4D+EvA/wI/bHX4oS/tjfsI69q93r37B/7afw58FweEPhv+2j8APiF4z8U+JPG3xE+AXhfwb4b0rw34M8La94g1DVPEPiDSrOw03Sb6Oa8l26fFIXsmk7rS299/6/TqCTTbbj8MvtRe8Wlonfc//Z";
+const CHEMISTRY_REFERENCE_CHECKBOX_TARGET = "media/mq_chemistry_reference_checkbox.jpeg";
 
 function isChemistryWrittenAnswerLine(paragraph: string): boolean {
   const text = paragraphText(paragraph);
@@ -275,8 +277,9 @@ function replaceChemistryParagraphSpacing(paragraph: string, spacing: string): s
   return paragraph.replace(/<w:p(?=[\s>])([^>]*)>/i, "<w:p$1><w:pPr>" + spacing + "</w:pPr>");
 }
 
-function normalizeChemistryWrittenAnswerLine(paragraph: string): string {
-  const tabs = '<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="' + CHEMISTRY_WRITTEN_LINE_END_TWIPS + '"/></w:tabs>';
+function normalizeChemistryWrittenAnswerLine(paragraph: string, reference = false): string {
+  if (reference) paragraph = paragraph.replace(/<w:(?:ind|jc)\b[^>]*\/>/gi, "");
+  const tabs = '<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="' + (reference ? '8740' : CHEMISTRY_WRITTEN_LINE_END_TWIPS) + '"/></w:tabs>';
   if (/<w:pPr\b/i.test(paragraph)) {
     paragraph = paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
       const cleaned = inner.replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "");
@@ -289,28 +292,88 @@ function normalizeChemistryWrittenAnswerLine(paragraph: string): string {
   const pPrEnd = paragraph.indexOf("</w:pPr>");
   const pEnd = paragraph.lastIndexOf("</w:p>");
   if (pPrEnd >= 0 && pEnd > pPrEnd) {
-    paragraph = paragraph.slice(0, pPrEnd + 8) + "<w:r><w:tab/></w:r>" + paragraph.slice(pEnd);
+    const run = reference
+      ? '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/></w:rPr><w:tab/></w:r>'
+      : '<w:r><w:tab/></w:r>';
+    paragraph = paragraph.slice(0, pPrEnd + 8) + run + paragraph.slice(pEnd);
   }
+  if (reference) paragraph = withParagraphProperties(paragraph, '<w:ind w:left="60" w:firstLine="0"/><w:jc w:val="left"/>');
   return paragraph;
 }
 
-function normalizeChemistryParagraphSpacing(xml: string): string {
-  const standardSpacing = '<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="auto"/>';
-  const writtenLineSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS + '" w:lineRule="exact"/>';
+// Measured from the supplied ExamWizard RTF: Arial 11, single-spaced text,
+// 16 pt roman indent, 24.65 pt answer-line pitch and a 437 pt line endpoint.
+function applyChemistryReferenceText(xml: string): string {
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
-    if (isChemistryWrittenAnswerLine(paragraph)) {
-      return replaceChemistryParagraphSpacing(
-        normalizeChemistryWrittenAnswerLine(paragraph),
-        writtenLineSpacing,
-      );
+    const text = paragraphText(paragraph);
+    if (!text) return paragraph;
+    paragraph = paragraph.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+      if (!/<w:t\b/i.test(run) || /<w:sym\b|<w:rFonts\b[^>]*(?:Symbol|Wingdings|Webdings)/i.test(run)) return run;
+      const superscript = /<w:vertAlign\b/i.test(run);
+      run = run.replace(/<w:rFonts\b[^>]*\/>/gi, "");
+      if (!superscript) run = run.replace(/<w:sz(?:Cs)?\b[^>]*\/>/gi, "");
+      const props = '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>'
+        + (superscript ? '' : '<w:sz w:val="22"/><w:szCs w:val="22"/>');
+      if (/<w:rPr\s*\/>/i.test(run)) return run.replace(/<w:rPr\s*\/>/i, `<w:rPr>${props}</w:rPr>`);
+      if (/<w:rPr\b/i.test(run)) return run.replace(/<w:rPr\b([^>]*)>/i, `<w:rPr$1>${props}`);
+      return run.replace(/<w:r(?=[\s>])([^>]*)>/i, `<w:r$1><w:rPr>${props}</w:rPr>`);
+    });
+    if (/^\((?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\)(?:\s|$)/i.test(text)) {
+      paragraph = paragraph.replace(/<w:ind\b[^>]*\/>/gi, "");
+      paragraph = withParagraphProperties(paragraph, '<w:ind w:left="320" w:firstLine="0"/>');
     }
-    return replaceChemistryParagraphSpacing(paragraph, standardSpacing);
+    return paragraph;
   });
 }
 
-function chemistryCheckboxImage(relationshipId: string): string {
-  const cx = "158750";
-  const cy = "171450";
+function chemistryReferenceSection(xml: string): string {
+  return xml.replace(/<w:pgMar\b[^>]*\/>/i, '<w:pgMar w:top="900" w:right="800" w:bottom="900" w:left="800" w:header="400" w:footer="400" w:gutter="0"/>');
+}
+
+function trimChemistryLayoutSpacers(xml: string): string {
+  const ps = rawParagraphs(xml);
+  const remove = new Set<number>();
+  for (let i = 0; i < ps.length; i++) {
+    if (ps[i].text || /<w:(?:drawing|pict|tab)\b|<m:oMath/i.test(ps[i].xml)) continue;
+    // Multiple explicit line breaks can be intentional calculation space.
+    if ((ps[i].xml.match(/<w:br\b/gi) || []).length > 1) continue;
+    const before = ps.slice(0, i).reverse().find(p => p.text || /<w:(?:drawing|pict)\b/i.test(p.xml));
+    const after = ps.slice(i + 1).find(p => p.text || /<w:(?:drawing|pict)\b/i.test(p.xml));
+    if (before && (/^Q\d+\.$/i.test(before.text) || /Total for question/i.test(before.text)
+      || (/<w:(?:drawing|pict)\b/i.test(before.xml) && /^The (?:table|diagram|graph)\b/i.test(after?.text || '')))) {
+      remove.add(ps[i].start);
+    }
+  }
+  for (let i = ps.length - 1; i >= 0; i--) {
+    if (remove.has(ps[i].start)) xml = xml.slice(0, ps[i].start) + xml.slice(ps[i].end);
+  }
+  return xml;
+}
+
+function normalizeChemistryParagraphSpacing(xml: string, reference = false): string {
+  const standardSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + (reference ? '240' : '300') + '" w:lineRule="auto"/>';
+  const writtenLineSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + (reference ? '493' : CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS) + '" w:lineRule="exact"/>';
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (isChemistryWrittenAnswerLine(paragraph)) {
+      return replaceChemistryParagraphSpacing(
+        normalizeChemistryWrittenAnswerLine(paragraph, reference),
+        writtenLineSpacing,
+      );
+    }
+    let spacing = standardSpacing;
+    if (reference && /^\([a-hj-uw-z]\)(?:\s|$)/i.test(paragraphText(paragraph))) {
+      spacing = '<w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/>';
+    }
+    if (reference && /Total for question/i.test(paragraphText(paragraph))) {
+      spacing = '<w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/>';
+    }
+    return replaceChemistryParagraphSpacing(paragraph, spacing);
+  });
+}
+
+function chemistryCheckboxImage(relationshipId: string, reference = false): string {
+  const cx = reference ? "152400" : "158750";
+  const cy = reference ? "152400" : "171450";
   const relId = escapeXml(relationshipId);
   return [
     '<w:r><w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"',
@@ -333,7 +396,7 @@ function chemistryCheckboxImage(relationshipId: string): string {
   ].join("");
 }
 
-function removeExistingChemistryCheckboxes(paragraph: string): string {
+function removeExistingChemistryCheckboxes(paragraph: string, preserveSymbols = false): string {
   const runs = Array.from(paragraph.matchAll(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi));
   const removals: Array<{ start: number; end: number }> = [];
   let fieldStart: number | null = null;
@@ -362,11 +425,15 @@ function removeExistingChemistryCheckboxes(paragraph: string): string {
 
   out = out
     .replace(/<w:sdt(?=[\s>])(?:(?!<\/w:sdt>)[\s\S])*?<w14:checkbox\b(?:(?!<\/w:sdt>)[\s\S])*?<\/w:sdt>/gi, "")
-    .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:sym\b[^>]*\/>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
+    .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:sym\b[^>]*\/>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi,
+      run => preserveSymbols && !/<w:sym\b[^>]*w:font="(?:Wingdings[^" ]*|Webdings|Marlett)"/i.test(run) ? run : "")
     .replace(/<w:r(?=[\s>])(?:(?!<\/w:r>)[\s\S])*?<w:t\b[^>]*>\s*<\/w:t>(?:(?!<\/w:r>)[\s\S])*?<\/w:r>/gi, "")
     .replace(/[☐☒☑□]/g, "");
 
+  let reachedOptionLetter = false;
   out = out.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+    if (/^[ABCD](?:\s|$)/.test(paragraphText(run))) reachedOptionLetter = true;
+    if (preserveSymbols && reachedOptionLetter) return run;
     if (!/<w:drawing\b/i.test(run)) return run;
     const cx = Number(/<wp:extent\b[^>]*\bcx=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[1] || /<wp:extent\b[^>]*\bcx=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[2] || 0);
     const cy = Number(/<wp:extent\b[^>]*\bcy=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[1] || /<wp:extent\b[^>]*\bcy=(?:"(\d+)"|'(\d+)')/i.exec(run)?.[2] || 0);
@@ -397,7 +464,7 @@ function chemistryCheckboxField(name: string): string {
     + '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
 }
 
-function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string): string {
+function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string, reference = false): string {
   const paragraphs = rawParagraphs(xml).map(p => ({
     ...p,
     text: paragraphText(p.xml.replace(/<w:tab\s*\/>/gi, '<w:t> </w:t>')),
@@ -425,7 +492,8 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     if (!optionIndexes.has(i)) continue;
     const paragraph = paragraphs[i];
-    let updated = removeExistingChemistryCheckboxes(paragraph.xml);
+    let updated = removeExistingChemistryCheckboxes(paragraph.xml, reference);
+    if (reference) updated = updated.replace(/<w:(?:keepLines|keepNext)\b[^>]*\/>/gi, "");
     // Use fixed tab stops rather than spaces so boxes, letters and wrapped
     // option text share the same positions for every source paper.
     updated = updated.replace(/<w:tabs\b[^>]*>[\s\S]*?<\/w:tabs>/gi, "")
@@ -437,9 +505,9 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
       .replace(/<w:spacing\b[^>]*>[\s\S]*?<\/w:spacing>/gi, "");
     updated = withParagraphProperties(updated,
       '<w:numPr><w:numId w:val="0"/></w:numPr>'
-      + '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs>'
-      + '<w:ind w:left="1600" w:hanging="1000"/>'
-      + '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>');
+      + (reference
+        ? '<w:tabs><w:tab w:val="left" w:pos="905"/><w:tab w:val="left" w:pos="1300"/></w:tabs><w:ind w:left="1300" w:hanging="820"/><w:spacing w:before="0" w:after="0" w:line="327" w:lineRule="exact"/><w:keepLines/>' + (/^[☐☒☑□\s]*D(?:\s|$)/.test(paragraph.text) ? '' : '<w:keepNext/>')
+        : '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs><w:ind w:left="1600" w:hanging="1000"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'));
     let foundLetter = false;
     let foundAnswer = false;
     updated = updated.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
@@ -462,7 +530,9 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
       return letter + '<w:r><w:tab/></w:r>' + rest;
     });
     updated = insertAtParagraphContentStart(updated,
-      chemistryCheckboxImage(relationshipId).replace(/<w:r><w:t xml:space="preserve"> <\/w:t><\/w:r>$/, '<w:r><w:tab/></w:r>'));
+      chemistryCheckboxImage(relationshipId, reference).replace(/<w:r><w:t xml:space="preserve"> <\/w:t><\/w:r>$/, '<w:r><w:tab/></w:r>'));
+    if (reference) updated = updated.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run =>
+      /<w:(?:t|tab|drawing|pict|sym|br|fldChar|instrText)\b/i.test(run) ? run : "");
     out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
   }
   return out;
@@ -513,7 +583,7 @@ function applyChemistryQuestionPagination(xml: string, questionNumber: number, m
   return questionNumber > 1 ? addChemistryQuestionPageBreak(xml) : xml;
 }
 
-function improveChemistryPageLayout(xml: string): string {
+function improveChemistryPageLayout(xml: string, reference = false): string {
   let out = stripPartialPageBreaks(xml);
 
   // Keep table rows intact where Word can do so safely. This stops diagrams/tables
@@ -538,13 +608,19 @@ function improveChemistryPageLayout(xml: string): string {
     const isSubPart = /^\((?:i|ii|iii|iv|v|vi)\)(?:\s|$)/i.test(text);
     const hasDrawing = /<w:drawing\b/i.test(p.xml) || /<w:pict\b/i.test(p.xml);
     const isTotal = /Total for question/i.test(text);
+    const nextContent = reference ? paragraphs.slice(i + 1).find(next => next.text.trim() || /<w:(?:drawing|pict)\b/i.test(next.xml)) : undefined;
+    const figureNeedsFollowingPrompt = hasDrawing && nextContent
+      && /^(?:\((?:i|ii|iii|iv|v)\)\s*)?(?:Complete|Use|Plot|Concordant results)\b/i.test(nextContent.text);
+    const introducesFigure = /^The (?:table|diagram|graph)\b/i.test(text)
+      && nextContent && /<w:(?:drawing|pict)\b/i.test(nextContent.xml);
 
     let props = "";
-    if (isQuestionLabel) props += `<w:keepNext/><w:keepLines/><w:widowControl/><w:spacing w:before=\"0\" w:after=\"60\" w:line=\"300\" w:lineRule=\"auto\"/>`;
+    if (isQuestionLabel) props += `<w:keepNext/><w:keepLines/><w:widowControl/><w:spacing w:before=\"0\" w:after=\"${reference ? 240 : 60}\" w:line=\"${reference ? 240 : 300}\" w:lineRule=\"auto\"/>`;
     else if (isMainPart || isSubPart) props += `<w:keepNext/><w:keepLines/><w:widowControl/>`;
     else if (hasDrawing) props += `<w:keepLines/><w:widowControl/>`;
     else if (isTotal) props += `<w:keepLines/><w:widowControl/>`;
     else if (text) props += `<w:widowControl/>`;
+    if (reference && (figureNeedsFollowingPrompt || introducesFigure)) props += `<w:keepNext/>`;
 
     if (!props) continue;
     let updated = p.xml;
@@ -683,24 +759,25 @@ function installChemistryCheckboxAsset(
   outputZip: JSZip,
   relState: RelState,
   contentTypesState: ContentTypesState,
+  reference = false,
 ): string {
   const idCounter = { value: relState.counter };
   const relationshipId = nextRelationshipId(relState.used, idCounter);
   relState.counter = idCounter.value;
-  const binary = atob(CHEMISTRY_CHECKBOX_IMAGE_BASE64);
+  const binary = atob(reference ? CHEMISTRY_REFERENCE_CHECKBOX_BASE64 : CHEMISTRY_CHECKBOX_IMAGE_BASE64);
   const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
-  outputZip.file("word/" + CHEMISTRY_CHECKBOX_MEDIA_TARGET, bytes);
+  outputZip.file("word/" + (reference ? CHEMISTRY_REFERENCE_CHECKBOX_TARGET : CHEMISTRY_CHECKBOX_MEDIA_TARGET), bytes);
   relState.xml = insertBeforeClosing(
     relState.xml,
     "</Relationships>",
     '<Relationship Id="' + escapeXml(relationshipId) + '"'
       + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
-      + ' Target="' + CHEMISTRY_CHECKBOX_MEDIA_TARGET + '"/>',
+      + ' Target="' + (reference ? CHEMISTRY_REFERENCE_CHECKBOX_TARGET : CHEMISTRY_CHECKBOX_MEDIA_TARGET) + '"/>',
   );
   contentTypesState.xml = ensureContentTypeDefault(
     contentTypesState.xml,
-    "png",
-    "image/png",
+    reference ? "jpeg" : "png",
+    reference ? "image/jpeg" : "image/png",
   );
   return relationshipId;
 }
@@ -901,20 +978,22 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry|Biology/i.test(subject)) {
-    chunk = normalizeChemistryMarkColors(chunk);
-    chunk = normalizeChemistryParagraphSpacing(chunk);
-    chunk = improveChemistryPageLayout(chunk);
+    const reference = /Chemistry/i.test(subject);
+    if (reference) chunk = applyChemistryReferenceText(trimChemistryLayoutSpacers(chunk));
+    chunk = normalizeChemistryMarkColors(chunk, reference);
+    chunk = normalizeChemistryParagraphSpacing(chunk, reference);
+    chunk = improveChemistryPageLayout(chunk, reference);
     chunk = applyChemistryQuestionPagination(chunk, newNumber, q.marks);
   }
   return chunk;
 }
 
-function normalizeChemistryMarkColors(xml: string): string {
+function normalizeChemistryMarkColors(xml: string, reference = false): string {
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
     const text = paragraphText(paragraph);
     const isTotal = /total\s+for\s+question/i.test(text);
     if (!isTotal && !/^\s*[([]\s*\d+\s*(?:marks?)?\s*[)\]]\s*$/i.test(text)) return paragraph;
-    const color = isTotal ? "000000" : "808080";
+    const color = isTotal ? "000000" : reference ? "A8AAAD" : "808080";
     return paragraph.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
       if (!/<w:t\b/i.test(run)) return run;
       const properties = '<w:b/><w:color w:val="' + color + '"/>';
@@ -941,13 +1020,13 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, /Chemistry/i.test(subject)) : null;
   const selected = questions.map((q, index) => {
     let chunk = buildQuestionChunk(source, q, index + 1, subject);
-    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId);
+    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
     return renumberDrawingIds(chunk, drawingCounter);
   }).join("");
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${sectPr}${suffix}`);
+  outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
@@ -967,15 +1046,15 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
     ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "", options.examName || "")
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, /Chemistry/i.test(subject)) : null;
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
-    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId);
+    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${chunks.join("")}${sectPr}${suffix}`);
+  outputZip.file("word/document.xml", `${prefix}${coverChunk}${chunks.join("")}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
