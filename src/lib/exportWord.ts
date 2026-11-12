@@ -1,6 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
+import { ensureChemistryCalculationSpace } from "./chemistryWorkingSpace";
 import type { Question } from "./questions";
 import { supabase } from "./supabase";
 import { FORMATTED_BUCKET, getFormattedSourceBucket, getFormattedSource } from "./sourceDocs";
@@ -354,6 +355,7 @@ function normalizeChemistryParagraphSpacing(xml: string, reference = false): str
   const standardSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + (reference ? '240' : '300') + '" w:lineRule="auto"/>';
   const writtenLineSpacing = '<w:spacing w:before="0" w:after="0" w:line="' + (reference ? '493' : CHEMISTRY_WRITTEN_LINE_SPACING_TWIPS) + '" w:lineRule="exact"/>';
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    if (reference && !paragraphText(paragraph) && /w:line="440"[^>]*w:lineRule="exact"/.test(paragraph)) return paragraph;
     if (isChemistryWrittenAnswerLine(paragraph)) {
       return replaceChemistryParagraphSpacing(
         normalizeChemistryWrittenAnswerLine(paragraph, reference),
@@ -975,6 +977,7 @@ function buildMockCoverChunk(subject: string, totalMarks: number, generatedDate:
 
 function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: number, subject: string): string {
   let chunk = extractRawQuestionXml(source, q.questionNumber);
+  if (/Chemistry/i.test(subject)) chunk = ensureChemistryCalculationSpace(chunk);
   chunk = selectQuestionParts(chunk, q.selectedParts, q.marks);
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry|Biology/i.test(subject)) {
