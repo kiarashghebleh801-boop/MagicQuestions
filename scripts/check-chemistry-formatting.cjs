@@ -22,6 +22,15 @@ assert.equal(f.normalizeChemistryMultipleChoiceBoxes(formatted,'rIdBox',true),fo
 const line=f.normalizeChemistryParagraphSpacing(p('.'.repeat(150)),true);
 assert(line.includes('w:pos="8740"'));assert(line.includes('w:line="493"'));assert(!line.includes('.'.repeat(150)));
 assert.equal(f.normalizeChemistryParagraphSpacing(line,true),line);
+for (const label of ['1','2','3','(1)','12']) {
+ const numbered=f.normalizeChemistryParagraphSpacing(p(label+'.'.repeat(150)),true);
+ assert(numbered.includes(`<w:t>${label}</w:t>`));
+ assert(numbered.includes('w:pos="8740"'));
+ assert(numbered.includes('w:line="493"'));
+ assert(!numbered.includes('.'.repeat(10)));
+ assert.equal(f.normalizeChemistryParagraphSpacing(numbered,true),numbered);
+}
+assert(!f.normalizeChemistryParagraphSpacing(p('mass = '+'.'.repeat(30)+' g'),true).includes('w:leader="dot"'),'Final calculation answer fields stay short');
 const roman=f.applyChemistryReferenceText(p('(ii) Explain this result.'));
 assert(roman.includes('w:left="320"'));assert(roman.includes('w:sz w:val="22"'));
 assert(f.normalizeChemistryParagraphSpacing(roman,true).includes('w:line="240"'));
