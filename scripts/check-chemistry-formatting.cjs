@@ -3,10 +3,15 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const Module = require('node:module'), ts = require('typescript'), JSZip = require('jszip');
 require.extensions['.ts'] = (m, f) => m._compile(ts.transpileModule(fs.readFileSync(f, 'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const filename = path.resolve(__dirname,'../src/lib/exportWord.ts');
-const source = fs.readFileSync(filename,'utf8') + '\nexport { ensureChemistryCalculationSpace, trimChemistryLayoutSpacers, applyChemistryReferenceText, chemistryReferenceSection, normalizeChemistryParagraphSpacing, normalizeChemistryMultipleChoiceBoxes, normalizeChemistryMarkColors, improveChemistryPageLayout, applyChemistryQuestionPagination, installChemistryCheckboxAsset };';
+const source = fs.readFileSync(filename,'utf8') + '\nexport { chemistryPortraitLayout, ensureChemistryCalculationSpace, trimChemistryLayoutSpacers, applyChemistryReferenceText, chemistryReferenceSection, normalizeChemistryParagraphSpacing, normalizeChemistryMultipleChoiceBoxes, normalizeChemistryMarkColors, improveChemistryPageLayout, applyChemistryQuestionPagination, installChemistryCheckboxAsset };';
 const mod = new Module(filename,module); mod.filename=filename; mod.paths=Module._nodeModulePaths(path.dirname(filename));
 mod._compile(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);
 const f=mod.exports;
+const portrait=f.chemistryPortraitLayout('<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:left="800"/></w:sectPr><wp:inline><wp:extent cx="9000000" cy="4500000"/><a:xfrm><a:ext cx="9000000" cy="4500000"/></a:xfrm></wp:inline>');
+assert(portrait.includes('<w:pgSz w:w="11906" w:h="16838"/>'));
+assert(!portrait.includes('landscape'));
+assert(portrait.includes('cx="6544310" cy="3272155"'));
+assert.equal(f.chemistryPortraitLayout(portrait),portrait);
 const p=t=>`<w:p><w:r><w:t>${t}</w:t></w:r></w:p>`;
 const mc=['A first answer','B second answer','C third answer','D fourth answer'].map(p).join('');
 const formatted=f.normalizeChemistryMultipleChoiceBoxes(f.applyChemistryReferenceText(mc),'rIdBox',true);

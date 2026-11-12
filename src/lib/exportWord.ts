@@ -328,7 +328,31 @@ function applyChemistryReferenceText(xml: string): string {
 }
 
 function chemistryReferenceSection(xml: string): string {
-  return xml.replace(/<w:pgMar\b[^>]*\/>/i, '<w:pgMar w:top="900" w:right="800" w:bottom="900" w:left="800" w:header="400" w:footer="400" w:gutter="0"/>');
+  const margins = '<w:pgMar w:top="900" w:right="800" w:bottom="900" w:left="800" w:header="400" w:footer="400" w:gutter="0"/>';
+  const size = '<w:pgSz w:w="11906" w:h="16838"/>';
+  xml = /<w:pgSz\b/.test(xml) ? xml.replace(/<w:pgSz\b[^>]*\/>/g, size) : xml.replace('</w:sectPr>', size + '</w:sectPr>');
+  return /<w:pgMar\b/.test(xml) ? xml.replace(/<w:pgMar\b[^>]*\/>/g, margins) : xml.replace('</w:sectPr>', margins + '</w:sectPr>');
+}
+
+// Source papers can carry landscape sections and full-width periodic tables.
+// Keep every Chemistry section on portrait A4 and fit images proportionally.
+function chemistryPortraitLayout(xml: string): string {
+  const maxWidth = (11906 - 1600) * 635; // Twips to drawing EMUs.
+  xml = xml.replace(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/g, chemistryReferenceSection);
+  xml = xml.replace(/<wp:(inline|anchor)\b[\s\S]*?<\/wp:\1>/g, drawing => {
+    const extent = /<wp:extent\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/.exec(drawing);
+    if (!extent || Number(extent[1]) <= maxWidth) return drawing;
+    const ratio = maxWidth / Number(extent[1]);
+    return drawing.replace(/<(wp:extent|a:ext)\b([^>]*?)\bcx="(\d+)"([^>]*?)\bcy="(\d+)"([^>]*?)\/>/g,
+      (_, tag, a, cx, b, cy, c) => `<${tag}${a}cx="${Math.round(Number(cx) * ratio)}"${b}cy="${Math.round(Number(cy) * ratio)}"${c}/>`);
+  });
+  xml = xml.replace(/<w:tblGrid\b[^>]*>[\s\S]*?<\/w:tblGrid>/g, grid => {
+    const widths = Array.from(grid.matchAll(/w:w="(\d+)"/g), m => Number(m[1]));
+    const total = widths.reduce((a, b) => a + b, 0);
+    return total > 10306 ? grid.replace(/w:w="(\d+)"/g, (_, w) => `w:w="${Math.floor(Number(w) * 10306 / total)}"`) : grid;
+  });
+  return xml.replace(/<w:(tblW|tcW)\b[^>]*\/>/g, width => /w:type="dxa"/.test(width)
+    ? width.replace(/w:w="(\d+)"/, (_, w) => `w:w="${Math.min(Number(w), 10306)}"`) : width);
 }
 
 function trimChemistryLayoutSpacers(xml: string): string {
@@ -1029,7 +1053,8 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
     if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
     return renumberDrawingIds(chunk, drawingCounter);
   }).join("");
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${selected}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`);
+  const outputXml = `${prefix}${coverChunk}${selected}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`;
+  outputZip.file("word/document.xml", /Chemistry/i.test(subject) ? chemistryPortraitLayout(outputXml) : outputXml);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
@@ -1057,7 +1082,8 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
     if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${chunks.join("")}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`);
+  const outputXml = `${prefix}${coverChunk}${chunks.join("")}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`;
+  outputZip.file("word/document.xml", /Chemistry/i.test(subject) ? chemistryPortraitLayout(outputXml) : outputXml);
   outputZip.file("word/_rels/document.xml.rels", relState.xml); outputZip.file("[Content_Types].xml", contentTypesState.xml);
   downloadBlob(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
 }
