@@ -1,6 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
+import { normalizeChemistryFormulaSubscripts } from "./chemistryFormulaFormatting";
 import { ensureChemistryCalculationSpace } from "./chemistryWorkingSpace";
 import type { Question } from "./questions";
 import { supabase } from "./supabase";
@@ -257,6 +258,13 @@ const CHEMISTRY_CHECKBOX_MEDIA_TARGET = "media/mq_chemistry_checkbox.png";
 const CHEMISTRY_REFERENCE_CHECKBOX_BASE64 = "/9j/4AAQSkZJRgABAQEAYABgAAD//gA8Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gMTAwCv/bAEMAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/bAEMBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/AABEIABAAEAMBEQACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/AP6OP2e/2dNF/aS8O/HXxv4r+O/7Y8vxST9sj9vHQbbSdC/bw/bR+G/hCHwX8Ov20/j78O/BHhrwr4L+Hvx+8LeC/DWk+GfBnhbQPD2l2GgaFpOnWNpplpFJZKJZL96VlZtaPrd73f8AX4+RbbTSSj8Mfsxe8U3q1fcP2iv2fPDv7Nui/AjxZ4I+Ov7ZD/FKL9sf9hDQtWtte/bx/bT+Ivgubwh8SP20fgD8PfGvhTxL4I+Inx98U+DPE2k+JfBninXfD+oaX4h0DU7S+07Vr2Sa0iDWEiFrptKy0tvff+v06gm22mo/DL7MVtFtapX3JP2fv2idB/Zt8M/HDwV4p+Bn7ZCfFaX9sf8Ab012PUtD/YN/bS+I3hBvBvxD/bV+PnxE8DeJ/Cfjb4e/AHxX4J8U6L4p8E+KvD3iHStR0DXtUsb231GB5rkxw/ZGE07JvRdNddX/AF6bdQabaacfhj9qK2ik9G77kP7Rf7Qnh/8AaR0f4D+EvA/wI/bHX4oS/tjfsI69q93r37B/7afw58FweEPhv+2j8APiF4z8U+JPG3xE+AXhfwb4b0rw34M8La94g1DVPEPiDSrOw03Sb6Oa8l26fFIXsmk7rS299/6/TqCTTbbj8MvtRe8Wlonfc//Z";
 const CHEMISTRY_REFERENCE_CHECKBOX_TARGET = "media/mq_chemistry_reference_checkbox.jpeg";
 
+function chemistryAnswerLabel(paragraph: string): string | undefined {
+  const text = paragraphText(paragraph);
+  const match = /^(advantage|disadvantage|reason|explanation|observation|conclusion|improvement|difference|similarity|source of error)(?:\s+\d+)?\s*:?\s*(?:\.{8,})?$/i.exec(text);
+  if (!match || (!/\.{8,}/.test(text) && !/w:leader="dot"/.test(paragraph))) return undefined;
+  return text.replace(/\s*\.{8,}\s*$/, '').trim();
+}
+
 function isChemistryWrittenAnswerLine(paragraph: string, numbered = false): boolean {
   const text = paragraphText(paragraph);
   const tabLeaderLine = text === ""
@@ -265,7 +273,7 @@ function isChemistryWrittenAnswerLine(paragraph: string, numbered = false): bool
   const typedDotLine = /^\.{10,}$/.test(text.replace(/\s+/g, ""));
   const numberedLine = numbered && (/^\(?\d{1,2}\)?[.)]?\s*\.{10,}$/.test(text.replace(/\s+/g, ""))
     || (/^\(?\d{1,2}\)?[.)]?$/.test(text) && /w:leader="dot"/.test(paragraph) && /<w:tab\s*\/>/.test(paragraph)));
-  return tabLeaderLine || typedDotLine || numberedLine;
+  return tabLeaderLine || typedDotLine || numberedLine || (numbered && Boolean(chemistryAnswerLabel(paragraph)));
 }
 
 function replaceChemistryParagraphSpacing(paragraph: string, spacing: string): string {
@@ -281,7 +289,7 @@ function replaceChemistryParagraphSpacing(paragraph: string, spacing: string): s
 }
 
 function normalizeChemistryWrittenAnswerLine(paragraph: string, reference = false): string {
-  const number = reference ? /^(\(?\d{1,2}\)?)(?:[.)])?\s*(?:\.{10,})?$/.exec(paragraphText(paragraph))?.[1] : undefined;
+  const number = reference ? chemistryAnswerLabel(paragraph) || /^(\(?\d{1,2}\)?)(?:[.)])?\s*(?:\.{10,})?$/.exec(paragraphText(paragraph))?.[1] : undefined;
   if (reference) paragraph = paragraph.replace(/<w:(?:ind|jc)\b[^>]*\/>/gi, "");
   const tabs = '<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="' + (reference ? '8740' : CHEMISTRY_WRITTEN_LINE_END_TWIPS) + '"/></w:tabs>';
   if (/<w:pPr\b/i.test(paragraph)) {
@@ -1036,7 +1044,7 @@ function buildQuestionChunk(source: LoadedDoc, q: ExportQuestion, newNumber: num
   chunk = renumberRawQuestionXml(chunk, newNumber);
   if (/Chemistry|Biology/i.test(subject)) {
     const reference = /Chemistry/i.test(subject);
-    if (reference) chunk = applyChemistryReferenceText(trimChemistryLayoutSpacers(chunk));
+    if (reference) chunk = normalizeChemistryFormulaSubscripts(applyChemistryReferenceText(trimChemistryLayoutSpacers(chunk)));
     chunk = normalizeChemistryMarkColors(chunk, reference);
     chunk = normalizeChemistryParagraphSpacing(chunk, reference);
     chunk = improveChemistryPageLayout(chunk, reference);
