@@ -502,7 +502,7 @@ function chemistryCheckboxField(name: string): string {
     + '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
 }
 
-function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string, reference = false): string {
+export function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: string, reference = false): string {
   const paragraphs = rawParagraphs(xml).map(p => ({
     ...p,
     text: paragraphText(p.xml.replace(/<w:tab\s*\/>/gi, '<w:t> </w:t>')),
@@ -544,7 +544,7 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
     updated = withParagraphProperties(updated,
       '<w:numPr><w:numId w:val="0"/></w:numPr>'
       + (reference
-        ? '<w:tabs><w:tab w:val="left" w:pos="905"/><w:tab w:val="left" w:pos="1300"/></w:tabs><w:ind w:left="1300" w:hanging="820"/><w:spacing w:before="0" w:after="0" w:line="327" w:lineRule="exact"/><w:keepLines/>' + (/^[☐☒☑□\s]*D(?:\s|$)/.test(paragraph.text) ? '' : '<w:keepNext/>')
+        ? '<w:tabs><w:tab w:val="left" w:pos="745"/><w:tab w:val="left" w:pos="1245"/></w:tabs><w:ind w:left="1245" w:hanging="925"/><w:spacing w:before="0" w:after="0" w:line="327" w:lineRule="exact"/><w:keepLines/>' + (/^[☐☒☑□\s]*D(?:\s|$)/.test(paragraph.text) ? '' : '<w:keepNext/>')
         : '<w:tabs><w:tab w:val="left" w:pos="1200"/><w:tab w:val="left" w:pos="1600"/></w:tabs><w:ind w:left="1600" w:hanging="1000"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'));
     let foundLetter = false;
     let foundAnswer = false;
@@ -571,6 +571,7 @@ function normalizeChemistryMultipleChoiceBoxes(xml: string, relationshipId: stri
       chemistryCheckboxImage(relationshipId, reference).replace(/<w:r><w:t xml:space="preserve"> <\/w:t><\/w:r>$/, '<w:r><w:tab/></w:r>'));
     if (reference) updated = updated.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run =>
       /<w:(?:t|tab|drawing|pict|sym|br|fldChar|instrText)\b/i.test(run) ? run : "");
+    if (reference) updated = applyChemistryReferenceText(updated);
     out = out.slice(0, paragraph.start) + updated + out.slice(paragraph.end);
   }
   return out;
@@ -819,7 +820,7 @@ function ensureContentTypeDefault(contentTypesXml: string, extension: string, co
   return insertBeforeClosing(contentTypesXml, "</Types>", `<Default Extension=\"${escapeXml(ext)}\" ContentType=\"${escapeXml(contentType)}\"/>`);
 }
 
-function installChemistryCheckboxAsset(
+export function installChemistryCheckboxAsset(
   outputZip: JSZip,
   relState: RelState,
   contentTypesState: ContentTypesState,
@@ -1085,10 +1086,10 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, /Chemistry/i.test(subject)) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, true) : null;
   const selected = questions.map((q, index) => {
     let chunk = buildQuestionChunk(source, q, index + 1, subject);
-    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
+    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, true);
     if (/Chemistry/i.test(subject)) chunk = keepChemistryPartsTogether(chunk);
     return renumberDrawingIds(chunk, drawingCounter);
   }).join("");
@@ -1113,12 +1114,12 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
     ? buildMockCoverChunk(subject, totalMarks, options.generatedDate || "", options.examName || "")
     : buildCoverChunk(cover, subject, totalMarks);
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentTypesState); coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
-  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, /Chemistry/i.test(subject)) : null;
+  const checkboxId = /Chemistry|Biology/i.test(subject) ? installChemistryCheckboxAsset(outputZip, relState, contentTypesState, true) : null;
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
-    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
+    if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, true);
     if (/Chemistry/i.test(subject)) chunk = keepChemistryPartsTogether(chunk);
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }

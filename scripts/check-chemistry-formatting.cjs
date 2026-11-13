@@ -17,8 +17,12 @@ const mc=['A first answer','B second answer','C third answer','D fourth answer']
 const formatted=f.normalizeChemistryMultipleChoiceBoxes(f.applyChemistryReferenceText(mc),'rIdBox',true);
 assert.equal((formatted.match(/r:embed="rIdBox"/g)||[]).length,4);
 assert.equal((formatted.match(/cx="152400" cy="152400"/g)||[]).length,8);
-assert(formatted.includes('w:pos="905"'));assert(formatted.includes('w:pos="1300"'));
+assert(formatted.includes('w:pos="745"'));assert(formatted.includes('w:pos="1245"'));
 assert.equal(f.normalizeChemistryMultipleChoiceBoxes(formatted,'rIdBox',true),formatted,'MC formatting must be idempotent');
+assert(formatted.includes('w:left="1245" w:hanging="925"'),'Wrapped option text aligns with the answer column');
+assert(formatted.includes('w:line="327"'),'Q7 option row pitch');
+assert.equal((formatted.match(/<w:sz w:val="22"\/>/g)||[]).length,8,'Q7 options use Arial 11');
+
 const line=f.normalizeChemistryParagraphSpacing(p('.'.repeat(150)),true);
 assert(line.includes('w:pos="8740"'));assert(line.includes('w:line="493"'));assert(!line.includes('.'.repeat(150)));
 assert.equal(f.normalizeChemistryParagraphSpacing(line,true),line);

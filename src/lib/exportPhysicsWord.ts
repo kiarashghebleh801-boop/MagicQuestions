@@ -1,6 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
+import { installChemistryCheckboxAsset, normalizeChemistryMultipleChoiceBoxes } from "./exportWord";
 import { physicsPartLayout, selectPhysicsParts, type PhysicsSelection } from "./physicsParts";
 import type { Question } from "./questions";
 import { physicsQuestions } from "./physicsQuestions";
@@ -820,6 +821,7 @@ export async function exportPhysicsPaperToWord(questions: PhysicsSelection[], op
     .map(node => serializer.serializeToString(node)).join("");
   formulaeChunk = await remapRelationships(formulaeChunk, formulae, outputZip, relState, contentState);
   formulaeChunk = renumberDrawingIds(formulaeChunk, drawingCounter);
+  const checkboxId = installChemistryCheckboxAsset(outputZip, relState, contentState, true);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = renumberQuestion(
@@ -832,8 +834,9 @@ export async function exportPhysicsPaperToWord(questions: PhysicsSelection[], op
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
     chunk = normalizePhysicsParagraphSpacing(physicsReferenceText(chunk));
     chunk = preventPhysicsTableRowSplits(chunk);
-    chunk = keepPhysicsPartsTogether(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
+    chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, true);
+    chunk = keepPhysicsPartsTogether(chunk);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
   }

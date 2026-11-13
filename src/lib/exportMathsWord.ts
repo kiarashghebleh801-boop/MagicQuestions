@@ -1,6 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
+import { installChemistryCheckboxAsset, normalizeChemistryMultipleChoiceBoxes } from "./exportWord";
 import type { Question } from "./questions";
 import { supabase } from "./supabase";
 import { FORMATTED_BUCKET, getFormattedSource } from "./sourceDocs";
@@ -672,6 +673,7 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
   coverChunk = await remapRelationships(coverChunk, cover, outputZip, relState, contentState);
   coverChunk = renumberDrawingIds(coverChunk, drawingCounter);
 
+  const checkboxId = installChemistryCheckboxAsset(outputZip, relState, contentState, true);
   const chunks: string[] = [];
   for (let i = 0; i < questions.length; i++) {
     let chunk = extractQuestion(sources[i], questions[i].questionNumber);
@@ -688,6 +690,7 @@ export async function exportMathsPaperToWord(inputQuestions: Question[]) {
     chunk = keepMathsFinalAnswersTogether(chunk);
     chunk = improveMathsQuestionLayout(chunk, questions[i].marks, i === 0);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
+    chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, true);
     chunk = renumberDrawingIds(chunk, drawingCounter);
     chunks.push(chunk);
   }
