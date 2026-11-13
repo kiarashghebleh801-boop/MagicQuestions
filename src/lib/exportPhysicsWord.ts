@@ -293,8 +293,8 @@ function boldPhysicsMultipleChoiceOptions(xml: string): string {
   return out;
 }
 
-const WRITTEN_LINE_END_TWIPS = "9800";
-const WRITTEN_LINE_SPACING_TWIPS = "420";
+const WRITTEN_LINE_END_TWIPS = "8790";
+const WRITTEN_LINE_SPACING_TWIPS = "373";
 
 function isWrittenAnswerLine(paragraph: string): boolean {
   const text = paragraphPlainText(paragraph);
@@ -302,7 +302,9 @@ function isWrittenAnswerLine(paragraph: string): boolean {
     && /<w:tab\b[^>]*\bw:leader=(?:"dot"|'dot')/i.test(paragraph)
     && /<w:tab\s*\/>/i.test(paragraph);
   const typedDotLine = /^\.{10,}$/.test(text.replace(/\s+/g, ""));
-  return tabLeaderLine || typedDotLine;
+  const labelled = /^(?:\(?\d{1,2}\)?[.)]?|advantage|disadvantage|reason|explanation|observation)\s*\.{10,}$/i.test(text)
+    || (/^(?:\(?\d{1,2}\)?[.)]?|advantage|disadvantage|reason|explanation|observation)$/i.test(text) && /w:leader="dot"/.test(paragraph));
+  return tabLeaderLine || typedDotLine || labelled;
 }
 
 function replaceParagraphSpacing(paragraph: string, spacing: string): string {
@@ -318,6 +320,8 @@ function replaceParagraphSpacing(paragraph: string, spacing: string): string {
 }
 
 function normalizeWrittenAnswerLine(paragraph: string): string {
+  const label = paragraphPlainText(paragraph).replace(/\s*\.{10,}\s*$/, '').trim();
+  paragraph = paragraph.replace(/<w:(?:ind|jc)\b[^>]*\/>/gi, '');
   const tabs = `<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="${WRITTEN_LINE_END_TWIPS}"/></w:tabs>`;
   if (/<w:pPr\b/i.test(paragraph)) {
     paragraph = paragraph.replace(/<w:pPr\b([^>]*)>([\s\S]*?)<\/w:pPr>/i, (_all, attrs, inner) => {
@@ -331,19 +335,55 @@ function normalizeWrittenAnswerLine(paragraph: string): string {
   const pPrEnd = paragraph.indexOf("</w:pPr>");
   const pEnd = paragraph.lastIndexOf("</w:p>");
   if (pPrEnd >= 0 && pEnd > pPrEnd) {
-    paragraph = `${paragraph.slice(0, pPrEnd + 8)}<w:r><w:tab/></w:r>${paragraph.slice(pEnd)}`;
+    const prefix = label ? '<w:r><w:t xml:space="preserve">' + escapeXml(label) + '</w:t></w:r>' : '';
+    paragraph = `${paragraph.slice(0, pPrEnd + 8)}${prefix}<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/></w:rPr><w:tab/></w:r>${paragraph.slice(pEnd)}`;
   }
-  return paragraph;
+  return paragraph.replace('</w:pPr>', '<w:ind w:left="0" w:firstLine="0"/><w:jc w:val="left"/></w:pPr>');
+}
+
+function physicsReferenceText(xml: string): string {
+  return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
+    const text = paragraphPlainText(paragraph);
+    const mark = /^\(\d{1,2}\)$/.test(text);
+    const total = /Total for question/i.test(text);
+    paragraph = paragraph.replace(/<w:r(?=[\s>])[\s\S]*?<\/w:r>/gi, run => {
+      if (!/<w:t\b/.test(run) || /<w:sym\b|<w:rFonts\b[^>]*(?:Symbol|Wingdings|Webdings)/i.test(run)) return run;
+      run = run.replace(/<w:rFonts\b[^>]*\/>/gi, '');
+      if (!/<w:vertAlign\b/.test(run)) run = run.replace(/<w:sz(?:Cs)?\b[^>]*\/>/gi, '');
+      let props = '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>' + (/<w:vertAlign\b/.test(run) ? '' : '<w:sz w:val="22"/><w:szCs w:val="22"/>');
+      if (mark || total) {
+        run = run.replace(/<w:(?:color|b|bCs)\b[^>]*\/>/gi, '');
+        props += '<w:b/><w:color w:val="' + (mark ? 'A8AAAD' : '000000') + '"/>';
+      }
+      if (/<w:rPr\s*\/>/.test(run)) return run.replace(/<w:rPr\s*\/>/, '<w:rPr>' + props + '</w:rPr>');
+      if (/<w:rPr\b/.test(run)) return run.replace(/<w:rPr\b([^>]*)>/, '<w:rPr$1>' + props);
+      return run.replace(/<w:r(?=[\s>])([^>]*)>/, '<w:r$1><w:rPr>' + props + '</w:rPr>');
+    });
+    const roman = /^(?:\([a-z]\)\s*)?\((?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\)(?:\s|$)/i.test(text);
+    if (roman || /^\([a-hj-uw-z]\)(?:\s|$)/i.test(text)) {
+      paragraph = paragraph.replace(/<w:ind\b[^>]*\/>/gi, '');
+      const indent = '<w:ind w:left="' + (roman ? '320' : '0') + '" w:firstLine="0"/>';
+      paragraph = /<w:pPr\b/.test(paragraph) ? paragraph.replace('</w:pPr>', indent + '</w:pPr>') : paragraph.replace(/<w:p(?=[\s>])([^>]*)>/, '<w:p$1><w:pPr>' + indent + '</w:pPr>');
+    }
+    return paragraph;
+  });
+}
+
+function physicsReferenceSection(xml: string): string {
+  return xml.replace(/<w:pgMar\b[^>]*\/>/g, '<w:pgMar w:top="900" w:right="800" w:bottom="900" w:left="800" w:header="720" w:footer="720" w:gutter="0"/>');
 }
 
 function normalizePhysicsParagraphSpacing(xml: string): string {
-  const standardSpacing = `<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="auto"/>`;
+  const standardSpacing = `<w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/>`;
   const writtenLineSpacing = `<w:spacing w:before="0" w:after="0" w:line="${WRITTEN_LINE_SPACING_TWIPS}" w:lineRule="exact"/>`;
   return xml.replace(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi, paragraph => {
     if (isWrittenAnswerLine(paragraph)) {
       return replaceParagraphSpacing(normalizeWrittenAnswerLine(paragraph), writtenLineSpacing);
     }
-    return replaceParagraphSpacing(paragraph, standardSpacing);
+    const text = paragraphPlainText(paragraph);
+    const spacing = !text ? '<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="auto"/>'
+      : /^Q\d+\.$|^\(\d{1,2}\)$/.test(text) ? '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>' : standardSpacing;
+    return replaceParagraphSpacing(paragraph, spacing);
   });
 }
 
@@ -476,19 +516,13 @@ function keepPhysicsPartsTogether(xml: string): string {
   });
   const paragraphs = Array.from(xml.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/gi));
   const keep = new Set<number>();
-  const pageStarts = new Set<number>();
   const pageBudget = 13200;
-  let usedHeight = 0;
   let start = 0;
   const finishGroup = (end: number) => {
     if (end <= start) return;
     const height = paragraphs.slice(start, end).reduce((sum, p) => sum + estimatePhysicsParagraphHeight(p[0]), 0);
     // Keep a complete part together only if it comfortably fits a page. Never
     // build a keepNext chain taller than a page, which causes gaps/blank pages.
-    if (usedHeight > 0 && usedHeight + height > pageBudget) {
-      pageStarts.add(start);
-      usedHeight = 0;
-    }
     if (height <= pageBudget) {
       for (let i = start; i < end - 1; i++) keep.add(i);
     } else {
@@ -499,20 +533,20 @@ function keepPhysicsPartsTogether(xml: string): string {
           || (text && /<w:drawing\b/.test(next))) keep.add(i);
       }
     }
-    usedHeight = (usedHeight + height) % pageBudget;
     start = end;
   };
   for (let i = 1; i < paragraphs.length; i++) {
     const text = paragraphPlainText(paragraphs[i][0]);
+    const instructionAfterFigure = /^(?:Explain|Describe|Suggest|Calculate|Determine|Show|Draw|Plot|Complete)\b/i.test(text)
+      && paragraphs.slice(start, i).some(p => /<w:(?:drawing|pict)\b/.test(p[0]));
     if (/^\((?:[a-z]|[ivx]+)\)(?:\s|$)/i.test(text)
-      || /<w:pageBreakBefore\b/.test(paragraphs[i][0])) finishGroup(i);
+      || instructionAfterFigure || /<w:pageBreakBefore\b/.test(paragraphs[i][0])) finishGroup(i);
   }
   finishGroup(paragraphs.length);
   let out = xml;
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     const p = paragraphs[i];
     let updated = setPhysicsPagination(p[0], keep.has(i));
-    if (pageStarts.has(i)) updated = addPageBreakBefore(updated);
     out = out.slice(0, p.index!) + updated + out.slice(p.index! + p[0].length);
   }
   return out;
@@ -796,7 +830,7 @@ export async function exportPhysicsPaperToWord(questions: PhysicsSelection[], op
     chunk = moveStandalonePageBreaksToFollowingContent(chunk);
     chunk = ensureQuestionStartsOnNewPage(chunk);
     chunk = boldPhysicsMultipleChoiceOptions(chunk);
-    chunk = normalizePhysicsParagraphSpacing(chunk);
+    chunk = normalizePhysicsParagraphSpacing(physicsReferenceText(chunk));
     chunk = preventPhysicsTableRowSplits(chunk);
     chunk = keepPhysicsPartsTogether(chunk);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentState);
@@ -804,7 +838,7 @@ export async function exportPhysicsPaperToWord(questions: PhysicsSelection[], op
     chunks.push(chunk);
   }
 
-  outputZip.file("word/document.xml", `${prefix}${coverChunk}${formulaeChunk}${chunks.join("")}${sectPr}${suffix}`);
+  outputZip.file("word/document.xml", `${prefix}${coverChunk}${formulaeChunk}${chunks.join("")}${physicsReferenceSection(sectPr)}${suffix}`);
   outputZip.file("word/_rels/document.xml.rels", relState.xml);
   outputZip.file("[Content_Types].xml", contentState.xml);
   download(await outputZip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } }));
