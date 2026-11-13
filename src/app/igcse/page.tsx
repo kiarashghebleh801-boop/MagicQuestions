@@ -58,25 +58,26 @@ export default function IgcsePage() {
 
   if (!ready) return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",background:BG,color:"#f5ecd1"}}><div className="authLogo" style={{margin:0,color:"inherit"}}><span style={{color:GOLD}}>✦</span> MagicQuestions</div></main>;
 
-  return <main style={{minHeight:"100vh",background:BG,color:"#f7f1df"}}>
-    <header style={{height:72,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 max(5vw,28px)",background:"#090909",borderBottom:"1px solid rgba(212,175,55,.22)",position:"sticky",top:0,zIndex:10}}>
+  return <main className="home-page" style={{minHeight:"100vh",background:BG,color:"#f7f1df"}}>
+    <header className="home-topbar" style={{height:72,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 max(5vw,28px)",background:"#090909",borderBottom:"1px solid rgba(212,175,55,.22)",position:"sticky",top:0,zIndex:10}}>
       <div style={{fontSize:21,fontWeight:850,letterSpacing:"-.5px"}}><span style={{color:GOLD,marginRight:7}}>✦</span> MagicQuestions</div>
       <div style={{fontSize:12,fontWeight:750,color:"#cdbf91",background:"rgba(212,175,55,.08)",border:"1px solid rgba(212,175,55,.20)",padding:"8px 12px",borderRadius:999}}>{email}</div>
     </header>
 
-    <section style={{textAlign:"center",padding:"58px 20px 34px"}}>
+    <section className="home-hero" style={{textAlign:"center",padding:"58px 20px 34px"}}>
       <p style={{fontSize:12,fontWeight:850,letterSpacing:2,color:GOLD,margin:"0 0 14px"}}>INTERNATIONAL GCSE</p>
       <h1 style={{fontSize:"clamp(38px,5vw,64px)",lineHeight:1.02,letterSpacing:"-3px",margin:"0 0 18px",color:"#fffaf0"}}>Choose your<br/><span style={{color:GOLD}}>subject.</span></h1>
       <p style={{maxWidth:700,margin:"0 auto",color:"#aaa28c",fontSize:17,lineHeight:1.6}}>Pick a subject to open its question generator and question bank.</p>
     </section>
 
-    <section style={{maxWidth:1180,margin:"0 auto 64px",padding:"0 20px",display:"grid",gap:16}}>
+    <section className="home-selection" style={{maxWidth:1180,margin:"0 auto 64px",padding:"0 20px",display:"grid",gap:16}}>
       <details className="home-subjects" open>
         <summary><span className="home-dropdown-label"><span className="home-dropdown-icon"><FolderIcon/></span><span><small>YOUR QUESTION BANKS</small><strong>Subjects</strong><em>Pick your next challenge</em></span></span><span className="home-dropdown-right"><span className="home-subject-count">04 subjects</span><span className="home-dropdown-chevron" aria-hidden="true">⌄</span></span></summary>
         <div className="home-subject-list">
       {subjects.map(subject => <button
         key={subject.title}
-        className="home-subject-card"
+        className={`home-subject-card home-subject-card-${subject.title.toLowerCase()}`}
+        aria-label={`Open ${subject.title} question bank`}
         onClick={()=>router.push(subject.route)}
         style={{
           width:"100%",
@@ -95,16 +96,7 @@ export default function IgcsePage() {
           boxShadow:"0 8px 24px rgba(0,0,0,.24)",
           transition:"transform .16s ease, border-color .16s ease, background .16s ease",
         }}
-        onMouseEnter={e=>{
-          e.currentTarget.style.transform="translateY(-1px)";
-          e.currentTarget.style.borderColor="rgba(212,175,55,.68)";
-          e.currentTarget.style.background="#15130d";
-        }}
-        onMouseLeave={e=>{
-          e.currentTarget.style.transform="translateY(0)";
-          e.currentTarget.style.borderColor="rgba(212,175,55,.24)";
-          e.currentTarget.style.background=PANEL;
-        }}
+
       >
         <div style={{width:46,height:46,borderRadius:13,display:"grid",placeItems:"center",background:"rgba(212,175,55,.10)",color:GOLD,border:"1px solid rgba(212,175,55,.13)"}}><FolderIcon/></div>
         <div>

@@ -32,11 +32,6 @@ export default function StudyDashboard() {
   const labelDay = (value: string) => new Date(value + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   return <section className="study-dashboard" aria-labelledby="study-title">
     <div className="study-heading"><div><p className="study-eyebrow">MAKE YOUR TIME COUNT</p><h2 id="study-title">Your study space</h2><p>One session at a time. See where your effort goes.</p></div><div className="study-today"><span>Studied today</span><strong>{duration(today)}</strong></div></div>
-    <div className="study-stat-grid">
-      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">◷</span><div><small>Total focus time</small><strong>{duration(lifetime)}</strong><span>Every minute adds up</span></div>{sparkDays.length > 1 && <svg viewBox="0 0 100 32" aria-hidden="true"><polyline points={sparkPoints}/></svg>}</div>
-      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">▦</span><div><small>Active study days</small><strong>{days.length}<em>days</em></strong><span>Your recorded days of progress</span></div><div className="study-stat-dots" aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} className={i < Math.min(days.length, 12) ? "lit" : ""}/>)}</div></div>
-      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">↗</span><div><small>Average per study day</small><strong>{duration(days.length ? lifetime / days.length : 0)}</strong><span>Across days you used the timer</span></div></div>
-    </div>
     <div className="study-grid">
       <div className="study-card study-timer">
         <div className="study-card-top"><h3>Study timer</h3><span className={`study-status${active?.runningSince != null ? " is-running" : ""}`}><i style={{ background: active?.runningSince != null ? selected.color : "#827c6b" }}/>{active ? active.runningSince === null ? "Paused" : "In progress" : "Ready when you are"}</span></div>
@@ -65,6 +60,11 @@ export default function StudyDashboard() {
         <div className="study-mode-balance"><div><span>Revision <strong>{duration(revision)}</strong></span><span>Past papers <strong>{duration(total - revision)}</strong></span></div><div className="study-mode-track"><i style={{ width: `${total ? revision / total * 100 : 0}%` }}/><i style={{ width: `${total ? (total - revision) / total * 100 : 0}%` }}/></div></div>
         {!total && <p className="study-chart-empty">Start your first session and watch your study time build up here.</p>}
       </div>
+    </div>
+    <div className="study-stat-grid">
+      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">◷</span><div><small>Total focus time</small><strong>{duration(lifetime)}</strong><span>Every minute adds up</span></div>{sparkDays.length > 1 && <svg viewBox="0 0 100 32" aria-hidden="true"><polyline points={sparkPoints}/></svg>}</div>
+      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">▦</span><div><small>Active study days</small><strong>{days.length}<em>days</em></strong><span>Your recorded days of progress</span></div><div className="study-stat-dots" aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} className={i < Math.min(days.length, 12) ? "lit" : ""}/>)}</div></div>
+      <div className="study-stat"><span className="study-stat-icon" aria-hidden="true">↗</span><div><small>Average per study day</small><strong>{duration(days.length ? lifetime / days.length : 0)}</strong><span>Across days you used the timer</span></div></div>
     </div>
     <div className="study-card study-history"><div className="study-card-top"><div><h3>Your study days</h3><p>Only the days you studied. Select one to explore your time.</p></div><span className="study-day-count">{days.length} {days.length === 1 ? "day" : "days"}</span></div>
       <div className="study-day-filters"><button aria-pressed={day === "all"} onClick={() => setDay("all")}>All days</button></div>
