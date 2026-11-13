@@ -3,7 +3,7 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const Module = require('node:module'), ts = require('typescript'), JSZip = require('jszip');
 require.extensions['.ts'] = (m, f) => m._compile(ts.transpileModule(fs.readFileSync(f, 'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const filename = path.resolve(__dirname,'../src/lib/exportWord.ts');
-const source = fs.readFileSync(filename,'utf8') + '\nexport { chemistryPortraitLayout, ensureChemistryCalculationSpace, trimChemistryLayoutSpacers, applyChemistryReferenceText, chemistryReferenceSection, normalizeChemistryParagraphSpacing, normalizeChemistryMultipleChoiceBoxes, normalizeChemistryMarkColors, improveChemistryPageLayout, applyChemistryQuestionPagination, installChemistryCheckboxAsset };';
+const source = fs.readFileSync(filename,'utf8') + '\nexport { keepChemistryPartsTogether, chemistryPortraitLayout, ensureChemistryCalculationSpace, trimChemistryLayoutSpacers, applyChemistryReferenceText, chemistryReferenceSection, normalizeChemistryParagraphSpacing, normalizeChemistryMultipleChoiceBoxes, normalizeChemistryMarkColors, improveChemistryPageLayout, applyChemistryQuestionPagination, installChemistryCheckboxAsset };';
 const mod = new Module(filename,module); mod.filename=filename; mod.paths=Module._nodeModulePaths(path.dirname(filename));
 mod._compile(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);
 const f=mod.exports;
@@ -31,6 +31,13 @@ for (const label of ['1','2','3','(1)','12']) {
  assert.equal(f.normalizeChemistryParagraphSpacing(numbered,true),numbered);
 }
 assert(!f.normalizeChemistryParagraphSpacing(p('mass = '+'.'.repeat(30)+' g'),true).includes('w:leader="dot"'),'Final calculation answer fields stay short');
+const grouped=f.keepChemistryPartsTogether(p('Q1.')+p('(a) Explain.')+p('(3)')+p('.'.repeat(100))+p('.'.repeat(100))+p('(b) Calculate.')+p('(2)')+p('')+p('mass = ................. g')+p('(Total for question = 5 marks)'));
+const groupedPs=Array.from(grouped.matchAll(/<w:p(?=[\s>])[\s\S]*?<\/w:p>/g),m=>m[0]);
+assert(groupedPs.slice(0,4).every(x=>x.includes('<w:keepNext/>')));
+assert(!groupedPs[4].includes('<w:keepNext/>'),'Release chain at the next part');
+assert(groupedPs.slice(5,-1).every(x=>x.includes('<w:keepNext/>')),'Keep calculation space and final answer with prompt');
+assert(!groupedPs.at(-1).includes('<w:keepNext/>'));
+assert.equal(f.keepChemistryPartsTogether(grouped),grouped);
 const roman=f.applyChemistryReferenceText(p('(ii) Explain this result.'));
 assert(roman.includes('w:left="320"'));assert(roman.includes('w:sz w:val="22"'));
 assert(f.normalizeChemistryParagraphSpacing(roman,true).includes('w:line="240"'));
@@ -56,7 +63,7 @@ if(process.argv[2]&&process.argv[3])(async()=>{
  let result=xml.slice(0,starts[0].index);
  starts.forEach((start,i)=>{
   let chunk=xml.slice(start.index,starts[i+1]?.index||end);const marks=Number(plain(chunk).match(/Total for question\s*=\s*(\d+)/i)[1]);
-  chunk=f.ensureChemistryCalculationSpace(chunk);chunk=f.applyChemistryReferenceText(f.trimChemistryLayoutSpacers(chunk));chunk=f.normalizeChemistryMarkColors(chunk,true);chunk=f.normalizeChemistryParagraphSpacing(chunk,true);chunk=f.improveChemistryPageLayout(chunk,true);chunk=f.applyChemistryQuestionPagination(chunk,i+1,marks);chunk=f.normalizeChemistryMultipleChoiceBoxes(chunk,id,true);result+=chunk;
+  chunk=f.ensureChemistryCalculationSpace(chunk);chunk=f.applyChemistryReferenceText(f.trimChemistryLayoutSpacers(chunk));chunk=f.normalizeChemistryMarkColors(chunk,true);chunk=f.normalizeChemistryParagraphSpacing(chunk,true);chunk=f.improveChemistryPageLayout(chunk,true);chunk=f.applyChemistryQuestionPagination(chunk,i+1,marks);chunk=f.normalizeChemistryMultipleChoiceBoxes(chunk,id,true);chunk=f.keepChemistryPartsTogether(chunk);result+=chunk;
  });
  result+=f.chemistryReferenceSection(xml.slice(end));zip.file('word/document.xml',result);zip.file('word/_rels/document.xml.rels',relState.xml);zip.file('[Content_Types].xml',content.xml);
  fs.writeFileSync(process.argv[3],await zip.generateAsync({type:'nodebuffer'}));

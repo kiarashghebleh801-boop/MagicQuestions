@@ -613,6 +613,32 @@ function applyChemistryQuestionPagination(xml: string, questionNumber: number, m
   return questionNumber > 1 ? addChemistryQuestionPageBreak(xml) : xml;
 }
 
+// Keep each marked part (including its answer/working space) on one page when
+// it fits. Word can still paginate a part that is taller than a whole page.
+function keepChemistryPartsTogether(xml: string): string {
+  const ps = rawParagraphs(xml);
+  const ends = new Set<number>();
+  let groupStart = 0;
+  for (let i = 1; i < ps.length; i++) {
+    if (!/^\([a-z]+\)(?:\s|\(|$)/i.test(ps[i].text.trim())) continue;
+    const previous = ps.slice(groupStart, i);
+    // A shared introduction or main-part heading belongs with its first subpart.
+    if (previous.some(p => /^\(\d{1,2}\)$/.test(p.text.trim()) || isChemistryWrittenAnswerLine(p.xml, true))) {
+      ends.add(i - 1);
+      groupStart = i;
+    }
+  }
+  let out = xml;
+  for (let i = ps.length - 1; i >= 0; i--) {
+    const p = ps[i];
+    const cleaned = p.xml.replace(/<w:keepNext\b[^>]*\/>/gi, '').replace(/<w:keepLines\b[^>]*\/>/gi, '');
+    const props = '<w:keepLines/>' + (i < ps.length - 1 && !ends.has(i) ? '<w:keepNext/>' : '');
+    const updated = withParagraphProperties(cleaned, props);
+    out = out.slice(0, p.start) + updated + out.slice(p.end);
+  }
+  return out;
+}
+
 function improveChemistryPageLayout(xml: string, reference = false): string {
   let out = stripPartialPageBreaks(xml);
 
@@ -1055,6 +1081,7 @@ async function exportSingleSource(questions: ExportQuestion[], source: LoadedDoc
   const selected = questions.map((q, index) => {
     let chunk = buildQuestionChunk(source, q, index + 1, subject);
     if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
+    if (/Chemistry/i.test(subject)) chunk = keepChemistryPartsTogether(chunk);
     return renumberDrawingIds(chunk, drawingCounter);
   }).join("");
   const outputXml = `${prefix}${coverChunk}${selected}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`;
@@ -1084,6 +1111,7 @@ async function exportAcrossSources(questions: ExportQuestion[], sources: LoadedD
     let chunk = buildQuestionChunk(sources[i], questions[i], i + 1, subject);
     chunk = await remapRelationships(chunk, sources[i], outputZip, relState, contentTypesState);
     if (checkboxId) chunk = normalizeChemistryMultipleChoiceBoxes(chunk, checkboxId, /Chemistry/i.test(subject));
+    if (/Chemistry/i.test(subject)) chunk = keepChemistryPartsTogether(chunk);
     chunk = renumberDrawingIds(chunk, drawingCounter); chunks.push(chunk);
   }
   const outputXml = `${prefix}${coverChunk}${chunks.join("")}${/Chemistry/i.test(subject) ? chemistryReferenceSection(sectPr) : sectPr}${suffix}`;
