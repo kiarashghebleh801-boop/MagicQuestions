@@ -4,7 +4,7 @@ export type MarkingQuestion = { label: string; maximum: number; questionText: st
 export type Criteria = { questions: MarkingQuestion[] };
 export type ReadAnswer = { label: string; text: string; confidence: 'high'|'medium'|'low'; uncertainty: string; location: string; visualDescription: string; needsVisualReview: boolean };
 export type Transcription = { answers: ReadAnswer[] };
-export type Decision = { criterionId: string; awarded: number; reason: string; evidence: string };
+export type Decision = { criterionId: string; awarded: number; reason: string; evidence: string; evidenceVerified?: boolean };
 export type MarkedQuestion = { label: string; decisions: Decision[]; feedback: string; improvedAnswer: string; needsReview: boolean; reviewReason: string; awarded: number|null; maximum: number };
 export type MarkingReport = { questions: MarkedQuestion[]; awarded: number; maximum: number; reviewCount: number; percentage: number|null };
 export type MarkerState = { criteria?: Criteria; transcription?: Transcription; report?: MarkingReport; corrections?: {label:string;text:string}[] };
@@ -42,15 +42,16 @@ export function validateReport(raw:unknown,criteria:Criteria,transcription:Trans
  if(input.length!==criteria.questions.length)throw new Error('The marking response missed a question. No result was saved.');
  const questions:MarkedQuestion[]=criteria.questions.map(q=>{
   const r=record(input.find(v=>record(v).label===q.label)),a=transcription.answers.find(a=>a.label===q.label)!;
-  const decisions=list(r.decisions,150).map(v=>{const d=record(v),criterionId=text(d.criterionId,100),c=q.criteria.find(c=>c.id===criterionId);if(!c)throw new Error('AI cited a criterion absent from the official scheme.');const awarded=integer(d.awarded,c.marks),evidence=text(d.evidence,4000);if(awarded&&!evidence.trim())throw new Error('An awarded mark had no answer evidence.');return {criterionId,awarded,reason:text(d.reason,4000),evidence};});
+  const decisions=list(r.decisions,150).map(v=>{const d=record(v),criterionId=text(d.criterionId,100),c=q.criteria.find(c=>c.id===criterionId);if(!c)throw new Error('AI cited a criterion absent from the official scheme.');const awarded=integer(d.awarded,c.marks),evidence=text(d.evidence,4000);return {criterionId,awarded,reason:text(d.reason,4000),evidence};});
   unique(decisions.map(d=>d.criterionId));if(decisions.length!==q.criteria.length)throw new Error('A marking criterion was skipped.');
   const sum=decisions.reduce((n,d)=>n+d.awarded,0);if(sum>q.maximum)throw new Error('AI exceeded the question maximum. No result was saved.');
   const answer=corrections?.find(c=>c.label===q.label)?.text??a.text;
   const normalise=(s:string)=>s.replace(/\s+/g,' ').trim();
-  if(decisions.some(d=>d.awarded&&!normalise(answer).includes(normalise(d.evidence))))throw new Error('An awarded mark cited evidence absent from the verified answer.');
+  const checkedDecisions=decisions.map(d=>({...d,evidenceVerified:!!normalise(d.evidence)&&normalise(answer).includes(normalise(d.evidence))}));
+  const unsupported=checkedDecisions.filter(d=>d.awarded&&!d.evidenceVerified).map(d=>d.criterionId);
   const corrected=normalise(answer)!==normalise(a.text);
-  const needsReview=q.needsReview||a.confidence==='low'||a.needsVisualReview||corrected||flag(r.needsReview);
-  return {label:q.label,decisions,feedback:text(r.feedback),improvedAnswer:text(r.improvedAnswer),needsReview,reviewReason:[q.reason,corrected?'The transcription was corrected; a human must verify the change against the original.':'',a.confidence==='low'?'Original answer was illegible.':'',a.needsVisualReview?'Graph, diagram or other visual answer needs human review.':'',text(r.reviewReason,4000)].filter(Boolean).join(' '),awarded:needsReview?null:sum,maximum:q.maximum};
+  const needsReview=unsupported.length>0||q.needsReview||a.confidence==='low'||a.needsVisualReview||corrected||flag(r.needsReview);
+  return {label:q.label,decisions:checkedDecisions,feedback:text(r.feedback),improvedAnswer:text(r.improvedAnswer),needsReview,reviewReason:[unsupported.length?`Evidence for ${unsupported.join(', ')} could not be matched to the verified answer. Proposed marks are withheld pending human review.`:'',q.reason,corrected?'The transcription was corrected; a human must verify the change against the original.':'',a.confidence==='low'?'Original answer was illegible.':'',a.needsVisualReview?'Graph, diagram or other visual answer needs human review.':'',text(r.reviewReason,4000)].filter(Boolean).join(' '),awarded:needsReview?null:sum,maximum:q.maximum};
  });
  const reviewCount=questions.filter(q=>q.needsReview).length,maximum=questions.reduce((n,q)=>n+q.maximum,0),awarded=questions.reduce((n,q)=>n+(q.awarded??0),0);
  return {questions,maximum,awarded,reviewCount,percentage:reviewCount||!maximum?null:Math.round(1000*awarded/maximum)/10};

@@ -97,3 +97,11 @@ Typed answer PDFs with native text on every page and no drawing/image/annotation
 operators are parsed directly; scans and visual PDFs still use vision. The uploaded
 three-page test PDF was checked with this text path, preserving its deliberate errors.
 Use MARKER_TEST_TYPED_PDF to run that optional fixture check with a local PDF.
+
+## Evidence review handling
+
+An unmatched or missing quote for a proposed awarded mark now flags that question
+for human review instead of rejecting the whole paper. Its score is withheld,
+unverified citations are explicitly labelled in the UI, and other questions still
+receive results. Matching only normalises whitespace; numbers, case, units and
+formulae are not fuzzily equated. Excess marks and invented criterion IDs still fail.
