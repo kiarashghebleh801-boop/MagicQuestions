@@ -1,4 +1,5 @@
 "use client";
+import { rememberMarkerPaper } from "@/lib/paperMarker";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -116,7 +117,7 @@ export default function PhysicsPage() {
     if (!paper.length || exporting) return;
     setExporting(true);
     try {
-      await exportPhysicsPaperToWord(paper, { coverMode: coverMode || "worksheet", generatedDate, examName });
+      await exportPhysicsPaperToWord(paper, { coverMode: coverMode || "worksheet", generatedDate, examName }); void rememberMarkerPaper("Physics", paper).catch(e => window.alert(e.message));
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Could not create the Physics Word paper.");
     } finally {
@@ -138,7 +139,7 @@ export default function PhysicsPage() {
 
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
-  return <SubjectWorkspace subject="Physics" email={email} mode={mode} onModeChange={setMode} questionCount={physicsQuestions.length} accountActions={<button className="accountButton" onClick={signOut}>Log out</button>}>
+  return <SubjectWorkspace markerPaper={paper} subject="Physics" email={email} mode={mode} onModeChange={setMode} questionCount={physicsQuestions.length} accountActions={<button className="accountButton" onClick={signOut}>Log out</button>}>
 
     <section className="hero">
       <p className="eyebrow">EDEXCEL INTERNATIONAL GCSE PHYSICS 4PH1</p>

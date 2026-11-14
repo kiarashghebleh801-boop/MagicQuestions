@@ -1,4 +1,5 @@
 "use client";
+import { rememberMarkerPaper } from "@/lib/paperMarker";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -115,7 +116,7 @@ export default function MathematicsPage() {
   }
   async function signOut() { await supabase.auth.signOut(); router.replace("/login"); }
 
-  return <SubjectWorkspace subject="Mathematics" email={email} mode={mode} onModeChange={setMode} questionCount={formattedQuestions.length} hasTracker={false} accountActions={<>{isOwner ? <button className="accountButton" onClick={() => router.push("/owner")}>Owner panel</button> : null}<button className="accountButton" onClick={signOut}>Log out</button></>}>
+  return <SubjectWorkspace markerPaper={paper} subject="Mathematics" email={email} mode={mode} onModeChange={setMode} questionCount={formattedQuestions.length} hasTracker={false} accountActions={<>{isOwner ? <button className="accountButton" onClick={() => router.push("/owner")}>Owner panel</button> : null}<button className="accountButton" onClick={signOut}>Log out</button></>}>
 
     <section className="hero"><p className="eyebrow">EDEXCEL IGCSE MATHEMATICS · PAST PAPERS, BUILT AROUND YOU</p><h1>Your topics. Your paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exactly what you want to practise. MagicQuestions selects matching Higher-tier Edexcel IGCSE Mathematics questions from the formatted Word question bank.</p></section>
 
@@ -159,7 +160,7 @@ function PaperPreview({paper,totalMarks,formattedQuestions,removeQuestion,regene
 
   async function downloadWord() {
     setExporting(true);
-    try { await exportMathsPaperToWord(paper); }
+    try { await exportMathsPaperToWord(paper); void rememberMarkerPaper("Mathematics", paper).catch(e => window.alert(e.message)); }
     catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Word paper."); }
     finally { setExporting(false); }
   }

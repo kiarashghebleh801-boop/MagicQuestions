@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import AIPaperMarker from "./AIPaperMarker";
+import type { MarkerQuestion } from "@/lib/paperMarker";
 
-export type SubjectWorkspaceMode = "resources" | "generate" | "bank" | "tracker" | "notes";
+export type SubjectWorkspaceMode = "resources" | "generate" | "bank" | "tracker" | "notes" | "marker";
 type Subject = "Mathematics" | "Chemistry" | "Physics" | "Biology";
 type IconName = "menu" | "book" | "resources" | "progress" | "notes" | "questions" | "target" | "timer" | "arrow" | "chevron";
 const subjects: { name: Subject; href: string; code: string }[] = [
@@ -29,9 +31,9 @@ function Icon({ name }: { name: IconName }) {
   return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-export default function SubjectWorkspace({ subject, email, mode, onModeChange, hasTracker = true, questionCount, children, accountActions }: {
+export default function SubjectWorkspace({ subject, email, mode, onModeChange, hasTracker = true, questionCount, children, accountActions, markerPaper }: {
   subject: Subject; email: string; mode: SubjectWorkspaceMode; onModeChange: (mode: SubjectWorkspaceMode) => void;
-  hasTracker?: boolean; questionCount: number; children: ReactNode; accountActions?: ReactNode;
+  hasTracker?: boolean; questionCount: number; children: ReactNode; accountActions?: ReactNode; markerPaper?: MarkerQuestion[];
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,7 +62,7 @@ export default function SubjectWorkspace({ subject, email, mode, onModeChange, h
       <Icon name={icon}/><span className="subject-nav-label">{label}</span>{soon ? <small className="subject-soon-label">Coming soon</small> : null}
     </button>;
   }
-  const title = { resources: "Course resources", generate: "Paper generator", bank: "Question bank", tracker: "Tracker", notes: "Revision notes" }[mode];
+  const title = { resources: "Course resources", generate: "Paper generator", bank: "Question bank", tracker: "Tracker", notes: "Revision notes", marker: "AI Paper Marker" }[mode];
   return <main className={`subject-workspace${collapsed ? " is-collapsed" : ""}${mobileOpen ? " is-mobile-open" : ""}`}>
     {mobileOpen ? <button type="button" className="subject-menu-scrim" aria-label="Close course menu" onClick={() => setMobileOpen(false)}/> : null}
     <aside ref={sidebarRef} className="subject-sidebar" id="subject-course-menu" aria-label={`${subject} course navigation`}>
@@ -79,6 +81,7 @@ export default function SubjectWorkspace({ subject, email, mode, onModeChange, h
           <p className="subject-nav-heading">Exam practice</p>
           {toolButton("bank", "Question bank", "questions")}
           {toolButton("generate", "Paper generator", "target")}
+          {toolButton("marker", "AI Paper Marker", "questions")}
           <Link className="subject-nav-item" href="/study" title={collapsed ? "Study timer" : undefined}><Icon name="timer"/><span className="subject-nav-label">Study timer</span></Link>
         </nav>
       </div>
@@ -97,6 +100,7 @@ export default function SubjectWorkspace({ subject, email, mode, onModeChange, h
         <div className="subject-resource-grid">
           <button type="button" className="subject-resource-card" onClick={() => navigate("bank")} style={{"--resource-accent":"#d4af37"} as CSSProperties}><span className="subject-resource-icon"><Icon name="questions"/></span><small>EXAM PRACTICE</small><h2>Question bank</h2><p>Explore {questionCount.toLocaleString()} questions and choose the topics you want to practise.</p><span className="subject-card-link">Browse questions <Icon name="arrow"/></span></button>
           <button type="button" className="subject-resource-card" onClick={() => navigate("generate")} style={{"--resource-accent":"#d4af37"} as CSSProperties}><span className="subject-resource-icon"><Icon name="target"/></span><small>MAKE IT YOURS</small><h2>Paper generator</h2><p>Build a custom paper around your topics, then download it with its available mark scheme.</p><span className="subject-card-link">Build a paper <Icon name="arrow"/></span></button>
+          <button type="button" className="subject-resource-card" onClick={() => navigate("marker")} style={{"--resource-accent":"#d4af37"} as CSSProperties}><span className="subject-resource-icon"><Icon name="questions"/></span><small>YOUR ANSWERS</small><h2>AI Paper Marker</h2><p>Prepare your completed papers, verify answers and keep private marking submissions.</p><span className="subject-card-link">Open paper marker <Icon name="arrow"/></span></button>
           {hasTracker ? <button type="button" className="subject-resource-card" onClick={() => navigate("tracker")} style={{"--resource-accent":"#d4af37"} as CSSProperties}><span className="subject-resource-icon"><Icon name="progress"/></span><small>YOUR PROGRESS</small><h2>Tracker</h2><p>Review your results, track topics and decide what to work on next.</p><span className="subject-card-link">View your progress <Icon name="arrow"/></span></button> : null}
           <button type="button" className="subject-resource-card subject-resource-soon" onClick={() => navigate("notes")} style={{"--resource-accent":"#d4af37"} as CSSProperties}><span className="subject-resource-icon"><Icon name="notes"/></span><small>REVISION <span className="subject-card-soon">Coming soon</span></small><h2>Revision notes</h2><p>A space for your {subject.toLowerCase()} revision notes. More resources are on the way.</p><span className="subject-card-link">Coming soon <Icon name="arrow"/></span></button>
         </div>

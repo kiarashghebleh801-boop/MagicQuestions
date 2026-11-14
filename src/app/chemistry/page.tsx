@@ -1,4 +1,5 @@
 "use client";
+import { rememberMarkerPaper } from "@/lib/paperMarker";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -154,7 +155,7 @@ export default function ChemistryPage() {
   function replaceQuestion(index: number, replacement: ChemistryQuestionSelection) {
     setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
-  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry", coverMode: coverMode || "worksheet", generatedDate, examName }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper."); } finally { setExporting(false); } }
+  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Chemistry", coverMode: coverMode || "worksheet", generatedDate, examName }); void rememberMarkerPaper("Chemistry", paper).catch(e => window.alert(e.message)); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Chemistry Word paper."); } finally { setExporting(false); } }
 
   async function downloadMarkScheme() {
     if (!paper.length || exportingMarkScheme) return;
@@ -171,7 +172,7 @@ export default function ChemistryPage() {
     } finally { setExportingMarkScheme(false); }
   }
 
-  return <SubjectWorkspace subject="Chemistry" email={email} mode={mode} onModeChange={setMode} questionCount={chemistryQuestions.length}>
+  return <SubjectWorkspace markerPaper={paper} subject="Chemistry" email={email} mode={mode} onModeChange={setMode} questionCount={chemistryQuestions.length}>
 
     <section className="hero"><p className="eyebrow">EDEXCEL INTERNATIONAL GCSE CHEMISTRY 4CH1</p><h1>Your topics. Your Chemistry paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose exact specification sections. MagicQuestions now keeps only the parts of each question that test the topic(s) you selected, removes unrelated parts, and renumbers the remaining parts from (a).</p></section>
 

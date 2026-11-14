@@ -225,3 +225,17 @@
 @media(max-width:360px){.home-hero{padding-inline:14px!important}.home-hero h1{font-size:33px!important}.home-selection{padding:0 10px!important}.home-subject-list>.home-subject-card{grid-template-columns:38px minmax(0,1fr) auto!important;padding:12px 9px!important;gap:8px!important}.home-subject-list>.home-subject-card>div:first-child{width:36px!important;height:36px!important}.home-subject-list>.home-subject-card h2{font-size:17px!important}.home-subject-list>.home-subject-card>div:nth-child(2)>div{font-size:9px!important}.home-dropdown-label{gap:8px!important}.home-dropdown-icon{width:38px!important;height:38px!important}}
 @media(prefers-reduced-motion:reduce){.home-hero h1 span,.home-subject-list>.home-subject-card{animation:none!important}}
 }
+
+/* AI Paper Marker uses the existing gold, black and card vocabulary. */
+.marker-page{max-width:1100px;margin:0 auto;padding:36px clamp(16px,4vw,48px) 80px;color:#f2efdf}
+.marker-page h1{font-size:clamp(27px,4vw,43px);letter-spacing:-1.2px;margin:12px 0}
+.marker-card,.marker-notice{border:1px solid #d4af3738;border-radius:18px;background:linear-gradient(140deg,#171811,#10110e);padding:22px;margin:18px 0;box-shadow:0 12px 35px #0003}
+.marker-notice{border-color:#e2bc5a65;color:#e9d9a3}.marker-notice p{margin-bottom:0}
+.marker-card h2{font-size:19px}.marker-page p{line-height:1.65}.marker-page .eyebrow{color:#d4af37}
+.marker-page button,.marker-file a{border:1px solid #d4af3745;background:#d4af3710;color:#f0d77a;border-radius:9px;padding:9px 12px;cursor:pointer;font:inherit;font-size:12px;text-decoration:none}
+.marker-page button:hover{border-color:#d4af3799;background:#d4af3720}.marker-page button:disabled{opacity:.45;cursor:not-allowed}.marker-page button[aria-pressed=true]{background:#d4af3733;border-color:#d4af37}
+.marker-page label{display:block;font-size:13px;color:#c9c2ac;margin:16px 0}.marker-page input:not([type=checkbox]),.marker-page select,.marker-page textarea{display:block;width:100%;box-sizing:border-box;background:#090a08;border:1px solid #ffffff24;border-radius:9px;color:#f2efdf;font:inherit;padding:11px;margin-top:8px}.marker-page textarea{min-height:120px;resize:vertical}
+.marker-page :focus-visible{outline:2px solid #d4af37;outline-offset:3px}.marker-page .marker-confirm{display:flex;align-items:flex-start;gap:10px}.marker-confirm input{margin-top:3px}
+.marker-file{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff12;padding:13px 0;overflow-wrap:anywhere}.marker-file>div:last-child,.marker-actions{display:flex;gap:7px;flex-wrap:wrap}.marker-file a{max-width:70%;overflow-wrap:anywhere}.marker-steps{display:flex;gap:24px;flex-wrap:wrap;color:#bfb28b;font-size:13px;padding-left:20px}.marker-answer{border-top:1px solid #ffffff15;margin-top:16px}.marker-error{color:#f2a6a0;border-left:3px solid #dc6a61;padding:12px}.marker-page details{border-top:1px solid #ffffff18;padding:12px 0}.marker-page summary{cursor:pointer;line-height:1.6}
+@media(max-width:600px){.marker-card{padding:16px}.marker-file{align-items:flex-start;flex-direction:column}.marker-file a{max-width:100%}.marker-steps{gap:12px}.marker-page{padding-top:22px}}
+.marker-page .subtitle{color:#bfb9a4;text-align:left;margin:0 0 18px;max-width:750px}
