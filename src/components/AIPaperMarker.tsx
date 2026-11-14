@@ -1,4 +1,5 @@
 "use client";
+import MarkerReview from './MarkerReview';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MARKER_BUCKET, inspectMarkerFile, paperSnapshot, type MarkerSubject, type MarkerQuestion } from '@/lib/paperMarker';
@@ -53,19 +54,19 @@ export default function AIPaperMarker({subject,paper=[]}:{subject:MarkerSubject;
   const finalized=await supabase.from('marker_sessions').update({status:'verified'}).eq('id',sessionId);if(finalized.error)throw finalized.error;
   setSessions(old=>old.map(s=>s.id===sessionId?{...s,status:'verified'}:s));
   uploads.forEach(u=>URL.revokeObjectURL(u.url));
-  setMessage('Saved privately. AI marking is not enabled yet; no marks have been awarded.');setUploads([]);setAnswers([]);setConfirmed(false);setTitle('');
+  setMessage('Saved privately. Open this submission in history to read and mark it with Gemini.');setUploads([]);setAnswers([]);setConfirmed(false);setTitle('');
  }catch(e){if(sessionId){await supabase.from('marker_sessions').update({status:'draft'}).eq('id',sessionId);setSessions(old=>old.map(s=>s.id===sessionId?{...s,status:'draft'}:s));}
  setError((e instanceof Error?e.message:'Could not save.')+(sessionId?' This incomplete session is in history. Delete it to clear the uploads, then retry.':''));}finally{setBusy(false);}}
  return <section className="marker-page">
-  <p className="eyebrow">{subject.toUpperCase()} · AI PAPER MARKER</p><h1>Prepare your paper for marking</h1>
+  <p className="eyebrow">{subject.toUpperCase()} · AI PAPER MARKER</p><h1>AI Paper Marker</h1>
   <p className="subtitle">Save your documents and review your answers in your own {subject} marking workspace.</p>
-  <div className="marker-notice" role="status"><b>Foundation preview</b><p>Private submissions and history are available. AI reading and grading are not enabled yet. No scores or grades will be generated until the marking engine has been configured and validated.</p></div>
+  <div className="marker-notice" role="status"><b>Gemini marking · Beta</b><p>Save a submission, then open it in history to match the official scheme, verify the answers and request provisional marking. For adult parents and teachers. Human review is required for uncertain or visual answers.</p></div>
   {error&&<p role="alert" className="marker-error">{error}</p>}{message&&<p role="status">{message}</p>}
-  {opened?<div className="marker-card"><button onClick={()=>setOpened(null)}>← Back to submissions</button><h2>{opened.title}</h2><p>{opened.status==='draft'?'Incomplete upload':'Documents verified'} · Not marked · {new Date(opened.created_at).toLocaleDateString()}</p>
+  {opened?<div className="marker-card"><button onClick={()=>setOpened(null)}>← Back to submissions</button><h2>{opened.title}</h2><p>{opened.status==='draft'?'Incomplete upload':'Documents verified'} ·  {new Date(opened.created_at).toLocaleDateString()}</p>
    {documents.map(d=><div className="marker-file" key={d.id}><span>{d.role} · {d.name} · {d.pages} pages</span><button onClick={()=>void preview(d)}>View original</button></div>)}
    {opened.paper_snapshot?.map(q=><details key={q.label}><summary>{q.label} · {q.question.marks} marks · {q.question.summary}</summary><p>Source: {q.source.session} {q.source.year}, {q.source.paper}, Q{q.source.questionNumber}. Parts: {q.source.selectedParts?.join(', ')||'All'}.</p><p>Mark scheme: {q.source.scheme?'Matched to source paper; criteria extraction pending':'Not available — manual scheme matching required'}</p></details>)}
    {opened.responses.map((a,i)=><div key={i}><b>{a.label} · Typed answer</b><p style={{whiteSpace:'pre-wrap'}}>{a.text}</p></div>)}
-   <button disabled={busy} onClick={()=>void remove(opened)}>Delete session and documents</button>
+   <MarkerReview key={opened.id} sessionId={opened.id} verified={opened.status==='verified'}/><button disabled={busy} onClick={()=>void remove(opened)}>Delete session and documents</button>
   </div>:<>
   <ol className="marker-steps"><li>Choose paper</li><li>Upload & order</li><li>Review answers</li><li>Save submission</li></ol>
   <div className="marker-card"><h2>1. Choose marking mode</h2><div className="marker-actions"><button aria-pressed={mode==='generated'} disabled={busy} onClick={()=>{setMode('generated');setConfirmed(false);}}>MagicQuestions paper</button><button aria-pressed={mode==='external'} disabled={busy} onClick={()=>{setMode('external');setConfirmed(false);}}>External paper</button></div>
@@ -75,13 +76,13 @@ export default function AIPaperMarker({subject,paper=[]}:{subject:MarkerSubject;
   <div className="marker-card"><h2>2. Upload & order pages</h2><p>PDF, PNG or JPEG · 25 MB per file · 60 pages per group · 100 MB total. Check every page before saving.</p>
    {(mode==='external'?['questions','answers','scheme']:['answers']).map(role=><div key={role}><label>{role==='questions'?'Original question paper':role==='scheme'?'Official mark scheme':'Completed answers'}<input type="file" accept="application/pdf,image/png,image/jpeg" multiple disabled={busy} onChange={e=>{const files=Array.from(e.target.files||[]);e.target.value='';setConfirmed(false);void add(role,files);}}/></label>{uploads.filter(u=>u.role===role).map((u,i)=><div className="marker-file" key={u.id}><a href={u.url} target="_blank" rel="noreferrer">{i+1}. {u.file.name} · {u.pages} pages — Preview</a><div><button disabled={busy} onClick={()=>{reorder(u.id,-1);setConfirmed(false);}} aria-label={`Move ${u.file.name} earlier`}>↑</button><button disabled={busy} onClick={()=>{reorder(u.id,1);setConfirmed(false);}} aria-label={`Move ${u.file.name} later`}>↓</button><button disabled={busy} onClick={()=>{setUploads(old=>old.filter(x=>x.id!==u.id));setConfirmed(false);}}>Remove</button></div></div>)}</div>)}
   </div>
-  <div className="marker-card"><h2>3. Typed answers & verification</h2><p>You may enter typed answers instead of uploading an answer document. Handwriting transcription will be added in a later phase; uploads are preserved as originals.</p>
+  <div className="marker-card"><h2>3. Typed answers & verification</h2><p>You may enter typed answers instead of uploading an answer document. Gemini can read your uploaded answers after saving. You must verify its transcription before marking; uploads are preserved as originals.</p>
    {answers.map((a,i)=><div key={i} className="marker-answer"><label>Question / subpart<input value={a.label} maxLength={40} onChange={e=>{setAnswers(old=>old.map((x,j)=>j===i?{...x,label:e.target.value}:x));setConfirmed(false);}}/></label><label>Your exact answer<textarea maxLength={20000} value={a.text} onChange={e=>{setAnswers(old=>old.map((x,j)=>j===i?{...x,text:e.target.value}:x));setConfirmed(false);}}/></label><button onClick={()=>{setAnswers(old=>old.filter((_,j)=>j!==i));setConfirmed(false);}}>Remove answer</button></div>)}
    <button disabled={busy||answers.length>=100} onClick={()=>{setAnswers(old=>[...old,{label:`Q${old.length+1}`,text:''}]);setConfirmed(false);}}>+ Add typed answer</button>
    <label className="marker-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/> I have checked document completeness, page order and typed answers.</label>
    <button className="generate" disabled={busy||!confirmed} onClick={()=>void save()}>{busy?'Processing documents…':'Save private submission'}</button>
-   <p className="qMeta">Saving does not send your work to an AI service. AI grading is awaiting configuration and validation.</p>
+   <p className="qMeta">Saving alone does not send documents to Gemini. Open the saved submission and confirm AI processing to start.</p>
   </div>
-  <div className="marker-card"><h2>{subject} marking history</h2>{!sessions.length?<p>No submissions yet.</p>:sessions.map(s=><div className="marker-file" key={s.id}><div><b>{s.title}</b><p className="qMeta">{new Date(s.created_at).toLocaleDateString()} · {s.status==='draft'?'Incomplete upload':'Verified submission'} · Not marked</p></div><div><button disabled={busy} onClick={()=>void open(s)}>Open</button><button disabled={busy} onClick={()=>void remove(s)}>Delete</button></div></div>)}</div></>}
+  <div className="marker-card"><h2>{subject} marking history</h2>{!sessions.length?<p>No submissions yet.</p>:sessions.map(s=><div className="marker-file" key={s.id}><div><b>{s.title}</b><p className="qMeta">{new Date(s.created_at).toLocaleDateString()} · {s.status==='draft'?'Incomplete upload':'Verified submission'} · Open for AI progress</p></div><div><button disabled={busy} onClick={()=>void open(s)}>Open</button><button disabled={busy} onClick={()=>void remove(s)}>Delete</button></div></div>)}</div></>}
  </section>;
 }

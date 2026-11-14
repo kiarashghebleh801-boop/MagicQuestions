@@ -1,67 +1,87 @@
-# AI Paper Marker implementation status
+# Gemini paper marker — provisional beta
 
-Phase 1 foundation is implemented. Automated marking is intentionally NOT released.
-No AI service receives student documents, and no marks or grades are produced.
+The private Phase 1 submissions now support real server-side Gemini requests.
+The application reads GEMINI_API_KEY from the deployed server environment; it
+never sends the key to the browser or prints it. Billing settings are unchanged.
+Default model: gemini-3.5-flash-lite. GEMINI_MARKER_MODEL can select another supported
+vision/JSON model. No paid fallback, provider upgrade or automatic retries.
 
-## Working
+## Flow
 
-- AI Paper Marker navigation within all four subjects, using existing styling.
-- Current generated papers and a private cloud record of new successful Word downloads.
-- Immutable per-session question snapshots: generated numbering, original year/session/paper/question number, selected parts, marks, specification tags and per-question mark-scheme source references. Mixed-source papers never share a guessed scheme.
-- External QP/answers/MS preparation; PDF/PNG/JPEG signature checks, PDF page count, image decode and dimension checks. Maximum 25 MB/file, 30 files, 60 pages/group and 100 MB/session in the upload UI. Storage independently limits MIME types and file size. Page count/completeness has not yet been independently validated server-side.
-- Local preview links, page-file reordering/removal, exact typed answers and explicit verification.
-- Private submissions, per-subject history, original-document viewing with two-minute signed URLs, reopen and deletion. Failed uploads remain visible as drafts for cleanup/retry.
-- Owner-only RLS and storage path policies. Anonymous roles have no table grants. Authenticated students cannot write AI criteria or results.
-- An authenticated API release gate returns 503; it does not simulate AI output.
+1. Save a verified generated or external paper in a subject's AI Paper Marker.
+2. Open it in history and load saved AI progress.
+3. An adult parent/teacher explicitly authorises sending documents to Google.
+4. Read the official criteria. External mode uses the uploaded QP and MS.
+   Generated mode resolves each question's canonical original QP and MS from
+   the existing source maps, preserving mixed years and selected-part mapping.
+5. Read completed answers. This separate AI call does NOT receive mark-scheme
+   answers. It records text, question labels, original location, legibility and
+   uncertainty; diagrams/graphs that need visual judgement require human review.
+6. Compare every transcription with the original document links, correct reading
+   errors, and explicitly confirm all responses before requesting marking.
+7. Marking uses official criteria, with per-criterion evidence and mark caps.
+   Any edited transcription, illegible answer, visual ambiguity or scheme issue
+   withholds a question score for human review. No complete percentage is shown
+   when a question requires review. No official IGCSE grade is assigned.
+8. Reopen stored progress or download the JSON report. Deleting the submission
+   also cascades its AI artifacts; the existing document deletion removes originals.
 
-## Database and API architecture
+## Controls
 
-`marker_papers`: user-owned generated paper snapshots.
-`marker_sessions`: subject, mode, status, immutable source snapshot and verified typed responses.
-`marker_documents`: ordered private object metadata, linked to session and owner.
-`marker_criteria`: future server-extracted official criteria with source references.
-`marker_results`: future criterion-linked decisions and review flags.
-Private `marker-documents` bucket stores originals under user/session IDs.
+- POST /api/marker authenticates with Supabase getUser and applies owner-only
+  queries/RLS; it never accepts client-provided file URLs or marking criteria.
+- Each AI step validates file signatures and parses PDF page counts on the server.
+  Up to 12 MB raw source input per step, 60 pages per file, 120 source pages per
+  step; generated mode supports up to eight distinct source files. Larger saved
+  submissions remain private but need splitting before AI processing.
+- Requests have a 45-second provider timeout and a 60-second function duration.
+  Each durable stage can be retried independently; cached stages avoid new calls.
+  This beta uses bounded synchronous steps, not a background queue. Keep the page
+  open; a timed-out step can be retried after its 90-second lease window.
+- An authenticated database claim function serialises quotas and verifies session
+  ownership/status. Limits: 12 steps/hour and 36 steps/day per account, 300 steps/day
+  globally. Gemini's own quotas may be lower. A separate metadata-only usage ledger
+  survives submission deletion, so deletion cannot reset the limit.
+- The claim function intentionally uses SECURITY DEFINER to insert usage records
+  without allowing clients to reset quotas. Its empty search_path, auth.uid check,
+  qualified object names and explicit grants restrict it to signed-in owners.
+- AI artifacts are stored as text plus an HMAC signature using the server key and
+  a marker-specific domain prefix. Clients can only update their own payload and
+  signature columns. The API ignores artifacts without a valid server signature,
+  bound to the owner/session/run/stage. Client-authored marks are never trusted.
+  Rotating GEMINI_API_KEY invalidates old artifact signatures: keep the old key
+  securely available before rotation if preserving verified history is needed;
+  this beta otherwise requires reprocessing those sessions.
+- Strict runtime validation rejects missing/duplicate labels, unsupported criterion
+  references, noninteger/negative/excess marks, incomplete marking and awarded
+  evidence absent from the verified answer. Totals/percentages are computed in code.
+- Documents are untrusted content, never instructions. No tools or code execution
+  are enabled. No prompts, originals, provider response bodies or keys are logged.
+- The UI discloses Google's free-tier data usage. Names/IDs should be removed first.
+  Adult account/operator confirmation does not constitute a Google compliance
+  determination about the entire site; deployment follows the user's clarified
+  adult parent/teacher use case. Operator must establish applicable provider terms.
 
-Future processing must use separate extraction, transcription/verification and marking jobs.
-Use a durable authenticated queue with retry/lease/idempotency controls, server-side file validation,
-strict JSON schemas, criterion IDs, maximum/dependency enforcement and a corrections audit trail.
-Only a trusted worker may write criteria/results. Never put an AI key in a public environment variable.
-The current API deliberately has no provider calls or pretend processing statuses.
+## Deliberate beta limits
 
-## Still required
-
-1. Choose and configure a vision-capable AI provider with a server-only API key.
-2. Implement extraction, crop regions and uncertain handwriting verification/corrections.
-3. Resolve and extract exact official criteria (including image/table regions), validating selected subparts for every question. A filename match is not a completed criterion match.
-4. Implement the asynchronous grading worker and validated mark-level outputs; handle missing schemes, illegibility and disagreement as review rather than zero.
-5. Test against supplied human-marked scripts: method marks, ECF, levels, alternate wording, changed MC selections, graphs and uncertainty.
-6. Only after validation, release results, reliable PDF annotation (or side comments), Tracker mark allocation and weak-topic practice.
-7. Add paper deletion/retention controls for the generated-paper catalogue and server-side quotas before high-volume release.
-
-Old papers downloaded before this change cannot be reconstructed automatically; use the current generator paper or external mode.
-Reopening saved sessions currently shows originals/typed responses, not AI feedback.
-Existing export and generation rules are preserved. No official grade-boundary claims are made.
+This is not calibrated to a certified examiner. Dependency/ECF/level rules are
+provided in official criteria and model instructions but still need representative
+human-marked calibration. Criterion transcription and source matching can be wrong;
+check them in the UI before marking. Visual answers are conservatively referred to
+a human instead of graded from guessed measurements. Original whole files/pages
+are viewable; automatic handwriting crops and anchored PDF annotation are not yet
+implemented. Annotated PDF exports, automatic Tracker allocation, weak-topic
+practice and a durable background worker remain future work. The original
+marker_criteria/marker_results tables stay locked to client writes; provisional
+beta artifacts do not populate official results or Tracker records.
 
 ## Verification
 
-- Production build and existing Chemistry/Physics/Maths export checks.
-- Marker unit checks for missing/incorrect file types and empty/oversize files; mixed-source snapshots and selected parts.
-- Hosted database transaction verifies owner access, denial to a different user and no authenticated INSERT privilege on results; transaction rolls back all test data.
-- Supabase advisors show no new marker-table RLS warnings. Existing unrelated account-function/password warnings were not changed.
-- Signed-in end-to-end upload/reopen/delete, real PDFs/images and provider grading still require representative user acceptance testing.
-
-## Changed files
-
-- src/components/AIPaperMarker.tsx
-- src/components/SubjectWorkspace.tsx
-- src/lib/paperMarker.ts
-- src/app/api/marker/route.ts
-- src/app/chemistry/page.tsx
-- src/app/physics/page.tsx
-- src/app/biology/page.tsx
-- src/app/mathematics/page.tsx
-- src/app/globals.css
-- supabase/ai-paper-marker.sql
-- scripts/check-paper-marker.cjs
-- docs/ai-paper-marker.md
+Build/type checks; existing export regression checks; JSON/mark-integrity tests;
+provider success/quota/auth/timeout/truncation tests with mocked HTTP; signed
+artifact tampering and cross-owner checks; database transaction tests for ownership,
+quota persistence, concurrent-step lease and anonymous/direct-insert denial.
+No real key is retrieved into the development workspace. Production key metadata
+is present. A representative signed-in upload/AI round trip and human-marked
+calibration still need live user testing; do not treat mocked tests as model-accuracy
+validation.
