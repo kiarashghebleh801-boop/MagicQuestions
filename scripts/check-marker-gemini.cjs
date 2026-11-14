@@ -26,6 +26,8 @@ assert.ok(verifiedArtifact(row,'u','s',secret));assert.equal(verifiedArtifact(ro
  const good=await geminiJSON('Extract',[],{},async(url,opts)=>{assert.equal(url.includes(process.env.GEMINI_API_KEY),false);assert.equal(opts.headers['x-goog-api-key'],'dummy-unit-test-key');const body=JSON.parse(opts.body);assert.equal(body.generationConfig.responseMimeType,'application/json');assert.deepEqual(body.generationConfig.responseJsonSchema,{});assert.equal(body.generationConfig.responseSchema,undefined);assert.equal(body.tools,undefined);return new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:'{"ok":true}'}]}}]}),{status:200});});assert.equal(good.ok,true);
  await assert.rejects(()=>geminiJSON('',[],{},async()=>new Response('secret provider data',{status:429})),/free usage limit/);
  await assert.rejects(()=>geminiJSON('',[],{},async()=>new Response('{}',{status:403})),/permissions/);
+ await assert.rejects(()=>geminiJSON('',[],{},async()=>new Response(JSON.stringify({error:{status:'INVALID_ARGUMENT',message:'PDF document invalid; secret-content-123'}}),{status:400})),e=>e.message.includes('HTTP 400: INVALID_ARGUMENT; DOCUMENT')&&!e.message.includes('secret-content-123'));
+ await assert.rejects(()=>geminiJSON('',[],{},async()=>new Response(JSON.stringify({error:{status:'UNAVAILABLE',message:'overloaded'}}),{status:503})),/temporarily unable/);
  await assert.rejects(()=>geminiJSON('',[],{},async()=>new Response(JSON.stringify({candidates:[{finishReason:'MAX_TOKENS'}]}),{status:200})),/incomplete/);
  await assert.rejects(()=>geminiJSON('',[],{},async()=>{throw new Error('sensitive internal error');}),/did not respond/);
  delete process.env.GEMINI_API_KEY;
@@ -43,4 +45,15 @@ assert.ok(verifiedArtifact(row,'u','s',secret));assert.equal(verifiedArtifact(ro
  await assert.rejects(()=>d.add('marker-documents','../another/file.pdf','Invalid'),/path/);
  await assert.rejects(()=>d.add('marker-documents','user/session/test.pdf','Wrong MIME','image/png'),/declared type/);
  console.log('PASS: server-side PDF parsing and explicit worker, real page count, file/path signature validation.');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{
+ const {Documents}=require('../src/lib/markerGemini.server.ts');
+ if(!process.env.MARKER_TEST_TYPED_PDF)return;
+ const pdf=fs.readFileSync(process.env.MARKER_TEST_TYPED_PDF);
+ const db={storage:{from:()=>({download:async()=>({data:new Blob([pdf]),error:null})})}};
+ const d=new Documents(db);await d.add('marker-documents','user/session/answers.pdf','answers - typed paper','application/pdf');
+ assert.equal(d.pages,3);assert.equal(d.parts.some(p=>p.inlineData),false);
+ const text=d.parts.filter(p=>p.text).map(p=>p.text).join('\n');
+ for(const expected of ['140%','0.53','lactic acid','Q5.'])assert.ok(text.includes(expected),expected);
+ console.log('PASS: actual 3-page typed-answer PDF preserves deliberate errors using native text, without PDF vision.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

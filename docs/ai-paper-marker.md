@@ -85,3 +85,15 @@ No real key is retrieved into the development workspace. Production key metadata
 is present. A representative signed-in upload/AI round trip and human-marked
 calibration still need live user testing; do not treat mocked tests as model-accuracy
 validation.
+
+## Answer-reading diagnostics update
+
+Production records showed criterion extraction succeeded while answer reading failed.
+The previous generic error discarded the upstream status, so the historical cause
+cannot be established from the retained logs. The app now logs only the HTTP code,
+an allowlisted Google error status and a static reason category, never raw messages.
+The interface distinguishes request rejection, capacity errors and quota failures.
+Typed answer PDFs with native text on every page and no drawing/image/annotation
+operators are parsed directly; scans and visual PDFs still use vision. The uploaded
+three-page test PDF was checked with this text path, preserving its deliberate errors.
+Use MARKER_TEST_TYPED_PDF to run that optional fixture check with a local PDF.
