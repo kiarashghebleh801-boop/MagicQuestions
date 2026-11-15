@@ -1,5 +1,4 @@
 "use client";
-import { rememberMarkerPaper } from "@/lib/paperMarker";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -100,7 +99,7 @@ export default function BiologyPage() {
   function replaceQuestion(index: number, replacement: BiologyQuestionSelection) {
     setPaper(current => current.map((q, i) => i === index ? replacement : q));
   }
-  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Biology", coverMode: coverMode || "worksheet", generatedDate, examName }); void rememberMarkerPaper("Biology", paper).catch(e => window.alert(e.message)); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Biology Word paper."); } finally { setExporting(false); } }
+  async function downloadWord() { if(!paper.length) return; setExporting(true); try { await exportPaperToWord(paper.map(asExportQuestion), { subject: "Biology", coverMode: coverMode || "worksheet", generatedDate, examName }); } catch (error) { window.alert(error instanceof Error ? error.message : "Could not build the Biology Word paper."); } finally { setExporting(false); } }
 
   async function downloadMarkScheme() {
     if (!paper.length || exportingMarkScheme) return;
@@ -113,7 +112,7 @@ export default function BiologyPage() {
     } finally { setExportingMarkScheme(false); }
   }
 
-  return <SubjectWorkspace markerPaper={paper} subject="Biology" email={email} mode={mode} onModeChange={setMode} questionCount={biologyQuestions.length}>
+  return <SubjectWorkspace subject="Biology" email={email} mode={mode} onModeChange={setMode} questionCount={biologyQuestions.length}>
 
     <section className="hero"><p className="eyebrow">EDEXCEL INTERNATIONAL GCSE BIOLOGY 4BI1</p><h1>Your topics. Your Biology paper.<br/><span>Generated in seconds.</span></h1><p className="subtitle">Choose your main Biology topics. Build a practice paper, browse questions, and track your progress in one place.</p></section>
 
